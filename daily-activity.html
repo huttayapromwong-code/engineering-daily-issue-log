@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Activity — Engineering Daily Issue Log</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA;
+    --ink: #0b0b0b; --ink-secondary: #52514e; --ink-muted: #898781;
+    --line: #e1e0d9; --line-strong: #c3c2b7;
+    --accent: #2B5D6B; --accent-soft: #E3EEEF;
+    --shadow: 0 1px 2px rgba(27,33,31,0.06), 0 8px 24px -12px rgba(27,33,31,0.18);
+    --good: #0ca30c; --good-soft: #e2f3e2;
+    --warning: #fab219; --warning-soft: #fef1d9;
+    --critical: #d03b3b; --critical-soft: #fbe3e3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
+      --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
+      --accent: #7CC2CD; --accent-soft: #1E3236;
+      --good: #0ca30c; --good-soft: #16281a;
+      --warning: #fab219; --warning-soft: #332711;
+      --critical: #d03b3b; --critical-soft: #33201d;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
+    --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
+    --accent: #7CC2CD; --accent-soft: #1E3236;
+    --good: #0ca30c; --good-soft: #16281a; --warning: #fab219; --warning-soft: #332711;
+    --critical: #d03b3b; --critical-soft: #33201d;
+  }
+  :root[data-theme="light"] {
+    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA; --ink: #0b0b0b;
+    --ink-secondary: #52514e; --ink-muted: #898781; --line: #e1e0d9; --line-strong: #c3c2b7;
+    --accent: #2B5D6B; --accent-soft: #E3EEEF;
+    --good: #0ca30c; --good-soft: #e2f3e2; --warning: #fab219; --warning-soft: #fef1d9;
+    --critical: #d03b3b; --critical-soft: #fbe3e3;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body { font-family: -apple-system, "Segoe UI", "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.55; margin: 0; padding: 24px 18px 80px; }
+  .wrap { max-width: 1280px; margin: 0 auto; }
+  .mono { font-family: "SF Mono", ui-monospace, monospace; }
+  h1, h2, h3 { font-family: Georgia, "Iowan Old Style", "Noto Serif Thai", serif; margin: 0; }
+
+  header.page { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; padding: 20px 24px; border-radius: 16px; background: linear-gradient(135deg, var(--accent-soft), var(--surface) 65%); border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+  h1 { font-size: clamp(20px,3vw,26px); font-weight: 600; }
+  .today { font-size: 12.5px; color: var(--ink-muted); margin-top: 4px; }
+
+  .btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.small { padding: 6px 10px; font-size: 12px; }
+  .btn.ghost { border-color: transparent; background: transparent; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .icon-btn { appearance: none; border: none; background: transparent; cursor: pointer; color: var(--ink-muted); padding: 4px 6px; border-radius: 4px; font-size: 14px; }
+  .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+
+  .banner { padding: 12px 16px; border-radius: 12px; font-size: 13.5px; margin-bottom: 16px; display: none; }
+  .banner.show { display: block; }
+  .banner.warn { background: var(--warning-soft); color: #8a6100; border: 1px solid var(--warning); }
+  .banner.err { background: var(--critical-soft); color: var(--critical); border: 1px solid var(--critical); }
+  @media (prefers-color-scheme: dark) { .banner.warn { color: var(--warning); } }
+
+  .card-shell { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
+  .card-shell h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .card-shell .sub { font-size: 11.5px; color: var(--ink-muted); margin-bottom: 14px; }
+
+  select, input[type=text], input[type=date], input[type=time], input[type=number], input[type=search], textarea {
+    font: inherit; font-size: 13.5px; padding: 8px 10px; border-radius: 8px;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  }
+  select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+  .filter-field { display: flex; flex-direction: column; gap: 4px; }
+  .filter-field label { font-size: 11px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .04em; }
+  .filter-field input, .filter-field select { min-width: 130px; }
+  .toolbar-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table.activity-table { width: 100%; border-collapse: collapse; min-width: 980px; }
+  table.activity-table th, table.activity-table td { text-align: left; padding: 10px 13px; font-size: 12.8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  table.activity-table thead th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-muted); background: var(--surface-2); font-weight: 600; position: sticky; top: 0; }
+  table.activity-table tbody tr:hover { background: var(--surface-2); cursor: pointer; }
+  table.activity-table tbody tr:last-child td { border-bottom: none; }
+  td.empty { text-align: center; color: var(--ink-muted); padding: 34px 0 !important; cursor: default; }
+  td.empty:hover { background: none; }
+
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 100px; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.st-Open { background: var(--critical-soft); color: var(--critical); }
+  .pill.st-InProgress { background: var(--warning-soft); color: #8a6100; }
+  @media (prefers-color-scheme: dark) { .pill.st-InProgress { color: var(--warning); } }
+  .pill.st-Closed { background: var(--good-soft); color: var(--good); }
+  .cat-badge { display: inline-flex; padding: 2px 8px; border-radius: 100px; font-size: 10.5px; font-weight: 700; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+
+  .progress-mini { width: 70px; height: 6px; border-radius: 100px; background: var(--surface-2); overflow: hidden; }
+  .progress-mini > div { height: 100%; background: var(--accent); border-radius: 100px; }
+  .progress-mini-wrap { display: flex; align-items: center; gap: 6px; }
+  .progress-mini-wrap span { font-size: 11px; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+
+  .thumb-cell { width: 40px; height: 40px; border-radius: 6px; overflow: hidden; background: var(--surface-2); flex: none; }
+  .thumb-cell img { width: 100%; height: 100%; object-fit: cover; }
+
+  .backdrop { position: fixed; inset: 0; background: rgba(11,11,11,.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .backdrop.show { display: flex; }
+  .modal { background: var(--surface); border-radius: 12px; max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .modal__head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+  .modal__body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-secondary); margin-bottom: 5px; }
+  .field input, .field select, .field textarea { width: 100%; }
+  .field textarea { min-height: 56px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
+  .modal__foot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; position: sticky; bottom: 0; background: var(--surface); }
+  .req::after { content: " *"; color: var(--critical); }
+
+  .thumb-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+  .thumb-box { border-radius: 6px; overflow: hidden; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; aspect-ratio: 4/3; }
+  .thumb-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-box .empty-hint { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--ink-muted); font-size: 10px; text-align: center; }
+  .attach-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 6px 9px; background: var(--surface-2); border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
+
+  .toast-stack { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; max-width: 340px; }
+  .toast { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; padding: 12px 14px; box-shadow: var(--shadow); font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
+  .toast.success { border-left-color: var(--good); }
+  .toast.error { border-left-color: var(--critical); }
+
+  .preview-backdrop { position: fixed; inset: 0; background: rgba(11,11,11,.55); display: none; align-items: center; justify-content: center; z-index: 150; padding: 20px; }
+  .preview-backdrop.show { display: flex; }
+  .preview-box { background: var(--surface); border-radius: 12px; max-width: 800px; width: 100%; max-height: 88vh; overflow: hidden; display: flex; flex-direction: column; }
+  .preview-box__head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .preview-box__body { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; background: var(--bg); min-height: 260px; }
+  .preview-box__body img { max-width: 100%; max-height: 74vh; object-fit: contain; }
+  .preview-box__body video { max-width: 100%; max-height: 74vh; }
+  .preview-box__body iframe { width: 100%; height: 74vh; border: none; }
+
+  footer.page { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 12px; text-align: center; }
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <div>
+      <div class="eyebrow">📝 Engineering Team · Daily Activity</div>
+      <h1>บันทึกกิจกรรมประจำวัน</h1>
+      <div class="today mono" id="todayLabel"></div>
+    </div>
+    <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <a class="btn" href="index.html">← หน้าแรก</a>
+      <a class="btn" href="daily-dashboard.html">📅 Daily Dashboard</a>
+      <a class="btn" href="settings.html">⚙️ Settings</a>
+      <button class="icon-btn" id="btnThemeToggle" aria-label="สลับธีมสว่าง/มืด" title="สลับธีมสว่าง/มืด">🌗</button>
+    </div>
+  </header>
+
+  <div class="banner warn" id="configBanner">⚠️ ยังไม่ได้ตั้งค่าฐานข้อมูลใน config.js</div>
+  <div class="banner err" id="errorBanner"></div>
+
+  <div class="card-shell">
+    <div class="toolbar-row">
+      <div>
+        <h2>รายการกิจกรรม</h2>
+        <div class="sub" id="resultCount">กำลังโหลด...</div>
+      </div>
+      <button class="btn primary" id="btnAddActivity">➕ เพิ่มรายการ</button>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-field"><label>จากวันที่</label><input type="date" id="fFrom"></div>
+      <div class="filter-field"><label>ถึงวันที่</label><input type="date" id="fTo"></div>
+      <div class="filter-field"><label>Line</label><select id="fFilterLine"><option value="">ทั้งหมด</option></select></div>
+      <div class="filter-field"><label>Category</label><select id="fFilterCategory"><option value="">ทั้งหมด</option><option>Problem</option><option>Trial</option><option>Improvement</option></select></div>
+      <div class="filter-field"><label>Status</label><select id="fFilterStatus"><option value="">ทั้งหมด</option><option>Open</option><option>In Progress</option><option>Closed</option></select></div>
+      <div class="filter-field"><label>Owner</label><input type="text" id="fFilterOwner" placeholder="ค้นหาชื่อ..."></div>
+      <button class="btn small" id="btnClearFilter">ล้างตัวกรอง</button>
+    </div>
+
+    <div class="tablewrap">
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th>วันที่/เวลา</th><th>Line / Machine</th><th>Category</th><th>Problem</th>
+            <th>Owner</th><th>ความคืบหน้า</th><th>Status</th><th></th><th></th>
+          </tr>
+        </thead>
+        <tbody id="activityTableBody">
+          <tr><td class="empty" colspan="9"><span class="spin"></span> กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="page">Daily Activity — ข้อมูลเก็บบนตาราง daily_activities เดียวกับ Daily Dashboard (Line/Machine/Product ใช้ dropdown จาก Settings → Lookup Data)</footer>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<div class="preview-backdrop" id="previewBackdrop">
+  <div class="preview-box">
+    <div class="preview-box__head">
+      <b id="previewName">—</b>
+      <div style="display:flex;gap:6px;">
+        <a class="icon-btn" id="previewDownload" href="#" target="_blank" title="ดาวน์โหลด">⬇</a>
+        <button class="icon-btn" id="btnClosePreview" title="ปิด">✕</button>
+      </div>
+    </div>
+    <div class="preview-box__body" id="previewBody"></div>
+  </div>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="modal">
+    <div class="modal__head">
+      <h3 id="modalTitle">เพิ่มรายการ Daily Activity</h3>
+      <button class="icon-btn" id="btnCloseModal">✕</button>
+    </div>
+    <div class="modal__body">
+      <div class="field-row">
+        <div class="field"><label class="req">ประเภทงาน (Category)</label>
+          <select id="fCategory"><option value="Problem">Problem / NG (แก้ปัญหา)</option><option value="Trial">Trial (ทดลอง)</option><option value="Improvement">Machine Improvement (ปรับปรุง)</option></select>
+        </div>
+        <div class="field"><label>Priority</label><select id="fPriority"><option value="">— ไม่ระบุ —</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label class="req">วันที่</label><input type="date" id="fDate"></div>
+        <div class="field"><label>เวลาที่บันทึก</label><input type="time" id="fTime"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label class="req">Production Line</label><select id="fLine"><option value="">— เลือก Line —</option></select></div>
+        <div class="field"><label>Machine</label><select id="fMachine"><option value="">— ไม่ระบุ —</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Product Model</label><select id="fProduct"><option value="">— ไม่ระบุ —</option></select></div>
+        <div class="field"><label>Process</label><input type="text" id="fProcess" placeholder="เช่น Polishing, Termination, Testing"></div>
+      </div>
+      <div class="field"><label class="req">Problem</label><input type="text" id="fProblem" placeholder="หัวข้อปัญหาสั้นๆ"></div>
+      <div class="field"><label>Problem Description</label><textarea id="fDescription" placeholder="รายละเอียดเพิ่มเติม..."></textarea></div>
+      <div class="field"><label>Root Cause</label><textarea id="fRootCause" placeholder="สาเหตุที่แท้จริง..."></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Corrective Action</label><textarea id="fCorrective" placeholder="มาตรการแก้ไข..."></textarea></div>
+        <div class="field"><label>Preventive Action</label><textarea id="fPreventive" placeholder="มาตรการป้องกัน..."></textarea></div>
+      </div>
+      <div class="field"><label>ผลลัพธ์หลังการแก้ไข (Result / Outcome)</label><textarea id="fResult" placeholder="เช่น ทดสอบซ้ำผ่านเกณฑ์ ไม่พบปัญหาเดิมซ้ำ..."></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Owner</label><input type="text" id="fOwner" placeholder="ผู้รับผิดชอบ"></div>
+        <div class="field"><label class="req">Status</label><select id="fStatus"><option>Open</option><option>In Progress</option><option>Closed</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Start Time</label><input type="time" id="fStartTime"></div>
+        <div class="field"><label>Finish Time</label><input type="time" id="fFinishTime"></div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-muted);" id="durationHint"></div>
+
+      <div class="field-row">
+        <div class="field"><label>Quantity OK</label><input type="number" id="fQtyOk" min="0" placeholder="0"></div>
+        <div class="field"><label>Quantity NG</label><input type="number" id="fQtyNg" min="0" placeholder="0"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Downtime (นาที)</label><input type="number" id="fDowntime" min="0" placeholder="0"></div>
+        <div class="field"><label>Downtime ที่ลดได้ (นาที)</label><input type="number" id="fDowntimeSaved" min="0" placeholder="0"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>NG ที่ลดได้ (ชิ้น)</label><input type="number" id="fNgReduced" min="0" placeholder="0"></div>
+        <div class="field"><label>Cost Saving (บาท)</label><input type="number" id="fCostSaving" min="0" placeholder="0"></div>
+      </div>
+      <div class="field"><label>ความคืบหน้า (%) — สำหรับ Trial/Improvement — <span id="progressVal">0</span>%</label><input type="range" id="fProgress" min="0" max="100" step="5" value="0" style="width:100%"></div>
+
+      <div class="field">
+        <label>รูปภาพ</label>
+        <div class="thumb-pair">
+          <div class="thumb-box" id="beforeBox"><div id="beforePreviewWrap" style="width:100%;height:100%;"></div></div>
+          <div class="thumb-box" id="afterBox"><div id="afterPreviewWrap" style="width:100%;height:100%;"></div></div>
+        </div>
+        <div class="field-row" style="margin-top:6px;">
+          <label class="btn small" style="justify-content:center;">📷 รูปก่อนแก้ไข<input type="file" accept="image/*" id="fPhotoBefore" style="display:none;"></label>
+          <label class="btn small" style="justify-content:center;">📷 รูปหลังแก้ไข<input type="file" accept="image/*" id="fPhotoAfter" style="display:none;"></label>
+        </div>
+      </div>
+      <div class="field">
+        <label>เอกสารแนบ (รูป/วิดีโอ/PDF/Excel/Word)</label>
+        <label class="btn small">📎 แนบไฟล์<input type="file" id="fAttachments" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple style="display:none;"></label>
+        <div id="attachmentsList" style="margin-top:8px;"></div>
+      </div>
+      <div class="field"><label>Remark</label><input type="text" id="fRemark" placeholder="หมายเหตุ"></div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn ghost" id="btnDelete" style="color:var(--critical); display:none;">🗑 ลบ</button>
+      <div style="display:flex; gap:10px; margin-left:auto;">
+        <button class="btn ghost" id="btnCancel">ยกเลิก</button>
+        <button class="btn primary" id="btnSave">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var SUPABASE_URL = window.SUPABASE_URL || "";
+  var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
+  var configured = SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.indexOf("YOUR_") !== 0;
+  var sb = (configured && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  function $(id) { return document.getElementById(id); }
+  function isoToday() { return new Date().toISOString().slice(0, 10); }
+  function isoDaysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+
+  var months = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  var now = new Date();
+  $("todayLabel").textContent = now.getDate() + " " + months[now.getMonth()] + " " + (now.getFullYear() + 543);
+
+  $("btnThemeToggle").addEventListener("click", function () {
+    var root = document.documentElement;
+    var cur = root.getAttribute("data-theme");
+    var next = cur === "dark" ? "light" : cur === "light" ? "" : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+    if (next) { root.setAttribute("data-theme", next); localStorage.setItem("eng-log-theme", next); }
+    else { root.removeAttribute("data-theme"); localStorage.removeItem("eng-log-theme"); }
+  });
+  var savedTheme = localStorage.getItem("eng-log-theme");
+  if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+
+  if (!configured) $("configBanner").classList.add("show");
+
+  function showToast(msg, type) {
+    var stack = $("toastStack");
+    var t = document.createElement("div"); t.className = "toast" + (type ? " " + type : "");
+    t.textContent = (type === "success" ? "✅ " : type === "error" ? "⚠️ " : "") + msg;
+    stack.appendChild(t);
+    setTimeout(function () { t.style.transition = "opacity .3s"; t.style.opacity = "0"; setTimeout(function () { t.remove(); }, 300); }, 4000);
+  }
+  function showErr(msg) {
+    var b = $("errorBanner"); b.textContent = msg; b.classList.add("show");
+    setTimeout(function () { b.classList.remove("show"); }, 6000);
+    showToast(msg, "error");
+  }
+
+  var IMAGE_EXT = ["jpg","jpeg","png","gif","webp","svg","bmp","heic"];
+  var VIDEO_EXT = ["mp4","webm","mov","ogg","m4v"];
+  var OFFICE_EXT = ["doc","docx","xls","xlsx","ppt","pptx"];
+  function fileIconFor(name) {
+    var ext = (name.split(".").pop() || "").toLowerCase();
+    if (IMAGE_EXT.indexOf(ext) !== -1) return "🖼";
+    if (VIDEO_EXT.indexOf(ext) !== -1) return "🎬";
+    if (ext === "pdf") return "📄";
+    if (OFFICE_EXT.indexOf(ext) !== -1) return "📑";
+    return "📎";
+  }
+  function openPreview(url, name) {
+    if (!url) return;
+    var ext = (url.split(".").pop() || "").toLowerCase().split("?")[0];
+    $("previewName").textContent = name || url;
+    $("previewDownload").href = url;
+    var body = $("previewBody"); body.innerHTML = "";
+    if (IMAGE_EXT.indexOf(ext) !== -1) { var img = document.createElement("img"); img.src = url; body.appendChild(img); }
+    else if (VIDEO_EXT.indexOf(ext) !== -1) { var vid = document.createElement("video"); vid.src = url; vid.controls = true; vid.autoplay = true; body.appendChild(vid); }
+    else if (ext === "pdf") { var frame = document.createElement("iframe"); frame.src = url; body.appendChild(frame); }
+    else if (OFFICE_EXT.indexOf(ext) !== -1) { var frame2 = document.createElement("iframe"); frame2.src = "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(url); body.appendChild(frame2); }
+    else { body.innerHTML = '<div style="padding:60px 30px;text-align:center;color:var(--ink-muted);">ไม่รองรับการแสดงตัวอย่างไฟล์นี้ กด ⬇ เพื่อดาวน์โหลด</div>'; }
+    $("previewBackdrop").classList.add("show");
+  }
+  $("btnClosePreview").addEventListener("click", function () { $("previewBackdrop").classList.remove("show"); $("previewBody").innerHTML = ""; });
+  $("previewBackdrop").addEventListener("click", function (e) { if (e.target.id === "previewBackdrop") { $("previewBackdrop").classList.remove("show"); $("previewBody").innerHTML = ""; } });
+
+  async function uploadFile(file, prefix) {
+    var ext = (file.name.split(".").pop() || "bin").toLowerCase();
+    var path = prefix + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 7) + "." + ext;
+    var res = await sb.storage.from("issue-photos").upload(path, file, { upsert: false });
+    if (res.error) throw new Error(res.error.message);
+    return sb.storage.from("issue-photos").getPublicUrl(path).data.publicUrl;
+  }
+  function previewPhoto(wrapId, url) { $(wrapId).innerHTML = url ? '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;">' : '<div class="empty-hint">ยังไม่มีรูป</div>'; }
+  $("beforeBox").addEventListener("click", function () { if (pendingPhotoBefore) openPreview(pendingPhotoBefore, "รูปก่อนแก้ไข"); });
+  $("afterBox").addEventListener("click", function () { if (pendingPhotoAfter) openPreview(pendingPhotoAfter, "รูปหลังแก้ไข"); });
+  $("fPhotoBefore").addEventListener("change", function () { if (this.files[0]) previewPhoto("beforePreviewWrap", URL.createObjectURL(this.files[0])); });
+  $("fPhotoAfter").addEventListener("change", function () { if (this.files[0]) previewPhoto("afterPreviewWrap", URL.createObjectURL(this.files[0])); });
+
+  var pendingPhotoBefore = null, pendingPhotoAfter = null;
+  var pendingAttachments = [], newAttachmentFiles = [];
+  function renderAttachmentsList() {
+    var el = $("attachmentsList"); el.innerHTML = "";
+    pendingAttachments.forEach(function (a, idx) {
+      var row = document.createElement("div"); row.className = "attach-item";
+      var link = document.createElement("span"); link.textContent = fileIconFor(a.name) + " " + a.name; link.style.flex = "1";
+      link.addEventListener("click", function () { openPreview(a.url, a.name); });
+      var rm = document.createElement("button"); rm.className = "icon-btn"; rm.textContent = "✕"; rm.type = "button";
+      rm.addEventListener("click", function (e) { e.stopPropagation(); pendingAttachments.splice(idx, 1); renderAttachmentsList(); });
+      row.appendChild(link); row.appendChild(rm); el.appendChild(row);
+    });
+    newAttachmentFiles.forEach(function (f, idx) {
+      var row = document.createElement("div"); row.className = "attach-item"; row.style.color = "var(--ink-muted)";
+      var span = document.createElement("span"); span.textContent = fileIconFor(f.name) + " " + f.name + " (รอบันทึก)"; span.style.flex = "1";
+      var rm = document.createElement("button"); rm.className = "icon-btn"; rm.textContent = "✕"; rm.type = "button";
+      rm.addEventListener("click", function () { newAttachmentFiles.splice(idx, 1); renderAttachmentsList(); });
+      row.appendChild(span); row.appendChild(rm); el.appendChild(row);
+    });
+  }
+  $("fAttachments").addEventListener("change", function () {
+    for (var i = 0; i < this.files.length; i++) newAttachmentFiles.push(this.files[i]);
+    renderAttachmentsList(); this.value = "";
+  });
+
+  function updateDurationHint() {
+    var s = $("fStartTime").value, f = $("fFinishTime").value;
+    if (s && f) {
+      var sm = s.split(":"), fm = f.split(":");
+      var mins = (parseInt(fm[0], 10) * 60 + parseInt(fm[1], 10)) - (parseInt(sm[0], 10) * 60 + parseInt(sm[1], 10));
+      $("durationHint").textContent = mins >= 0 ? ("⏱ ใช้เวลาแก้ไข: " + mins + " นาที") : "⚠️ Finish Time ต้องอยู่หลัง Start Time";
+    } else { $("durationHint").textContent = ""; }
+  }
+  $("fStartTime").addEventListener("input", updateDurationHint);
+  $("fFinishTime").addEventListener("input", updateDurationHint);
+  $("fProgress").addEventListener("input", function () { $("progressVal").textContent = this.value; });
+
+  // ============================================================
+  // Lookup dropdowns (from Module 2 tables)
+  // ============================================================
+  var lookupLines = [], lookupMachines = [], lookupProducts = [];
+  async function loadLookups() {
+    if (!sb) return;
+    var res = await Promise.all([
+      sb.from("production_lines").select("name,is_active").eq("is_active", true).order("name"),
+      sb.from("machines").select("name,is_active").eq("is_active", true).order("name"),
+      sb.from("products").select("model_name").order("model_name")
+    ]);
+    lookupLines = (res[0].data || []).map(function (r) { return r.name; });
+    lookupMachines = (res[1].data || []).map(function (r) { return r.name; });
+    lookupProducts = (res[2].data || []).map(function (r) { return r.model_name; });
+
+    function fillSelect(id, values, includeAll) {
+      var el = $(id);
+      var current = el.value;
+      var opts = includeAll ? '<option value="">ทั้งหมด</option>' : el.options[0].outerHTML;
+      opts += values.map(function (v) { return '<option value="' + v.replace(/"/g, "&quot;") + '">' + v + "</option>"; }).join("");
+      el.innerHTML = opts;
+      if (values.indexOf(current) !== -1 || current === "") el.value = current;
+    }
+    fillSelect("fLine", lookupLines, false);
+    fillSelect("fMachine", lookupMachines, false);
+    fillSelect("fProduct", lookupProducts, false);
+    fillSelect("fFilterLine", lookupLines, true);
+  }
+
+  // ============================================================
+  // Load + filter + render
+  // ============================================================
+  var allActivities = [];
+  var editingId = null;
+
+  async function loadAll() {
+    if (!sb) { showErr("ยังไม่ได้ตั้งค่าฐานข้อมูล"); return; }
+    var res = await sb.from("daily_activities").select("*").order("activity_date", { ascending: false }).order("activity_time", { ascending: false });
+    if (res.error) { showErr("โหลดข้อมูลไม่สำเร็จ: " + res.error.message); return; }
+    allActivities = res.data || [];
+    renderTable();
+  }
+
+  function statusClass(s) { return s === "Open" ? "Open" : s === "In Progress" ? "InProgress" : "Closed"; }
+  function fmtDateShort(s) {
+    var d = new Date(s + "T00:00:00");
+    var mo = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+    return d.getDate() + " " + mo[d.getMonth()];
+  }
+
+  function getFilteredList() {
+    var from = $("fFrom").value, to = $("fTo").value;
+    var line = $("fFilterLine").value, cat = $("fFilterCategory").value;
+    var status = $("fFilterStatus").value, owner = $("fFilterOwner").value.trim().toLowerCase();
+    return allActivities.filter(function (a) {
+      if (from && a.activity_date < from) return false;
+      if (to && a.activity_date > to) return false;
+      if (line && a.line !== line) return false;
+      if (cat && a.category !== cat) return false;
+      if (status && a.status !== status) return false;
+      if (owner && (!a.owner || a.owner.toLowerCase().indexOf(owner) === -1)) return false;
+      return true;
+    });
+  }
+
+  function renderTable() {
+    var list = getFilteredList();
+    $("resultCount").textContent = list.length + " รายการ" + (allActivities.length !== list.length ? " (จากทั้งหมด " + allActivities.length + ")" : "");
+    var tbody = $("activityTableBody");
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td class="empty" colspan="9">ไม่พบรายการที่ตรงกับตัวกรอง — ลอง "ล้างตัวกรอง" หรือกด "เพิ่มรายการ"</td></tr>';
+      return;
+    }
+    tbody.innerHTML = "";
+    list.forEach(function (a) {
+      var tr = document.createElement("tr");
+
+      var tdDate = document.createElement("td");
+      tdDate.innerHTML = "<b>" + fmtDateShort(a.activity_date) + "</b>" + (a.activity_time ? '<br><span style="color:var(--ink-muted);font-size:11px;">' + a.activity_time.slice(0, 5) + "</span>" : "");
+      tr.appendChild(tdDate);
+
+      var tdLine = document.createElement("td");
+      tdLine.innerHTML = (a.line || "—") + (a.machine ? '<br><span style="color:var(--ink-muted);font-size:11px;">' + a.machine + "</span>" : "");
+      tr.appendChild(tdLine);
+
+      var tdCat = document.createElement("td");
+      tdCat.innerHTML = '<span class="cat-badge">' + (a.category || "Problem") + "</span>";
+      tr.appendChild(tdCat);
+
+      var tdProblem = document.createElement("td");
+      tdProblem.textContent = a.problem || "—";
+      tdProblem.style.maxWidth = "220px";
+      tr.appendChild(tdProblem);
+
+      var tdOwner = document.createElement("td");
+      tdOwner.textContent = a.owner || "—";
+      tr.appendChild(tdOwner);
+
+      var tdProgress = document.createElement("td");
+      var pct = a.progress != null ? a.progress : 0;
+      tdProgress.innerHTML = '<div class="progress-mini-wrap"><div class="progress-mini"><div style="width:' + pct + '%"></div></div><span>' + pct + "%</span></div>";
+      tr.appendChild(tdProgress);
+
+      var tdStatus = document.createElement("td");
+      tdStatus.innerHTML = '<span class="pill st-' + statusClass(a.status) + '">' + a.status + "</span>";
+      tr.appendChild(tdStatus);
+
+      var tdMedia = document.createElement("td");
+      if (a.photo_before || a.photo_after) {
+        var thumb = document.createElement("div"); thumb.className = "thumb-cell";
+        var img = document.createElement("img"); img.src = a.photo_before || a.photo_after; thumb.appendChild(img);
+        thumb.addEventListener("click", function (e) { e.stopPropagation(); openPreview(a.photo_before || a.photo_after, a.problem); });
+        tdMedia.appendChild(thumb);
+      } else { tdMedia.textContent = "—"; }
+      tr.appendChild(tdMedia);
+
+      var tdAct = document.createElement("td");
+      var delBtn = document.createElement("button"); delBtn.className = "icon-btn"; delBtn.textContent = "🗑"; delBtn.title = "ลบ";
+      delBtn.addEventListener("click", async function (e) {
+        e.stopPropagation();
+        if (!confirm('ลบ "' + (a.problem || "รายการนี้") + '" ใช่หรือไม่?')) return;
+        var res = await sb.from("daily_activities").delete().eq("id", a.id);
+        if (res.error) { showErr("ลบไม่สำเร็จ: " + res.error.message); return; }
+        showToast("ลบรายการแล้ว", "success");
+        await loadAll();
+      });
+      tdAct.appendChild(delBtn);
+      tr.appendChild(tdAct);
+
+      tr.addEventListener("click", function () { openModal(a); });
+      tbody.appendChild(tr);
+    });
+  }
+
+  [ "fFrom","fTo","fFilterLine","fFilterCategory","fFilterStatus" ].forEach(function (id) {
+    $(id).addEventListener("change", renderTable);
+  });
+  $("fFilterOwner").addEventListener("input", renderTable);
+  $("btnClearFilter").addEventListener("click", function () {
+    $("fFrom").value = isoDaysAgo(30); $("fTo").value = isoToday();
+    $("fFilterLine").value = ""; $("fFilterCategory").value = ""; $("fFilterStatus").value = ""; $("fFilterOwner").value = "";
+    renderTable();
+  });
+
+  // ============================================================
+  // Modal open / save / delete
+  // ============================================================
+  function openModal(activity) {
+    editingId = activity ? activity.id : null;
+    $("modalTitle").textContent = activity ? "แก้ไขรายการ" : "เพิ่มรายการ Daily Activity";
+    $("btnDelete").style.display = activity ? "inline-flex" : "none";
+    $("fCategory").value = activity ? (activity.category || "Problem") : "Problem";
+    $("fPriority").value = activity ? (activity.priority || "") : "";
+    $("fDate").value = activity ? activity.activity_date : isoToday();
+    $("fTime").value = activity && activity.activity_time ? activity.activity_time.slice(0, 5) : "";
+    $("fLine").value = activity ? (activity.line || "") : "";
+    $("fMachine").value = activity ? (activity.machine || "") : "";
+    $("fProduct").value = activity ? (activity.product || "") : "";
+    $("fProcess").value = activity ? (activity.process || "") : "";
+    $("fStatus").value = activity ? activity.status : "Open";
+    $("fProblem").value = activity ? (activity.problem || "") : "";
+    $("fDescription").value = activity ? (activity.description || "") : "";
+    $("fRootCause").value = activity ? (activity.root_cause || "") : "";
+    $("fCorrective").value = activity ? (activity.corrective_action || "") : "";
+    $("fPreventive").value = activity ? (activity.preventive_action || "") : "";
+    $("fResult").value = activity ? (activity.result_outcome || "") : "";
+    $("fOwner").value = activity ? (activity.owner || "") : "";
+    $("fRemark").value = activity ? (activity.remark || "") : "";
+    $("fStartTime").value = activity && activity.start_time ? activity.start_time.slice(0, 5) : "";
+    $("fFinishTime").value = activity && activity.finish_time ? activity.finish_time.slice(0, 5) : "";
+    updateDurationHint();
+    $("fQtyOk").value = activity && activity.qty_ok != null ? activity.qty_ok : "";
+    $("fQtyNg").value = activity && activity.qty_ng != null ? activity.qty_ng : "";
+    $("fDowntime").value = activity && activity.downtime_minutes != null ? activity.downtime_minutes : "";
+    $("fDowntimeSaved").value = activity && activity.downtime_saved_minutes != null ? activity.downtime_saved_minutes : "";
+    $("fNgReduced").value = activity && activity.ng_reduced_qty != null ? activity.ng_reduced_qty : "";
+    $("fCostSaving").value = activity && activity.cost_saving_thb != null ? activity.cost_saving_thb : "";
+    $("fProgress").value = activity && activity.progress != null ? activity.progress : 0;
+    $("progressVal").textContent = $("fProgress").value;
+
+    pendingPhotoBefore = activity ? activity.photo_before : null;
+    pendingPhotoAfter = activity ? activity.photo_after : null;
+    previewPhoto("beforePreviewWrap", pendingPhotoBefore);
+    previewPhoto("afterPreviewWrap", pendingPhotoAfter);
+    $("fPhotoBefore").value = ""; $("fPhotoAfter").value = "";
+    pendingAttachments = activity && activity.attachments ? activity.attachments.slice() : [];
+    newAttachmentFiles = [];
+    $("fAttachments").value = "";
+    renderAttachmentsList();
+
+    $("backdrop").classList.add("show");
+  }
+  function closeModal() { $("backdrop").classList.remove("show"); editingId = null; }
+  $("btnAddActivity").addEventListener("click", function () { openModal(null); });
+  $("btnCloseModal").addEventListener("click", closeModal);
+  $("btnCancel").addEventListener("click", closeModal);
+  $("backdrop").addEventListener("click", function (e) { if (e.target.id === "backdrop") closeModal(); });
+
+  $("btnDelete").addEventListener("click", async function () {
+    if (!editingId) return;
+    if (!confirm("ลบรายการนี้ใช่หรือไม่?")) return;
+    var res = await sb.from("daily_activities").delete().eq("id", editingId);
+    if (res.error) { showErr("ลบไม่สำเร็จ: " + res.error.message); return; }
+    showToast("ลบรายการแล้ว", "success");
+    closeModal();
+    await loadAll();
+  });
+
+  $("btnSave").addEventListener("click", async function () {
+    var date = $("fDate").value, line = $("fLine").value, problem = $("fProblem").value.trim();
+    if (!date || !line || !problem) { showErr("กรุณากรอกวันที่, Production Line และ Problem"); return; }
+    var btn = $("btnSave"); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังบันทึก...';
+    try {
+      var photoBeforeUrl = pendingPhotoBefore, photoAfterUrl = pendingPhotoAfter;
+      if ($("fPhotoBefore").files[0]) photoBeforeUrl = await uploadFile($("fPhotoBefore").files[0], "daily/before");
+      if ($("fPhotoAfter").files[0]) photoAfterUrl = await uploadFile($("fPhotoAfter").files[0], "daily/after");
+      for (var i = 0; i < newAttachmentFiles.length; i++) {
+        var url = await uploadFile(newAttachmentFiles[i], "daily/attachments");
+        pendingAttachments.push({ name: newAttachmentFiles[i].name, url: url });
+      }
+      newAttachmentFiles = [];
+
+      var payload = {
+        activity_date: date, activity_time: $("fTime").value || null,
+        category: $("fCategory").value, priority: $("fPriority").value || null,
+        line: line, machine: $("fMachine").value || null, product: $("fProduct").value || null,
+        process: $("fProcess").value.trim() || null,
+        status: $("fStatus").value, problem: problem, description: $("fDescription").value.trim() || null,
+        root_cause: $("fRootCause").value.trim() || null, corrective_action: $("fCorrective").value.trim() || null,
+        preventive_action: $("fPreventive").value.trim() || null, result_outcome: $("fResult").value.trim() || null,
+        owner: $("fOwner").value.trim() || null, remark: $("fRemark").value.trim() || null,
+        start_time: $("fStartTime").value || null, finish_time: $("fFinishTime").value || null,
+        qty_ok: $("fQtyOk").value !== "" ? parseFloat($("fQtyOk").value) : null,
+        qty_ng: $("fQtyNg").value !== "" ? parseFloat($("fQtyNg").value) : null,
+        downtime_minutes: $("fDowntime").value !== "" ? parseFloat($("fDowntime").value) : null,
+        downtime_saved_minutes: $("fDowntimeSaved").value !== "" ? parseFloat($("fDowntimeSaved").value) : null,
+        ng_reduced_qty: $("fNgReduced").value !== "" ? parseFloat($("fNgReduced").value) : null,
+        cost_saving_thb: $("fCostSaving").value !== "" ? parseFloat($("fCostSaving").value) : null,
+        progress: parseInt($("fProgress").value, 10),
+        photo_before: photoBeforeUrl, photo_after: photoAfterUrl, attachments: pendingAttachments
+      };
+      var res;
+      if (editingId) res = await sb.from("daily_activities").update(payload).eq("id", editingId);
+      else res = await sb.from("daily_activities").insert(payload);
+      if (res.error) throw new Error(res.error.message);
+      closeModal();
+      await loadAll();
+      showToast(editingId ? "บันทึกการแก้ไขแล้ว" : "เพิ่มรายการแล้ว", "success");
+    } catch (err) {
+      showErr("บันทึกไม่สำเร็จ: " + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "บันทึก";
+    }
+  });
+
+  // ============================================================
+  // Init
+  // ============================================================
+  $("fFrom").value = isoDaysAgo(30);
+  $("fTo").value = isoToday();
+  if (sb) { loadLookups().then(loadAll); }
+
+})();
+</script>
+</body>
+</html>

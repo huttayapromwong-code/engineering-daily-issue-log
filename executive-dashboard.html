@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Executive Dashboard — Manufacturing Engineering</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA;
+    --ink: #0b0b0b; --ink-secondary: #52514e; --ink-muted: #898781;
+    --line: #e1e0d9; --line-strong: #c3c2b7;
+    --accent: #2B5D6B; --accent-soft: #E3EEEF;
+    --shadow: 0 1px 2px rgba(27,33,31,0.06), 0 8px 24px -12px rgba(27,33,31,0.18);
+    --good: #0ca30c; --good-soft: #e2f3e2;
+    --warning: #fab219; --warning-soft: #fef1d9;
+    --critical: #d03b3b; --critical-soft: #fbe3e3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
+      --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
+      --accent: #7CC2CD; --accent-soft: #1E3236;
+      --good: #0ca30c; --good-soft: #16281a; --warning: #fab219; --warning-soft: #332711;
+      --critical: #d03b3b; --critical-soft: #33201d;
+    }
+  }
+  :root[data-theme="dark"] { --bg:#14181A;--surface:#1B2124;--surface-2:#212A2D;--ink:#ffffff;--ink-secondary:#c3c2b7;--ink-muted:#898781;--line:#2c2c2a;--line-strong:#383835;--accent:#7CC2CD;--accent-soft:#1E3236;--good:#0ca30c;--good-soft:#16281a;--warning:#fab219;--warning-soft:#332711;--critical:#d03b3b;--critical-soft:#33201d; }
+  :root[data-theme="light"] { --bg:#F3F5F1;--surface:#FFFFFF;--surface-2:#ECF0EA;--ink:#0b0b0b;--ink-secondary:#52514e;--ink-muted:#898781;--line:#e1e0d9;--line-strong:#c3c2b7;--accent:#2B5D6B;--accent-soft:#E3EEEF;--good:#0ca30c;--good-soft:#e2f3e2;--warning:#fab219;--warning-soft:#fef1d9;--critical:#d03b3b;--critical-soft:#fbe3e3; }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body { font-family: -apple-system, "Segoe UI", "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 24px 18px 60px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .mono { font-family: "SF Mono", ui-monospace, monospace; }
+  .tabular { font-variant-numeric: tabular-nums; }
+  h1, h2 { font-family: Georgia, "Iowan Old Style", "Noto Serif Thai", serif; margin: 0; }
+
+  header.page { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; padding: 22px 26px; border-radius: 16px; background: linear-gradient(135deg, var(--accent-soft), var(--surface) 65%); border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+  h1 { font-size: clamp(22px,3.2vw,30px); font-weight: 600; }
+  .sub { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
+  .btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 9px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { background: var(--surface-2); }
+  .icon-btn { appearance: none; border: none; background: transparent; cursor: pointer; color: var(--ink-muted); padding: 4px 6px; border-radius: 4px; font-size: 14px; }
+  .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+
+  .period-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; margin-bottom: 20px; }
+  .period-btn { appearance: none; border: none; background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; cursor: pointer; border-right: 1px solid var(--line-strong); }
+  .period-btn:last-child { border-right: none; }
+  .period-btn:hover { background: var(--surface-2); }
+  .period-btn.active { background: var(--accent); color: #fff; }
+
+  .hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; margin-bottom: 20px; }
+  .hero-stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; box-shadow: var(--shadow); }
+  .hero-stat .label { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .hero-stat .value { font-size: 34px; font-weight: 700; line-height: 1; }
+  .hero-stat .value.good-c { color: var(--good); }
+  .hero-stat .value.critical { color: var(--critical); }
+  .hero-stat .value.accent-c { color: var(--accent); }
+  .hero-stat .delta { font-size: 12px; margin-top: 6px; color: var(--ink-muted); }
+
+  .grid2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } }
+  .card-shell { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; box-shadow: var(--shadow); }
+  .card-shell h2 { font-size: 16.5px; font-weight: 600; margin-bottom: 4px; }
+  .card-shell .csub { font-size: 12px; color: var(--ink-muted); margin-bottom: 14px; }
+
+  .status-bar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; gap: 2px; background: var(--line); margin-bottom: 10px; }
+  .status-seg { display: flex; align-items: center; justify-content: center; min-width: 2px; }
+  .status-seg .n { font-size: 11.5px; font-weight: 700; color: #fff; }
+  .status-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-secondary); }
+  .status-legend span.dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 5px; }
+
+  .rank-list { display: flex; flex-direction: column; gap: 10px; }
+  .rank-item { display: flex; align-items: center; gap: 10px; }
+  .rank-item .rk { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .rank-item .rlabel { flex: 1; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-item .rval { flex: none; font-size: 12.5px; font-weight: 700; color: var(--accent); }
+
+  .summary-box { background: var(--accent-soft); border-radius: 10px; padding: 16px 18px; font-size: 14px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; }
+  .empty { color: var(--ink-muted); font-size: 13px; text-align: center; padding: 20px; }
+
+  @media print { header.page a, .period-toggle { display: none !important; } body { background: #fff; } .hero-stat, .card-shell { box-shadow: none; border: 1px solid #ccc; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <div>
+      <div class="eyebrow">🧭 Executive Overview</div>
+      <h1>สถานการณ์โรงงานวันนี้</h1>
+      <div class="sub mono" id="todayLabel"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a class="btn" href="daily-dashboard.html">📅 Daily Dashboard</a>
+      <a class="btn" href="index.html">← หน้าแรก</a>
+      <button class="icon-btn" id="btnThemeToggle" title="สลับธีม">🌗</button>
+    </div>
+  </header>
+
+  <div class="period-toggle" id="periodToggle">
+    <button class="period-btn" data-period="daily">วันนี้</button>
+    <button class="period-btn active" data-period="weekly">สัปดาห์นี้</button>
+    <button class="period-btn" data-period="monthly">เดือนนี้</button>
+    <button class="period-btn" data-period="yearly">ปีนี้</button>
+  </div>
+
+  <div class="hero-grid" id="heroStats"></div>
+
+  <div class="grid2">
+    <div class="card-shell">
+      <h2>📋 สถานะงานโดยรวม</h2>
+      <div class="csub">Open / In Progress / Closed ในช่วงเวลาที่เลือก</div>
+      <div class="status-bar" id="statusBar"></div>
+      <div class="status-legend" id="statusLegend"></div>
+    </div>
+    <div class="card-shell">
+      <h2>🤖 AI Daily Summary</h2>
+      <div class="csub" id="summaryDateLabel">สรุปวันนี้</div>
+      <div class="summary-box" id="summaryBox"><span class="empty">ยังไม่มีสรุปสำหรับวันนี้ — ไปสร้างที่หน้า Daily Dashboard</span></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card-shell">
+      <h2>🔥 Top Problem</h2>
+      <div class="csub">ปัญหาที่เกิดบ่อยที่สุด</div>
+      <div class="rank-list" id="topProblemList"></div>
+    </div>
+    <div class="card-shell">
+      <h2>🧬 Top Root Cause</h2>
+      <div class="csub">สาเหตุที่เกิดบ่อยที่สุด</div>
+      <div class="rank-list" id="topRootCauseList"></div>
+    </div>
+  </div>
+
+  <footer style="margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:var(--ink-muted);font-size:11.5px;text-align:center;">
+    Executive Dashboard — สรุปจากข้อมูล Daily Engineering Dashboard แบบ read-only
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var SUPABASE_URL = window.SUPABASE_URL || "";
+  var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
+  var sb = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  function $(id) { return document.getElementById(id); }
+  function fmtDate(s) {
+    if (!s) return "—";
+    var d = new Date(s + "T00:00:00");
+    var months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+    return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+  }
+  function isoToday() { return new Date().toISOString().slice(0, 10); }
+  function truncateLabel(s, n) { return s && s.length > n ? s.slice(0, n - 1) + "…" : (s || "ไม่ระบุ"); }
+
+  var currentPeriod = "weekly";
+  function periodRange(period, refDateStr) {
+    var d = new Date(refDateStr + "T00:00:00");
+    if (period === "daily") return [refDateStr, refDateStr];
+    if (period === "weekly") {
+      var day = d.getDay(); var diff = day === 0 ? -6 : 1 - day;
+      var mon = new Date(d); mon.setDate(d.getDate() + diff);
+      var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      return [mon.toISOString().slice(0, 10), sun.toISOString().slice(0, 10)];
+    }
+    if (period === "monthly") {
+      var first = new Date(d.getFullYear(), d.getMonth(), 1);
+      var last = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      return [first.toISOString().slice(0, 10), last.toISOString().slice(0, 10)];
+    }
+    var fy = new Date(d.getFullYear(), 0, 1), ly = new Date(d.getFullYear(), 11, 31);
+    return [fy.toISOString().slice(0, 10), ly.toISOString().slice(0, 10)];
+  }
+
+  var allActivities = [];
+  function inCurrentPeriod(a) {
+    var range = periodRange(currentPeriod, isoToday());
+    return a.activity_date >= range[0] && a.activity_date <= range[1];
+  }
+
+  function renderHero() {
+    var scoped = allActivities.filter(inCurrentPeriod);
+    var output = scoped.reduce(function (s, a) { return s + (Number(a.qty_ok) || 0); }, 0);
+    var ngTotal = scoped.reduce(function (s, a) { return s + (Number(a.qty_ng) || 0); }, 0);
+    var totalUnits = output + ngTotal;
+    var yieldPct = totalUnits > 0 ? (output / totalUnits * 100) : null;
+    var open = scoped.filter(function (a) { return a.status !== "Closed"; }).length;
+    var costSaving = scoped.reduce(function (s, a) { return s + (Number(a.cost_saving_thb) || 0); }, 0);
+    var downtimeSaved = scoped.reduce(function (s, a) { return s + (Number(a.downtime_saved_minutes) || 0); }, 0);
+
+    var tiles = [
+      ["🏗", "Production Output", output.toLocaleString(), "accent-c"],
+      ["🎯", "Yield", yieldPct === null ? "—" : yieldPct.toFixed(1) + "%", "good-c"],
+      ["🔓", "Open Cases", open, open > 0 ? "critical" : "good-c"],
+      ["💰", "Cost Saving", "฿" + costSaving.toLocaleString(), "good-c"],
+      ["⏱", "Downtime Saved", downtimeSaved.toLocaleString() + " min", "good-c"]
+    ];
+    var el = $("heroStats"); el.innerHTML = "";
+    tiles.forEach(function (t) {
+      var d = document.createElement("div"); d.className = "hero-stat";
+      d.innerHTML = '<div class="label">' + t[0] + ' ' + t[1] + '</div><div class="value tabular ' + t[3] + '">' + t[2] + '</div>';
+      el.appendChild(d);
+    });
+  }
+
+  function renderStatusBar() {
+    var scoped = allActivities.filter(inCurrentPeriod);
+    var open = scoped.filter(function (a) { return a.status === "Open"; }).length;
+    var prog = scoped.filter(function (a) { return a.status === "In Progress"; }).length;
+    var closed = scoped.filter(function (a) { return a.status === "Closed"; }).length;
+    var total = Math.max(open + prog + closed, 1);
+    var bar = $("statusBar"); bar.innerHTML = "";
+    [["var(--critical)", open], ["var(--warning)", prog], ["var(--good)", closed]].forEach(function (seg) {
+      if (seg[1] <= 0) return;
+      var d = document.createElement("div"); d.className = "status-seg"; d.style.background = seg[0]; d.style.width = (seg[1] / total * 100) + "%";
+      var n = document.createElement("span"); n.className = "n"; n.textContent = seg[1]; d.appendChild(n);
+      bar.appendChild(d);
+    });
+    $("statusLegend").innerHTML =
+      '<span><span class="dot" style="background:var(--critical)"></span>Open ' + open + '</span>' +
+      '<span><span class="dot" style="background:var(--warning)"></span>In Progress ' + prog + '</span>' +
+      '<span><span class="dot" style="background:var(--good)"></span>Closed ' + closed + '</span>';
+  }
+
+  function renderTopList(elId, field) {
+    var scoped = allActivities.filter(inCurrentPeriod);
+    var counts = {};
+    scoped.forEach(function (a) { var v = a[field]; if (!v) return; counts[v] = (counts[v] || 0) + 1; });
+    var entries = Object.keys(counts).map(function (k) { return { label: k, value: counts[k] }; }).sort(function (a, b) { return b.value - a.value; }).slice(0, 5);
+    var el = $(elId);
+    if (!entries.length) { el.innerHTML = '<div class="empty">No Data Available</div>'; return; }
+    el.innerHTML = "";
+    entries.forEach(function (e, idx) {
+      var item = document.createElement("div"); item.className = "rank-item"; item.title = e.label;
+      item.innerHTML = '<div class="rk">' + (idx + 1) + '</div><div class="rlabel">' + truncateLabel(e.label, 46) + '</div><div class="rval">' + e.value + '</div>';
+      el.appendChild(item);
+    });
+  }
+
+  async function loadSummaryFor(dateStr) {
+    var res = await sb.from("daily_summaries").select("summary_text").eq("summary_date", dateStr).maybeSingle();
+    $("summaryDateLabel").textContent = "สรุปวันที่ " + fmtDate(dateStr);
+    if (res.data && res.data.summary_text) $("summaryBox").textContent = res.data.summary_text;
+    else $("summaryBox").innerHTML = '<span class="empty">ยังไม่มีสรุปสำหรับวันนี้ — ไปสร้างที่หน้า Daily Dashboard</span>';
+  }
+
+  function renderAll() {
+    renderHero();
+    renderStatusBar();
+    renderTopList("topProblemList", "problem");
+    renderTopList("topRootCauseList", "root_cause");
+    loadSummaryFor(isoToday());
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var months = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+    var now = new Date();
+    $("todayLabel").textContent = "อัปเดตล่าสุด: " + now.getDate() + " " + months[now.getMonth()] + " " + now.getFullYear();
+
+    var savedTheme = localStorage.getItem("eng-log-theme");
+    if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+    $("btnThemeToggle").addEventListener("click", function () {
+      var root = document.documentElement;
+      var cur = root.getAttribute("data-theme");
+      var next = cur === "dark" ? "light" : cur === "light" ? "" : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+      if (next) { root.setAttribute("data-theme", next); localStorage.setItem("eng-log-theme", next); }
+      else { root.removeAttribute("data-theme"); localStorage.removeItem("eng-log-theme"); }
+    });
+
+    document.querySelectorAll("#periodToggle .period-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll("#periodToggle .period-btn").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        currentPeriod = btn.dataset.period;
+        renderHero(); renderStatusBar(); renderTopList("topProblemList", "problem"); renderTopList("topRootCauseList", "root_cause");
+      });
+    });
+
+    if (!sb) { $("summaryBox").innerHTML = '<span class="empty">ยังไม่ได้ตั้งค่าฐานข้อมูล</span>'; return; }
+    sb.from("daily_activities").select("*").then(function (res) {
+      if (res.error) { $("summaryBox").innerHTML = '<span class="empty">โหลดข้อมูลไม่สำเร็จ: ' + res.error.message + '</span>'; return; }
+      allActivities = res.data || [];
+      renderAll();
+    });
+  });
+})();
+</script>
+</body>
+</html>

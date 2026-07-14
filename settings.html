@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings — Engineering Daily Issue Log</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA;
+    --ink: #0b0b0b; --ink-secondary: #52514e; --ink-muted: #898781;
+    --line: #e1e0d9; --line-strong: #c3c2b7;
+    --accent: #2B5D6B; --accent-soft: #E3EEEF;
+    --shadow: 0 1px 2px rgba(27,33,31,0.06), 0 8px 24px -12px rgba(27,33,31,0.18);
+    --good: #0ca30c; --good-soft: #e2f3e2;
+    --warning: #fab219; --warning-soft: #fef1d9;
+    --critical: #d03b3b; --critical-soft: #fbe3e3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
+      --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
+      --accent: #7CC2CD; --accent-soft: #1E3236;
+      --good: #0ca30c; --good-soft: #16281a;
+      --warning: #fab219; --warning-soft: #332711;
+      --critical: #d03b3b; --critical-soft: #33201d;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
+    --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
+    --accent: #7CC2CD; --accent-soft: #1E3236;
+    --good: #0ca30c; --good-soft: #16281a;
+    --warning: #fab219; --warning-soft: #332711;
+    --critical: #d03b3b; --critical-soft: #33201d;
+  }
+  :root[data-theme="light"] {
+    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA; --ink: #0b0b0b;
+    --ink-secondary: #52514e; --ink-muted: #898781; --line: #e1e0d9; --line-strong: #c3c2b7;
+    --accent: #2B5D6B; --accent-soft: #E3EEEF;
+    --good: #0ca30c; --good-soft: #e2f3e2;
+    --warning: #fab219; --warning-soft: #fef1d9;
+    --critical: #d03b3b; --critical-soft: #fbe3e3;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font-family: -apple-system, "Segoe UI", "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15.5px; line-height: 1.55; margin: 0; padding: 24px 18px 80px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .mono { font-family: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+
+  header.page {
+    display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;
+    margin-bottom: 22px; padding: 20px 24px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--surface) 65%);
+    border: 1px solid var(--line); box-shadow: var(--shadow);
+  }
+  header.page .eyebrow { display: flex; align-items: center; gap: 6px; }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+  h1 { font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Noto Serif Thai", serif; font-size: clamp(21px,3.2vw,27px); font-weight: 600; margin: 0; text-wrap: balance; }
+  .today { font-size: 12.5px; color: var(--ink-muted); }
+
+  .btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 13.5px; padding: 9px 16px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+  .btn:hover { background: var(--surface-2); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.small { padding: 5px 10px; font-size: 12.5px; }
+  .btn.danger { color: var(--critical); border-color: var(--critical); }
+  .btn.danger:hover { background: var(--critical-soft); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .icon-btn { appearance: none; border: none; background: transparent; cursor: pointer; color: var(--ink-muted); padding: 4px 6px; border-radius: 4px; font-size: 13px; }
+  .icon-btn:hover { background: var(--surface); color: var(--ink); }
+
+  .banner { padding: 12px 16px; border-radius: 12px; font-size: 13.5px; margin-bottom: 16px; display: none; }
+  .banner.show { display: block; }
+  .banner.warn { background: var(--warning-soft); color: #8a6100; border: 1px solid var(--warning); }
+  .banner.err { background: var(--critical-soft); color: var(--critical); border: 1px solid var(--critical); }
+  @media (prefers-color-scheme: dark) { .banner.warn { color: var(--warning); } }
+
+  .settings-shell { display: grid; grid-template-columns: 210px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 760px) { .settings-shell { grid-template-columns: 1fr; } }
+
+  .settings-nav { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 2px; position: sticky; top: 18px; }
+  .settings-nav button { appearance: none; border: none; background: transparent; text-align: left; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-secondary); padding: 10px 12px; border-radius: 9px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .settings-nav button:hover { background: var(--surface-2); color: var(--ink); }
+  .settings-nav button.active { background: var(--accent); color: #fff; }
+
+  .card-shell { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
+  .card-shell h2 { font-family: Georgia, serif; font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+  .card-shell .sub { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 14px; }
+
+  .subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .subtab-btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: 100px; cursor: pointer; }
+  .subtab-btn:hover { background: var(--surface-2); }
+  .subtab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .list-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; flex-wrap: wrap; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table.lk { width: 100%; border-collapse: collapse; min-width: 520px; }
+  table.lk th, table.lk td { text-align: left; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  table.lk thead th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-muted); background: var(--surface-2); font-weight: 600; }
+  table.lk tbody tr:last-child td { border-bottom: none; }
+  table.lk tbody tr:hover { background: var(--surface-2); }
+  .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 100px; }
+  .pill.active { background: var(--good-soft); color: var(--good); }
+  .pill.inactive { background: var(--surface-2); color: var(--ink-muted); }
+  .empty-row td { text-align: center; color: var(--ink-muted); padding: 30px 0; }
+  .skel-row td { padding: 14px; }
+  .skel { background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%); background-size: 400% 100%; animation: skel 1.4s ease infinite; border-radius: 6px; height: 14px; }
+  @keyframes skel { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+  .placeholder { text-align: center; padding: 50px 20px; color: var(--ink-muted); }
+  .placeholder .big { font-size: 34px; margin-bottom: 10px; }
+  .placeholder h3 { font-family: Georgia, serif; font-size: 16px; color: var(--ink); margin-bottom: 6px; }
+  .placeholder p { font-size: 13px; max-width: 44ch; margin: 0 auto; }
+
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(11,11,11,.45); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+  .modal-backdrop.show { display: flex; }
+  .modal { background: var(--surface); border-radius: 10px; max-width: 460px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .modal__head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+  .modal__head h3 { font-family: Georgia, serif; font-size: 17px; margin: 0; }
+  .modal__body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+  .modal__foot { padding: 16px 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; position: sticky; bottom: 0; background: var(--surface); }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-secondary); margin-bottom: 5px; }
+  .field input, .field select, .field textarea { width: 100%; }
+  .req::after { content: " *"; color: var(--critical); }
+  select, input[type=text] {
+    font: inherit; font-size: 13.5px; padding: 7px 10px; border-radius: 9px;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  }
+  select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .checkline { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+  .checkline input { width: auto; }
+
+  .toast-stack { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; max-width: 340px; }
+  .toast { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); font-size: 13px; display: flex; gap: 10px; align-items: flex-start; animation: toast-in .25s ease; }
+  .toast.success { border-left-color: var(--good); }
+  .toast.error { border-left-color: var(--critical); }
+  .toast .icon { flex: none; }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+
+  footer.page { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <div>
+      <div class="eyebrow">⚙️ Engineering Team · Settings</div>
+      <h1>ตั้งค่าระบบ</h1>
+      <div class="today mono" id="todayLabel"></div>
+    </div>
+    <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <a class="btn" href="index.html">← หน้าแรก</a>
+      <a class="btn" href="daily-dashboard.html">📅 Daily Dashboard</a>
+      <a class="btn" href="executive-dashboard.html">🧭 Executive Dashboard</a>
+      <a class="btn" href="my-performance.html">🙋 Performance</a>
+      <button class="icon-btn" id="btnThemeToggle" aria-label="สลับธีมสว่าง/มืด" title="สลับธีมสว่าง/มืด">🌗</button>
+    </div>
+  </header>
+
+  <div class="banner warn" id="configBanner">⚠️ ยังไม่ได้ตั้งค่าฐานข้อมูลใน config.js</div>
+  <div class="banner err" id="errorBanner"></div>
+
+  <div class="settings-shell">
+    <nav class="settings-nav" id="settingsNav">
+      <button class="active" data-tab="general">🏢 General</button>
+      <button data-tab="lookup">🗂 Lookup Data</button>
+      <button data-tab="engineers">🙋 Engineers</button>
+      <button data-tab="notifications">🔔 Notifications</button>
+      <button data-tab="export">📤 Data Export</button>
+      <button data-tab="about">ℹ️ About</button>
+    </nav>
+
+    <div>
+      <!-- GENERAL (placeholder) -->
+      <section class="card-shell" id="panel-general" style="display:none;">
+        <div class="placeholder">
+          <div class="big">🏢</div>
+          <h3>General Settings</h3>
+          <p>เร็ว ๆ นี้ — ตั้งค่าชื่อโรงงาน ภาษา และธีมเริ่มต้น (อยู่นอกขอบเขตของ Module ปัจจุบัน)</p>
+        </div>
+      </section>
+
+      <!-- LOOKUP DATA -->
+      <section id="panel-lookup">
+        <section class="card-shell">
+          <h2>Lookup Data Management</h2>
+          <div class="sub">จัดการค่าอ้างอิงมาตรฐานที่ใช้ทั่วทั้งระบบ — แก้ที่นี่ที่เดียว มีผลกับ dropdown ทุกหน้าทันที</div>
+          <div class="subtabs" id="lookupSubtabs"></div>
+
+          <div class="list-toolbar">
+            <div class="mono" style="font-size:12px; color:var(--ink-muted);" id="lookupCount"></div>
+            <button class="btn primary" id="btnAddLookup">➕ <span id="btnAddLookupLabel">เพิ่มรายการ</span></button>
+          </div>
+
+          <div class="tablewrap">
+            <table class="lk" id="lookupTable">
+              <thead><tr id="lookupTableHead"></tr></thead>
+              <tbody id="lookupTableBody">
+                <tr class="skel-row"><td colspan="4"><div class="skel"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ENGINEERS (placeholder) -->
+      <section class="card-shell" id="panel-engineers" style="display:none;">
+        <div class="placeholder">
+          <div class="big">🙋</div>
+          <h3>Engineers</h3>
+          <p>เร็ว ๆ นี้ — จัดการรายชื่อวิศวกรที่ใช้แทนระบบ Authentication (ต้องสร้างตารางเพิ่มเติมใน Module ถัดไป)</p>
+        </div>
+      </section>
+
+      <!-- NOTIFICATIONS (placeholder) -->
+      <section class="card-shell" id="panel-notifications" style="display:none;">
+        <div class="placeholder">
+          <div class="big">🔔</div>
+          <h3>Notification Preferences</h3>
+          <p>เร็ว ๆ นี้ — เปิด/ปิดการแจ้งเตือนแต่ละประเภท (คู่กับหน้า Notification ที่ยังไม่ได้สร้าง)</p>
+        </div>
+      </section>
+
+      <!-- DATA EXPORT (placeholder) -->
+      <section class="card-shell" id="panel-export" style="display:none;">
+        <div class="placeholder">
+          <div class="big">📤</div>
+          <h3>Data Export &amp; Backup</h3>
+          <p>เร็ว ๆ นี้ — ส่งออกข้อมูลทั้งระบบและดูสถานะการสำรองข้อมูล</p>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section class="card-shell" id="panel-about" style="display:none;">
+        <h2>About</h2>
+        <div class="sub">Engineering Daily Issue Log</div>
+        <table class="lk" style="min-width:0;">
+          <tbody>
+            <tr><td style="width:200px;">Module ล่าสุด</td><td>Module 2 — Settings / Lookup Data Management</td></tr>
+            <tr><td>ฐานข้อมูล</td><td class="mono">Supabase (Postgres)</td></tr>
+            <tr><td>Hosting</td><td class="mono">Netlify</td></tr>
+            <tr><td>Authentication</td><td>ยังไม่เปิดใช้งาน (ใช้ชื่อผู้รับผิดชอบแทน)</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </div>
+
+  <footer class="page">Engineering Daily Issue Log · Settings</footer>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<div class="modal-backdrop" id="lookupModalBackdrop">
+  <div class="modal">
+    <div class="modal__head">
+      <h3 id="lookupModalTitle">เพิ่มรายการ</h3>
+      <button class="icon-btn" id="btnCloseLookupModal">✕</button>
+    </div>
+    <div class="modal__body">
+      <div class="field">
+        <label class="req" id="lookupNameLabel">ชื่อ</label>
+        <input type="text" id="lookupNameInput">
+      </div>
+      <div class="field" id="lookupLineField" style="display:none;">
+        <label>Production Line</label>
+        <select id="lookupLineSelect"><option value="">— ไม่ระบุ —</option></select>
+      </div>
+      <div class="field" id="lookupExtraField" style="display:none;">
+        <label id="lookupExtraLabel">ข้อมูลเพิ่มเติม</label>
+        <input type="text" id="lookupExtraInput">
+      </div>
+      <div class="checkline" id="lookupActiveField" style="display:none;">
+        <input type="checkbox" id="lookupActiveInput" checked>
+        <label for="lookupActiveInput" style="margin:0;">เปิดใช้งาน (แสดงใน dropdown)</label>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn danger" id="btnDeleteLookup" style="display:none;">🗑 ลบ</button>
+      <div style="display:flex; gap:10px; margin-left:auto;">
+        <button class="btn" id="btnCancelLookup">ยกเลิก</button>
+        <button class="btn primary" id="btnSaveLookup">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SUPABASE_URL = window.SUPABASE_URL || "YOUR_SUPABASE_URL";
+  var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+  var sb = null;
+  var configured = SUPABASE_URL.indexOf("YOUR_") !== 0 && SUPABASE_ANON_KEY.indexOf("YOUR_") !== 0;
+  if (configured && window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function $(id) { return document.getElementById(id); }
+  function showError(msg) {
+    var b = $("errorBanner");
+    b.textContent = msg; b.classList.add("show");
+    setTimeout(function () { b.classList.remove("show"); }, 6000);
+    showToast(msg, "error");
+  }
+  function showToast(msg, type) {
+    var stack = $("toastStack");
+    var t = document.createElement("div"); t.className = "toast" + (type ? " " + type : "");
+    var icon = document.createElement("span"); icon.className = "icon";
+    icon.textContent = type === "success" ? "✅" : type === "error" ? "⚠️" : "ℹ️";
+    var text = document.createElement("span"); text.textContent = msg;
+    t.appendChild(icon); t.appendChild(text);
+    stack.appendChild(t);
+    setTimeout(function () {
+      t.style.transition = "opacity .3s ease"; t.style.opacity = "0";
+      setTimeout(function () { t.remove(); }, 300);
+    }, 4000);
+  }
+
+  var months = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  var now = new Date();
+  $("todayLabel").textContent = now.getDate() + " " + months[now.getMonth()] + " " + (now.getFullYear() + 543);
+
+  $("btnThemeToggle").addEventListener("click", function () {
+    var root = document.documentElement;
+    var cur = root.getAttribute("data-theme");
+    var next = cur === "dark" ? "light" : cur === "light" ? "" : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+    if (next) { root.setAttribute("data-theme", next); localStorage.setItem("eng-log-theme", next); }
+    else { root.removeAttribute("data-theme"); localStorage.removeItem("eng-log-theme"); }
+  });
+  var savedTheme = localStorage.getItem("eng-log-theme");
+  if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+
+  if (!configured) $("configBanner").classList.add("show");
+
+  // ============================================================
+  // Settings side-nav
+  // ============================================================
+  var TABS = ["general", "lookup", "engineers", "notifications", "export", "about"];
+  document.querySelectorAll("#settingsNav button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll("#settingsNav button").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      TABS.forEach(function (t) { $("panel-" + t).style.display = "none"; });
+      $("panel-" + btn.dataset.tab).style.display = "";
+    });
+  });
+
+  // ============================================================
+  // Lookup Data Management
+  // ============================================================
+  var ENTITIES = {
+    lines: { table: "production_lines", label: "Production Lines", short: "Line", nameField: "name", nameLabel: "ชื่อ Line", hasActive: true, extra: { key: "plant_area", label: "โซนโรงงาน" } },
+    machines: { table: "machines", label: "Machines", short: "เครื่องจักร", nameField: "name", nameLabel: "ชื่อเครื่องจักร", hasActive: true, hasLine: true, extra: { key: "model", label: "รุ่นเครื่อง" } },
+    products: { table: "products", label: "Products", short: "สินค้า", nameField: "model_name", nameLabel: "ชื่อรุ่นสินค้า", hasActive: false, extra: { key: "category", label: "หมวดหมู่" } },
+    defects: { table: "defect_categories", label: "Defect Categories", short: "Defect", nameField: "name", nameLabel: "ชื่อหมวดหมู่ Defect", hasActive: true },
+    rootcauses: { table: "root_cause_categories", label: "Root Cause Categories", short: "Root Cause", nameField: "name", nameLabel: "ชื่อหมวดหมู่สาเหตุ (6M)", hasActive: true }
+  };
+  var ENTITY_ORDER = ["lines", "machines", "products", "defects", "rootcauses"];
+  var currentEntity = "lines";
+  var currentRows = [];
+  var linesCache = [];
+  var editingRow = null;
+
+  var subtabsEl = $("lookupSubtabs");
+  ENTITY_ORDER.forEach(function (key) {
+    var b = document.createElement("button");
+    b.className = "subtab-btn" + (key === currentEntity ? " active" : "");
+    b.textContent = ENTITIES[key].label;
+    b.addEventListener("click", function () {
+      currentEntity = key;
+      document.querySelectorAll(".subtab-btn").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      loadLookup();
+    });
+    subtabsEl.appendChild(b);
+  });
+
+  async function loadLinesCache() {
+    if (!sb) return;
+    var res = await sb.from("production_lines").select("id,name").order("name");
+    linesCache = res.data || [];
+  }
+
+  async function loadLookup() {
+    if (!sb) return;
+    var ent = ENTITIES[currentEntity];
+    $("btnAddLookupLabel").textContent = "เพิ่ม" + ent.short;
+    $("lookupTableBody").innerHTML = '<tr class="skel-row"><td colspan="4"><div class="skel"></div></td></tr>';
+
+    var head = "<th>" + ent.nameLabel + "</th>";
+    if (ent.hasLine) head += "<th>Production Line</th>";
+    if (ent.extra) head += "<th>" + ent.extra.label + "</th>";
+    if (ent.hasActive) head += "<th>สถานะ</th>";
+    head += "<th></th>";
+    $("lookupTableHead").innerHTML = head;
+
+    var res = await sb.from(ent.table).select("*").order(ent.nameField);
+    if (res.error) { showError("โหลดข้อมูลไม่สำเร็จ: " + res.error.message); return; }
+    currentRows = res.data || [];
+    $("lookupCount").textContent = currentRows.length + " รายการ";
+
+    if (!currentRows.length) {
+      $("lookupTableBody").innerHTML = '<tr class="empty-row"><td colspan="4">ยังไม่มีข้อมูล — กด "เพิ่ม' + ent.short + '" เพื่อเริ่มต้น</td></tr>';
+      return;
+    }
+
+    var lineNameById = {};
+    linesCache.forEach(function (l) { lineNameById[l.id] = l.name; });
+
+    var rowsHtml = currentRows.map(function (r) {
+      var cells = "<td><b>" + escapeHtml(r[ent.nameField] || "") + "</b></td>";
+      if (ent.hasLine) cells += "<td>" + (r.line_id ? escapeHtml(lineNameById[r.line_id] || "—") : "—") + "</td>";
+      if (ent.extra) cells += "<td>" + escapeHtml(r[ent.extra.key] || "—") + "</td>";
+      if (ent.hasActive) cells += '<td><span class="pill ' + (r.is_active ? "active" : "inactive") + '">' + (r.is_active ? "เปิดใช้งาน" : "ปิดใช้งาน") + "</span></td>";
+      cells += '<td><div class="row-actions"><button class="btn small" data-edit="' + r.id + '">✏️ แก้ไข</button></div></td>';
+      return "<tr>" + cells + "</tr>";
+    }).join("");
+    $("lookupTableBody").innerHTML = rowsHtml;
+
+    document.querySelectorAll("[data-edit]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var row = currentRows.find(function (r) { return r.id === b.dataset.edit; });
+        openLookupModal(row);
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function openLookupModal(row) {
+    editingRow = row || null;
+    var ent = ENTITIES[currentEntity];
+    $("lookupModalTitle").textContent = (row ? "แก้ไข" : "เพิ่ม") + ent.short;
+    $("lookupNameLabel").textContent = ent.nameLabel;
+    $("lookupNameInput").value = row ? (row[ent.nameField] || "") : "";
+
+    if (ent.hasLine) {
+      $("lookupLineField").style.display = "";
+      var opts = '<option value="">— ไม่ระบุ —</option>' + linesCache.map(function (l) {
+        return '<option value="' + l.id + '"' + (row && row.line_id === l.id ? " selected" : "") + ">" + escapeHtml(l.name) + "</option>";
+      }).join("");
+      $("lookupLineSelect").innerHTML = opts;
+    } else {
+      $("lookupLineField").style.display = "none";
+    }
+
+    if (ent.extra) {
+      $("lookupExtraField").style.display = "";
+      $("lookupExtraLabel").textContent = ent.extra.label;
+      $("lookupExtraInput").value = row ? (row[ent.extra.key] || "") : "";
+    } else {
+      $("lookupExtraField").style.display = "none";
+    }
+
+    if (ent.hasActive) {
+      $("lookupActiveField").style.display = "flex";
+      $("lookupActiveInput").checked = row ? !!row.is_active : true;
+    } else {
+      $("lookupActiveField").style.display = "none";
+    }
+
+    $("btnDeleteLookup").style.display = row ? "inline-flex" : "none";
+    $("lookupModalBackdrop").classList.add("show");
+  }
+
+  function closeLookupModal() {
+    $("lookupModalBackdrop").classList.remove("show");
+    editingRow = null;
+  }
+
+  async function saveLookup() {
+    var ent = ENTITIES[currentEntity];
+    var name = $("lookupNameInput").value.trim();
+    if (!name) { showError(ent.nameLabel + "ห้ามว่าง"); return; }
+
+    var payload = {};
+    payload[ent.nameField] = name;
+    if (ent.hasLine) payload.line_id = $("lookupLineSelect").value || null;
+    if (ent.extra) payload[ent.extra.key] = $("lookupExtraInput").value.trim() || null;
+    if (ent.hasActive) payload.is_active = $("lookupActiveInput").checked;
+
+    var res;
+    if (editingRow) {
+      res = await sb.from(ent.table).update(payload).eq("id", editingRow.id);
+    } else {
+      res = await sb.from(ent.table).insert(payload);
+    }
+    if (res.error) { showError("บันทึกไม่สำเร็จ: " + res.error.message); return; }
+    showToast("บันทึกแล้ว", "success");
+    closeLookupModal();
+    if (ent.hasLine === undefined && currentEntity === "lines") await loadLinesCache();
+    if (currentEntity === "lines") await loadLinesCache();
+    await loadLookup();
+  }
+
+  async function deleteLookup() {
+    if (!editingRow) return;
+    var ent = ENTITIES[currentEntity];
+    var ok = confirm("ลบ \"" + editingRow[ent.nameField] + "\" ใช่หรือไม่?\n\nงานที่เคยอ้างอิงรายการนี้จะไม่หายไป แต่จะไม่ผูกกับ " + ent.short + " นี้อีกต่อไป\n(แนะนำ: ใช้ \"ปิดการใช้งาน\" แทนการลบ หากยังมีงานเก่าอ้างอิงอยู่)");
+    if (!ok) return;
+    var res = await sb.from(ent.table).delete().eq("id", editingRow.id);
+    if (res.error) { showError("ลบไม่สำเร็จ: " + res.error.message); return; }
+    showToast("ลบแล้ว", "success");
+    closeLookupModal();
+    if (currentEntity === "lines") await loadLinesCache();
+    await loadLookup();
+  }
+
+  $("btnAddLookup").addEventListener("click", function () { openLookupModal(null); });
+  $("btnCloseLookupModal").addEventListener("click", closeLookupModal);
+  $("btnCancelLookup").addEventListener("click", closeLookupModal);
+  $("btnSaveLookup").addEventListener("click", saveLookup);
+  $("btnDeleteLookup").addEventListener("click", deleteLookup);
+  $("lookupModalBackdrop").addEventListener("click", function (e) { if (e.target.id === "lookupModalBackdrop") closeLookupModal(); });
+
+  if (sb) { loadLinesCache().then(loadLookup); }
+
+})();
+</script>
+</body>
+</html>

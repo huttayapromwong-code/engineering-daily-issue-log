@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Engineering Performance</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA;
+    --ink: #0b0b0b; --ink-secondary: #52514e; --ink-muted: #898781;
+    --line: #e1e0d9; --line-strong: #c3c2b7;
+    --accent: #2B5D6B; --accent-soft: #E3EEEF;
+    --shadow: 0 1px 2px rgba(27,33,31,0.06), 0 8px 24px -12px rgba(27,33,31,0.18);
+    --good: #0ca30c; --good-soft: #e2f3e2;
+    --warning: #fab219; --warning-soft: #fef1d9;
+    --critical: #d03b3b; --critical-soft: #fbe3e3;
+    --grid-line: #e1e0d9; --axis-line: #c3c2b7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14181A;--surface:#1B2124;--surface-2:#212A2D;--ink:#ffffff;--ink-secondary:#c3c2b7;--ink-muted:#898781;--line:#2c2c2a;--line-strong:#383835;--accent:#7CC2CD;--accent-soft:#1E3236;--good:#0ca30c;--good-soft:#16281a;--warning:#fab219;--warning-soft:#332711;--critical:#d03b3b;--critical-soft:#33201d;--grid-line:#2c2c2a;--axis-line:#383835; }
+  }
+  :root[data-theme="dark"] { --bg:#14181A;--surface:#1B2124;--surface-2:#212A2D;--ink:#ffffff;--ink-secondary:#c3c2b7;--ink-muted:#898781;--line:#2c2c2a;--line-strong:#383835;--accent:#7CC2CD;--accent-soft:#1E3236;--good:#0ca30c;--good-soft:#16281a;--warning:#fab219;--warning-soft:#332711;--critical:#d03b3b;--critical-soft:#33201d;--grid-line:#2c2c2a;--axis-line:#383835; }
+  :root[data-theme="light"] { --bg:#F3F5F1;--surface:#FFFFFF;--surface-2:#ECF0EA;--ink:#0b0b0b;--ink-secondary:#52514e;--ink-muted:#898781;--line:#e1e0d9;--line-strong:#c3c2b7;--accent:#2B5D6B;--accent-soft:#E3EEEF;--good:#0ca30c;--good-soft:#e2f3e2;--warning:#fab219;--warning-soft:#fef1d9;--critical:#d03b3b;--critical-soft:#fbe3e3;--grid-line:#e1e0d9;--axis-line:#c3c2b7; }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body { font-family: -apple-system, "Segoe UI", "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 24px 18px 60px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  .mono { font-family: "SF Mono", ui-monospace, monospace; }
+  .tabular { font-variant-numeric: tabular-nums; }
+  h1, h2 { font-family: Georgia, "Iowan Old Style", "Noto Serif Thai", serif; margin: 0; }
+
+  header.page { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; padding: 22px 26px; border-radius: 16px; background: linear-gradient(135deg, var(--accent-soft), var(--surface) 65%); border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+  h1 { font-size: clamp(20px,3vw,26px); font-weight: 600; }
+  .btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 9px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .icon-btn { appearance: none; border: none; background: transparent; cursor: pointer; color: var(--ink-muted); padding: 4px 6px; border-radius: 4px; font-size: 14px; }
+  .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+
+  .selector-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  select, input[type=text] { font: inherit; font-size: 13.5px; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .period-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
+  .period-btn { appearance: none; border: none; background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 13px; cursor: pointer; border-right: 1px solid var(--line-strong); }
+  .period-btn:last-child { border-right: none; }
+  .period-btn:hover { background: var(--surface-2); }
+  .period-btn.active { background: var(--accent); color: #fff; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .stat .label { font-size: 12px; color: var(--ink-muted); margin-bottom: 6px; }
+  .stat .value { font-size: 26px; font-weight: 600; }
+  .stat .value.good-c { color: var(--good); }
+  .stat .value.accent-c { color: var(--accent); }
+  .stat .value.critical { color: var(--critical); }
+
+  .card-shell { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; box-shadow: var(--shadow); margin-bottom: 18px; }
+  .card-shell h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .card-shell .csub { font-size: 12px; color: var(--ink-muted); margin-bottom: 14px; }
+
+  .col-chart { display: flex; align-items: flex-end; gap: 10px; height: 160px; padding-left: 34px; position: relative; min-width: 320px; }
+  .col-chart__grid { position: absolute; left: 34px; right: 0; top: 0; bottom: 22px; pointer-events: none; }
+  .col-chart__gridline { position: absolute; left: 0; right: 0; border-top: 1px solid var(--grid-line); }
+  .col-chart__gridline .tick { position: absolute; left: -34px; top: -7px; width: 28px; text-align: right; font-size: 10px; color: var(--ink-muted); }
+  .col-chart__bars { display: flex; align-items: flex-end; gap: 10px; flex: 1; height: 138px; position: relative; z-index: 1; }
+  .col-chart__col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 1; min-width: 34px; height: 100%; }
+  .col-chart__val { font-size: 10.5px; font-weight: 700; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .col-chart__bar { width: 100%; max-width: 28px; background: var(--accent); border-radius: 4px 4px 0 0; }
+  .col-chart__labels { display: flex; gap: 10px; padding-left: 34px; margin-top: 6px; min-width: 320px; }
+  .col-chart__label { flex: 1; min-width: 34px; font-size: 10px; color: var(--ink-muted); text-align: center; }
+  .chart-scroll { overflow-x: auto; }
+  .empty { color: var(--ink-muted); font-size: 13px; text-align: center; padding: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <div>
+      <div class="eyebrow">🙋 My Engineering Performance</div>
+      <h1>ผลการทำงานของฉัน</h1>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a class="btn" href="daily-dashboard.html">📅 Daily Dashboard</a>
+      <a class="btn" href="index.html">← หน้าแรก</a>
+      <button class="icon-btn" id="btnThemeToggle" title="สลับธีม">🌗</button>
+    </div>
+  </header>
+
+  <div class="selector-row">
+    <label style="font-size:13px;color:var(--ink-secondary);">ชื่อวิศวกร (Owner):</label>
+    <select id="ownerSelect"></select>
+    <div class="period-toggle" id="periodToggle">
+      <button class="period-btn active" data-period="monthly">รายเดือน</button>
+      <button class="period-btn" data-period="yearly">รายปี</button>
+    </div>
+  </div>
+
+  <section class="stats" id="stats"></section>
+
+  <div class="card-shell">
+    <h2>📈 จำนวนงานที่ปิดสำเร็จ ตามช่วงเวลา</h2>
+    <div class="csub">แนวโน้มผลงานย้อนหลัง</div>
+    <div class="chart-scroll"><div id="closedTrendChart"></div></div>
+  </div>
+
+  <div class="card-shell">
+    <h2>🏆 สรุปคุณค่าที่สร้างให้โรงงาน</h2>
+    <div class="csub">สะสมทั้งหมดตามช่วงเวลาที่เลือก</div>
+    <div id="valueSummary" style="font-size:14px;line-height:1.9;"></div>
+  </div>
+
+  <footer style="margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:var(--ink-muted);font-size:11.5px;text-align:center;">
+    My Engineering Performance — คำนวณจากข้อมูล Daily Engineering Dashboard (ไม่มีระบบ login จริง ใช้ชื่อ Owner ในการกรอง)
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var SUPABASE_URL = window.SUPABASE_URL || "";
+  var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
+  var sb = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  function $(id) { return document.getElementById(id); }
+  function niceMax(max) {
+    if (max <= 0) return 1;
+    var step = max <= 5 ? 1 : max <= 10 ? 2 : max <= 25 ? 5 : max <= 100 ? 10 : Math.ceil(max / 5 / 50) * 50;
+    return Math.ceil(max / step) * step;
+  }
+
+  var allActivities = [];
+  var currentPeriod = "monthly";
+
+  function bucketKeyOf(dateStr, period) { return period === "yearly" ? dateStr.slice(0, 4) : dateStr.slice(0, 7); }
+  function bucketLabelOf(key, period) {
+    if (period === "yearly") return key;
+    var parts = key.split("-");
+    var months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+    return months[parseInt(parts[1], 10) - 1] + " " + parts[0].slice(2);
+  }
+
+  function myActivities() {
+    var owner = $("ownerSelect").value;
+    if (!owner) return [];
+    return allActivities.filter(function (a) { return a.owner === owner; });
+  }
+
+  function timeToMinutes(t) { if (!t) return null; var p = t.split(":"); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); }
+
+  function renderStats() {
+    var mine = myActivities();
+    var closed = mine.filter(function (a) { return a.status === "Closed"; });
+    var closeRate = mine.length ? (closed.length / mine.length * 100) : null;
+    var durations = mine.filter(function (a) { return a.start_time && a.finish_time; }).map(function (a) { return timeToMinutes(a.finish_time) - timeToMinutes(a.start_time); }).filter(function (m) { return m >= 0; });
+    var avgDuration = durations.length ? (durations.reduce(function (s, m) { return s + m; }, 0) / durations.length) : null;
+    var rcaCount = mine.filter(function (a) { return a.category === "Problem" && a.root_cause; }).length;
+    var trialCount = mine.filter(function (a) { return a.category === "Trial"; }).length;
+    var improveCount = mine.filter(function (a) { return a.category === "Improvement"; }).length;
+    var costSaving = mine.reduce(function (s, a) { return s + (Number(a.cost_saving_thb) || 0); }, 0);
+    var downtimeSaved = mine.reduce(function (s, a) { return s + (Number(a.downtime_saved_minutes) || 0); }, 0);
+    var ngReduced = mine.reduce(function (s, a) { return s + (Number(a.ng_reduced_qty) || 0); }, 0);
+
+    var tiles = [
+      ["📋 งานที่รับผิดชอบ", mine.length, ""],
+      ["✅ งานที่ปิดสำเร็จ", closed.length, "good-c"],
+      ["📊 อัตราการปิดงาน", closeRate === null ? "—" : closeRate.toFixed(1) + "%", "good-c"],
+      ["⏱ เวลาปิดงานเฉลี่ย", avgDuration === null ? "—" : Math.round(avgDuration) + " นาที", ""],
+      ["🔬 จำนวน RCA", rcaCount, "accent-c"],
+      ["🧪 จำนวน Trial", trialCount, "accent-c"],
+      ["🔧 โครงการปรับปรุง", improveCount, "accent-c"],
+      ["💰 Cost Saving สะสม", "฿" + costSaving.toLocaleString(), "good-c"],
+      ["⏱ Downtime ที่ลดได้", downtimeSaved.toLocaleString() + " นาที", "good-c"],
+      ["📉 NG ที่ลดได้", ngReduced.toLocaleString() + " ชิ้น", "good-c"]
+    ];
+    var el = $("stats"); el.innerHTML = "";
+    tiles.forEach(function (t) {
+      var d = document.createElement("div"); d.className = "stat";
+      d.innerHTML = '<div class="label">' + t[0] + '</div><div class="value tabular' + (t[2] ? " " + t[2] : "") + '">' + t[1] + '</div>';
+      el.appendChild(d);
+    });
+  }
+
+  function renderClosedTrend() {
+    var mine = myActivities().filter(function (a) { return a.status === "Closed"; });
+    var map = {};
+    mine.forEach(function (a) { var k = bucketKeyOf(a.activity_date, currentPeriod); map[k] = (map[k] || 0) + 1; });
+    var entries = Object.keys(map).sort().map(function (k) { return { label: bucketLabelOf(k, currentPeriod), value: map[k] }; });
+    var el = $("closedTrendChart");
+    if (!entries.length) { el.innerHTML = '<div class="empty">No Data Available</div>'; return; }
+    var maxV = niceMax(Math.max.apply(null, entries.map(function (e) { return e.value; })));
+    el.innerHTML = "";
+    var wrap = document.createElement("div");
+    var chart = document.createElement("div"); chart.className = "col-chart";
+    var grid = document.createElement("div"); grid.className = "col-chart__grid";
+    for (var g = 0; g <= 4; g++) {
+      var gl = document.createElement("div"); gl.className = "col-chart__gridline"; gl.style.bottom = (g / 4 * 100) + "%";
+      var tick = document.createElement("span"); tick.className = "tick tabular"; tick.textContent = Math.round(maxV * g / 4);
+      gl.appendChild(tick); grid.appendChild(gl);
+    }
+    chart.appendChild(grid);
+    var bars = document.createElement("div"); bars.className = "col-chart__bars";
+    entries.forEach(function (e) {
+      var col = document.createElement("div"); col.className = "col-chart__col";
+      var v = document.createElement("div"); v.className = "col-chart__val"; v.textContent = e.value;
+      var bar = document.createElement("div"); bar.className = "col-chart__bar"; bar.style.height = Math.max(e.value / maxV * 100, 2) + "%";
+      col.appendChild(v); col.appendChild(bar); bars.appendChild(col);
+    });
+    chart.appendChild(bars); wrap.appendChild(chart);
+    var labels = document.createElement("div"); labels.className = "col-chart__labels";
+    entries.forEach(function (e) { var lab = document.createElement("div"); lab.className = "col-chart__label"; lab.textContent = e.label; labels.appendChild(lab); });
+    wrap.appendChild(labels); el.appendChild(wrap);
+  }
+
+  function renderValueSummary() {
+    var mine = myActivities();
+    var owner = $("ownerSelect").value;
+    var el = $("valueSummary");
+    if (!owner || !mine.length) { el.innerHTML = '<div class="empty">ยังไม่มีข้อมูล — เลือกชื่อวิศวกรด้านบน</div>'; return; }
+    var closed = mine.filter(function (a) { return a.status === "Closed"; }).length;
+    var costSaving = mine.reduce(function (s, a) { return s + (Number(a.cost_saving_thb) || 0); }, 0);
+    var downtimeSaved = mine.reduce(function (s, a) { return s + (Number(a.downtime_saved_minutes) || 0); }, 0);
+    var ngReduced = mine.reduce(function (s, a) { return s + (Number(a.ng_reduced_qty) || 0); }, 0);
+    el.innerHTML = "คุณ <b>" + owner + "</b> ปิดงานสำเร็จ <b>" + closed + "</b> รายการ ช่วยลด Downtime รวม <b>" + downtimeSaved.toLocaleString() +
+      " นาที</b> ลด NG ได้ <b>" + ngReduced.toLocaleString() + " ชิ้น</b> และสร้าง Cost Saving ให้โรงงานรวม <b style=\"color:var(--good)\">฿" + costSaving.toLocaleString() + "</b>";
+  }
+
+  function populateOwners() {
+    var sel = $("ownerSelect");
+    var owners = Array.from(new Set(allActivities.map(function (a) { return a.owner; }).filter(Boolean))).sort();
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">— เลือกชื่อ —</option>';
+    owners.forEach(function (o) { var opt = document.createElement("option"); opt.value = o; opt.textContent = o; sel.appendChild(opt); });
+    if (cur) sel.value = cur;
+    else if (owners.length) sel.value = owners[0];
+  }
+
+  function renderAll() { renderStats(); renderClosedTrend(); renderValueSummary(); }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var savedTheme = localStorage.getItem("eng-log-theme");
+    if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+    $("btnThemeToggle").addEventListener("click", function () {
+      var root = document.documentElement;
+      var cur = root.getAttribute("data-theme");
+      var next = cur === "dark" ? "light" : cur === "light" ? "" : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+      if (next) { root.setAttribute("data-theme", next); localStorage.setItem("eng-log-theme", next); }
+      else { root.removeAttribute("data-theme"); localStorage.removeItem("eng-log-theme"); }
+    });
+
+    $("ownerSelect").addEventListener("change", renderAll);
+    document.querySelectorAll("#periodToggle .period-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll("#periodToggle .period-btn").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        currentPeriod = btn.dataset.period;
+        renderClosedTrend();
+      });
+    });
+
+    if (!sb) { $("stats").innerHTML = '<div class="empty">ยังไม่ได้ตั้งค่าฐานข้อมูล</div>'; return; }
+    sb.from("daily_activities").select("*").then(function (res) {
+      if (res.error) { $("stats").innerHTML = '<div class="empty">โหลดข้อมูลไม่สำเร็จ</div>'; return; }
+      allActivities = res.data || [];
+      populateOwners();
+      renderAll();
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2448 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engineering Daily Issue Log</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --bg: #F3F5F1;
+    --surface: #FFFFFF;
+    --surface-2: #ECF0EA;
+    --ink: #0b0b0b;
+    --ink-secondary: #52514e;
+    --ink-muted: #898781;
+    --line: #e1e0d9;
+    --line-strong: #c3c2b7;
+    --accent: #2B5D6B;
+    --accent-soft: #E3EEEF;
+    --shadow: 0 1px 2px rgba(27,33,31,0.06), 0 8px 24px -12px rgba(27,33,31,0.18);
+    --good: #0ca30c; --good-soft: #e2f3e2;
+    --warning: #fab219; --warning-soft: #fef1d9;
+    --critical: #d03b3b; --critical-soft: #fbe3e3;
+    --sev-minor: #B7D6DB; --sev-major: #4F8A96; --sev-critical: #17414B;
+    --cat-1: #2a78d6; --cat-2: #1baf7a; --cat-3: #eda100; --cat-4: #4a3aa7;
+    --cat-5: #e34948; --cat-6: #eb6834; --cat-7: #e87ba4; --cat-other: #898781;
+    --pareto-line: #eb6834;
+    --grid-line: #e1e0d9; --axis-line: #c3c2b7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
+      --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
+      --accent: #7CC2CD; --accent-soft: #1E3236;
+      --good: #0ca30c; --good-soft: #16281a;
+      --warning: #fab219; --warning-soft: #332711;
+      --critical: #d03b3b; --critical-soft: #33201d;
+      --sev-minor: #2E4D52; --sev-major: #5FA3AC; --sev-critical: #9FE0E8;
+      --cat-1: #3987e5; --cat-2: #199e70; --cat-3: #c98500; --cat-4: #9085e9;
+      --cat-5: #e66767; --cat-6: #d95926; --cat-7: #d55181; --cat-other: #898781;
+      --pareto-line: #d95926;
+      --grid-line: #2c2c2a; --axis-line: #383835;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
+    --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
+    --accent: #7CC2CD; --accent-soft: #1E3236;
+    --good: #0ca30c; --good-soft: #16281a;
+    --warning: #fab219; --warning-soft: #332711;
+    --critical: #d03b3b; --critical-soft: #33201d;
+    --sev-minor: #2E4D52; --sev-major: #5FA3AC; --sev-critical: #9FE0E8;
+    --cat-1: #3987e5; --cat-2: #199e70; --cat-3: #c98500; --cat-4: #9085e9;
+    --cat-5: #e66767; --cat-6: #d95926; --cat-7: #d55181; --cat-other: #898781;
+    --pareto-line: #d95926;
+    --grid-line: #2c2c2a; --axis-line: #383835;
+  }
+  :root[data-theme="light"] {
+    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA; --ink: #0b0b0b;
+    --ink-secondary: #52514e; --ink-muted: #898781; --line: #e1e0d9; --line-strong: #c3c2b7;
+    --accent: #2B5D6B; --accent-soft: #E3EEEF;
+    --good: #0ca30c; --good-soft: #e2f3e2;
+    --warning: #fab219; --warning-soft: #fef1d9;
+    --critical: #d03b3b; --critical-soft: #fbe3e3;
+    --sev-minor: #B7D6DB; --sev-major: #4F8A96; --sev-critical: #17414B;
+    --cat-1: #2a78d6; --cat-2: #1baf7a; --cat-3: #eda100; --cat-4: #4a3aa7;
+    --cat-5: #e34948; --cat-6: #eb6834; --cat-7: #e87ba4; --cat-other: #898781;
+    --pareto-line: #eb6834;
+    --grid-line: #e1e0d9; --axis-line: #c3c2b7;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font-family: -apple-system, "Segoe UI", "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15.5px; line-height: 1.55; margin: 0; padding: 24px 18px 80px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .mono { font-family: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  header.page {
+    display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;
+    margin-bottom: 22px; padding: 20px 24px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--surface) 65%);
+    border: 1px solid var(--line); box-shadow: var(--shadow);
+  }
+  header.page .eyebrow { display: flex; align-items: center; gap: 6px; }
+  header.page .greet { font-size: 13px; color: var(--ink-secondary); margin-top: 3px; }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+  h1 { font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Noto Serif Thai", serif; font-size: clamp(21px,3.2vw,27px); font-weight: 600; margin: 0; text-wrap: balance; }
+  .today { font-size: 12.5px; color: var(--ink-muted); }
+
+  .btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 13.5px; padding: 9px 16px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { background: var(--surface-2); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.ghost { border-color: transparent; background: transparent; }
+  .btn.small { padding: 5px 10px; font-size: 12.5px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .banner { padding: 12px 16px; border-radius: 12px; font-size: 13.5px; margin-bottom: 16px; display: none; }
+  .banner.show { display: block; }
+  .banner.warn { background: var(--warning-soft); color: #8a6100; border: 1px solid var(--warning); }
+  .banner.err { background: var(--critical-soft); color: var(--critical); border: 1px solid var(--critical); }
+  @media (prefers-color-scheme: dark) { .banner.warn { color: var(--warning); } }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .stat .label { font-size: 12px; color: var(--ink-muted); margin-bottom: 6px; }
+  .stat .value { font-size: 25px; font-weight: 600; line-height: 1; }
+  .stat .value.critical { color: var(--critical); }
+  .stat .value.warning-c { color: var(--warning); }
+  .stat .value.good-c { color: var(--good); }
+  .stat.clickable { cursor: pointer; transition: background .12s; }
+  .stat.clickable:hover { background: var(--surface-2); }
+  .stat.clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .period-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
+  .period-btn { appearance: none; border: none; background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; cursor: pointer; border-right: 1px solid var(--line-strong); }
+  .period-btn:last-child { border-right: none; }
+  .period-btn:hover { background: var(--surface-2); }
+  .period-btn.active { background: var(--accent); color: #fff; }
+
+  .card-shell { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
+  .card-shell h2 { font-family: Georgia, serif; font-size: 16px; font-weight: 600; margin: 0 0 12px; }
+
+  .dist-bar { display: flex; height: 18px; border-radius: 4px; overflow: hidden; gap: 2px; background: var(--line); }
+  .dist-seg { display: flex; align-items: center; justify-content: center; min-width: 2px; }
+  .dist-seg.Open { background: var(--critical); }
+  .dist-seg.progress-seg { background: var(--warning); }
+  .dist-seg.Closed { background: var(--good); }
+  .dist-seg .n { font-size: 11px; font-weight: 700; color: #fff; }
+  .legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-secondary); }
+  .legend-swatch { width: 9px; height: 9px; border-radius: 3px; }
+  .legend-swatch.Open { background: var(--critical); }
+  .legend-swatch.progress-seg { background: var(--warning); }
+  .legend-swatch.Closed { background: var(--good); }
+
+  /* timeline (gantt) */
+  .timeline-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-muted); padding-left: 190px; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+  .timeline-rows { display: flex; flex-direction: column; gap: 4px; min-width: 480px; }
+  .t-row { display: flex; align-items: center; gap: 10px; height: 28px; }
+  .t-row:hover { background: var(--surface-2); border-radius: 9px; }
+  .t-label { width: 180px; flex: none; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 4px; color: var(--ink-secondary); }
+  .t-label b { color: var(--ink); font-weight: 600; }
+  .t-track { position: relative; flex: 1; height: 100%; }
+  .t-bar { position: absolute; top: 4px; height: 20px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; transition: filter .1s, width .5s cubic-bezier(.2,.8,.2,1); }
+  .t-bar:hover { filter: brightness(1.12); }
+  .t-bar.st-Open { background: var(--critical); }
+  .t-bar.st-InProgress { background: var(--warning); }
+  .t-bar.st-Closed { background: var(--good); }
+  .t-bar .t-days { font-size: 10px; font-weight: 700; color: #fff; padding: 0 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .t-bar.tiny .t-days { position: absolute; left: 100%; margin-left: 6px; color: var(--ink-secondary); }
+  .timeline-legend { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+  .timeline-legend-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-secondary); }
+  .timeline-legend-swatch { width: 10px; height: 10px; border-radius: 3px; }
+  .chart-scroll { overflow-x: auto; padding-bottom: 4px; }
+  .chart-empty { font-size: 13px; color: var(--ink-muted); padding: 30px 0; text-align: center; }
+  .chart-tooltip {
+    position: fixed; z-index: 60; background: var(--ink); color: var(--bg);
+    padding: 8px 11px; border-radius: 9px; font-size: 12px; line-height: 1.55;
+    pointer-events: none; display: none; box-shadow: var(--shadow); white-space: nowrap;
+  }
+  @media (prefers-color-scheme: dark) { .chart-tooltip { background: #ECEEEC; color: #14181A; } }
+  .chart-tooltip .tt-val { font-weight: 700; }
+  .chart-tooltip .tt-row { display: flex; justify-content: space-between; gap: 12px; }
+
+  /* dashboard chart grid */
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+  @media (max-width: 760px) { .dash-grid { grid-template-columns: 1fr; } }
+  .chart-card.in { opacity: 1; transform: none; }
+  .card-shell.chart-card { opacity: 0; transform: translateY(6px); transition: opacity .4s ease, transform .4s ease; }
+  @media (prefers-reduced-motion: reduce) { .card-shell.chart-card { transition: none; opacity: 1; transform: none; } }
+
+  /* column / bar chart */
+  .col-chart { display: flex; align-items: flex-end; gap: 14px; height: 160px; padding-left: 34px; position: relative; min-width: 320px; }
+  .col-chart__grid { position: absolute; left: 34px; right: 0; top: 0; bottom: 22px; pointer-events: none; }
+  .col-chart__gridline { position: absolute; left: 0; right: 0; border-top: 1px solid var(--grid-line); }
+  .col-chart__gridline .tick { position: absolute; left: -34px; top: -7px; width: 28px; text-align: right; font-size: 10px; color: var(--ink-muted); }
+  .col-chart__bars { display: flex; align-items: flex-end; gap: 14px; flex: 1; height: 138px; position: relative; z-index: 1; }
+  .col-chart__col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 1; min-width: 46px; height: 100%; }
+  .col-chart__val { font-size: 11px; font-weight: 700; color: var(--ink); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .col-chart__bar { width: 100%; max-width: 34px; background: var(--accent); border-radius: 4px 4px 0 0; cursor: pointer; transition: filter .1s, height .5s cubic-bezier(.2,.8,.2,1); }
+  .col-chart__bar:hover { filter: brightness(1.15); }
+  .col-chart__bar.other { background: var(--cat-other); }
+  .col-chart__labels { display: flex; gap: 14px; padding-left: 34px; margin-top: 6px; min-width: 320px; }
+  .col-chart__label { flex: 1; min-width: 46px; font-size: 10.5px; color: var(--ink-muted); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* donut chart */
+  .donut-wrap { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .donut-svg circle { cursor: pointer; transition: filter .1s; }
+  .donut-svg circle:hover { filter: brightness(1.12); }
+  .donut-center-label { font-size: 20px; font-weight: 700; fill: var(--ink); }
+  .donut-center-sub { font-size: 9px; fill: var(--ink-muted); }
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+  .donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .donut-legend-swatch { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+  .donut-legend-name { color: var(--ink-secondary); flex: 1; }
+  .donut-legend-pct { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .donut-legend-count { color: var(--ink-muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+  /* pareto + trend chart (SVG) */
+  .svg-chart { width: 100%; height: auto; display: block; min-width: 420px; }
+  .svg-chart .bar { fill: var(--accent); cursor: pointer; transition: filter .1s; }
+  .svg-chart .bar:hover { filter: brightness(1.15); }
+  .svg-chart .grid-line { stroke: var(--grid-line); stroke-width: 1; }
+  .svg-chart .threshold-line { stroke: var(--ink-muted); stroke-width: 1.2; stroke-dasharray: 4 3; }
+  .svg-chart .tick-label { fill: var(--ink-muted); font-size: 10px; font-family: "SF Mono", ui-monospace, monospace; }
+  .svg-chart .cat-label { fill: var(--ink-muted); font-size: 10px; }
+  .svg-chart .pareto-line { fill: none; stroke: var(--pareto-line); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .svg-chart .pareto-dot { fill: var(--pareto-line); stroke: var(--surface); stroke-width: 2; cursor: pointer; }
+  .svg-chart .end-label { font-size: 11px; font-weight: 700; }
+  .svg-chart .ok-line { fill: none; stroke: var(--good); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .svg-chart .ng-line { fill: none; stroke: var(--critical); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .svg-chart .ok-dot { fill: var(--good); stroke: var(--surface); stroke-width: 2; }
+  .svg-chart .ng-dot { fill: var(--critical); stroke: var(--surface); stroke-width: 2; }
+  .svg-chart .hit-col { fill: transparent; cursor: crosshair; }
+  .svg-chart .hit-col:hover { fill: var(--surface-2); opacity: .5; }
+  .line-legend { display: flex; gap: 18px; margin-bottom: 10px; flex-wrap: wrap; }
+  .line-legend-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-secondary); }
+  .line-legend-key { width: 16px; height: 2px; border-radius: 2px; flex: none; }
+
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  select, input[type=text], input[type=search], input[type=date], input[type=number], textarea {
+    font: inherit; font-size: 13.5px; padding: 7px 10px; border-radius: 9px;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  }
+  select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .filters input[type=search] { flex: 1; min-width: 160px; }
+
+  .list-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .sort-wrap { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-secondary); }
+  .view-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
+  .view-btn { appearance: none; border: none; background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; cursor: pointer; border-right: 1px solid var(--line-strong); }
+  .view-btn:last-child { border-right: none; }
+  .view-btn:hover { background: var(--surface-2); }
+  .view-btn.active { background: var(--accent); color: #fff; }
+
+  /* ---------- Table view ---------- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
+  #issueTable { width: 100%; border-collapse: collapse; min-width: 760px; }
+  #issueTable th, #issueTable td { text-align: left; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  #issueTable thead th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-muted); background: var(--surface-2); font-weight: 600; }
+  #issueTable tbody tr { cursor: pointer; }
+  #issueTable tbody tr:hover { background: var(--surface-2); }
+  #issueTable tbody tr:last-child td { border-bottom: none; }
+
+  /* ---------- Issue cards ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  .issue-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; transition: transform .18s ease, box-shadow .18s ease; }
+  .issue-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(27,33,31,0.08), 0 14px 32px -12px rgba(27,33,31,0.24); }
+  .issue-card__top { padding: 16px 18px 12px; display: flex; gap: 12px; }
+  .issue-card__main { flex: 1; min-width: 0; }
+  .issue-card__badges { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .issue-card__title { font-weight: 600; font-size: 15px; margin: 0 0 4px; }
+  .issue-card__meta { font-size: 12.5px; color: var(--ink-muted); }
+  .issue-card__desc { font-size: 13px; color: var(--ink-secondary); margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .ring-wrap { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .ring-wrap .ring-label { font-size: 10px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .04em; }
+
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 100px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.st-Open { background: var(--critical-soft); color: var(--critical); }
+  .pill.st-InProgress { background: var(--warning-soft); color: #8a6100; }
+  @media (prefers-color-scheme: dark) { .pill.st-InProgress { color: var(--warning); } }
+  .pill.st-Closed { background: var(--good-soft); color: var(--good); }
+  .sev { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid; }
+  .sev.Critical { color: var(--critical); border-color: var(--critical); }
+  .sev.Major { color: #8a6100; border-color: var(--warning); }
+  @media (prefers-color-scheme: dark) { .sev.Major { color: var(--warning); } }
+  .sev.Minor { color: var(--good); border-color: var(--good); }
+  .sev.Neutral { color: var(--ink-muted); border-color: var(--line-strong); }
+  .sev.Info { color: var(--accent); border-color: var(--accent); }
+
+  .photo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-top: 1px solid var(--line); }
+  .photo-slot { position: relative; aspect-ratio: 4/3; background: var(--surface-2); overflow: hidden; }
+  .photo-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-slot .cap { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(11,11,11,.55); color: #fff; font-size: 10.5px; padding: 3px 8px; letter-spacing: .03em; }
+  .photo-slot .empty-hint { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--ink-muted); font-size: 11.5px; text-align: center; padding: 8px; }
+
+  .issue-card__foot { padding: 10px 18px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .issue-card__foot .updated-count { font-size: 12px; color: var(--ink-muted); }
+
+  /* ---------- Detail panel (expanded) ---------- */
+  .detail { border-top: 1px solid var(--line); padding: 16px 18px; background: var(--surface-2); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 480px) { .detail-grid { grid-template-columns: 1fr; } }
+  .detail-section { margin-bottom: 18px; }
+  .detail-section__title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .why-list { display: flex; flex-direction: column; gap: 6px; }
+  .why-item { display: flex; gap: 8px; font-size: 13px; color: var(--ink-secondary); }
+  .why-item .num { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .attach-item { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 8px 10px; background: var(--surface-2); border-radius: 9px; margin-bottom: 6px; }
+  .attach-item a { color: var(--accent); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini-timeline { display: flex; align-items: center; gap: 0; font-size: 12px; }
+  .mini-timeline .pt { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 76px; }
+  .mini-timeline .pt .mk { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line-strong); background: var(--surface); }
+  .mini-timeline .pt.done .mk { background: var(--good); border-color: var(--good); }
+  .mini-timeline .pt.now .mk { background: var(--accent); border-color: var(--accent); }
+  .mini-timeline .pt.overdue .mk { background: var(--critical); border-color: var(--critical); }
+  .mini-timeline .ln { flex: 1; height: 2px; background: var(--line-strong); margin-bottom: 20px; }
+  .approval-item { display: flex; gap: 10px; background: var(--accent-soft); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; font-size: 12.5px; }
+  .approval-item .badge { flex: none; font-size: 11px; font-weight: 700; color: var(--accent); }
+  .detail-field .k { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-muted); margin-bottom: 4px; }
+  .detail-field .v { font-size: 13px; color: var(--ink-secondary); white-space: pre-wrap; }
+  .detail-field textarea { width: 100%; min-height: 56px; }
+
+  .updates-list { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 14px; }
+  .update-item { display: flex; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .update-item img { width: 52px; height: 52px; object-fit: cover; border-radius: 9px; flex: none; }
+  .update-item .body { flex: 1; min-width: 0; }
+  .update-item .date { font-size: 11.5px; color: var(--ink-muted); }
+  .update-item .note { font-size: 13px; margin-top: 2px; }
+  .update-item .prog { font-size: 11.5px; color: var(--accent); font-weight: 700; }
+
+  .quick-update { display: flex; flex-direction: column; gap: 8px; background: var(--surface); border: 1px dashed var(--line-strong); border-radius: 12px; padding: 12px; }
+  .quick-update__row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .quick-update textarea { flex: 1; min-height: 40px; min-width: 160px; }
+  .slider-wrap { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-secondary); }
+  input[type=range] { accent-color: var(--accent); width: 120px; }
+
+  .file-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 6px 10px; border: 1px solid var(--line-strong); border-radius: 9px; cursor: pointer; background: var(--surface); }
+  .file-btn:hover { background: var(--surface-2); }
+  .file-btn input { display: none; }
+
+  .icon-btn { appearance: none; border: none; background: transparent; cursor: pointer; color: var(--ink-muted); padding: 4px 6px; border-radius: 4px; font-size: 13px; }
+  .icon-btn:hover { background: var(--surface); color: var(--ink); }
+
+  /* ---------- Quick Actions ---------- */
+  .quick-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .qa-btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 12.5px; padding: 9px 14px; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; box-shadow: var(--shadow); }
+  .qa-btn:hover { background: var(--surface-2); transform: translateY(-1px); }
+  .qa-btn:active { transform: translateY(0); }
+  .qa-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .qa-btn.primary:hover { filter: brightness(1.06); }
+
+  /* ---------- Notifications ---------- */
+  .notif-wrap { position: relative; }
+  .notif-bell { position: relative; font-size: 17px; }
+  .notif-badge { position: absolute; top: -2px; right: -2px; background: var(--critical); color: #fff; font-size: 10px; font-weight: 700; min-width: 15px; height: 15px; border-radius: 100px; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
+  .notif-dropdown { position: absolute; top: 130%; right: 0; width: 320px; max-width: 88vw; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); z-index: 40; display: none; overflow: hidden; }
+  .notif-dropdown.show { display: block; }
+  .notif-dropdown__head { padding: 12px 16px; font-weight: 700; font-size: 13px; border-bottom: 1px solid var(--line); }
+  .notif-dropdown__list { max-height: 340px; overflow-y: auto; }
+  .notif-item { display: flex; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 12.5px; }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-item:hover { background: var(--surface-2); }
+  .notif-item .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; margin-top: 4px; }
+  .notif-item .dot.crit { background: var(--critical); }
+  .notif-item .dot.warn { background: var(--warning); }
+  .notif-item .body b { display: block; color: var(--ink); margin-bottom: 2px; }
+  .notif-item .body span { color: var(--ink-muted); font-size: 11.5px; }
+  .notif-empty { padding: 24px 16px; text-align: center; color: var(--ink-muted); font-size: 12.5px; }
+
+  /* ---------- Toasts ---------- */
+  .toast-stack { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; max-width: 340px; }
+  .toast { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); font-size: 13px; display: flex; gap: 10px; align-items: flex-start; animation: toast-in .25s ease; }
+  .toast.success { border-left-color: var(--good); }
+  .toast.error { border-left-color: var(--critical); }
+  .toast .icon { flex: none; }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+
+  /* ---------- Loading skeleton ---------- */
+  .skel { background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%); background-size: 400% 100%; animation: skel-shine 1.4s ease infinite; border-radius: 9px; }
+  @keyframes skel-shine { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+  @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+  .skel-card { height: 90px; border-radius: 12px; }
+  .skel-chart { height: 180px; border-radius: 12px; }
+
+  .empty { text-align: center; padding: 50px 20px; color: var(--ink-muted); font-size: 13.5px; grid-column: 1/-1; }
+
+  /* ---------- Modal ---------- */
+  .backdrop { position: fixed; inset: 0; background: rgba(11,11,11,.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .backdrop.show { display: flex; }
+
+  /* ---------- Media Preview ---------- */
+  .preview-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.78); display: none; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
+  .preview-backdrop.show { display: flex; }
+  .preview-box { background: var(--surface); border-radius: 12px; max-width: 92vw; max-height: 90vh; width: 900px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  .preview-box__head { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .preview-box__head b { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .preview-box__body { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; background: var(--bg); min-height: 300px; }
+  .preview-box__body img { max-width: 100%; max-height: 78vh; object-fit: contain; display: block; }
+  .preview-box__body video { max-width: 100%; max-height: 78vh; }
+  .preview-box__body iframe { width: 100%; height: 78vh; border: none; }
+  .preview-box__fallback { padding: 60px 30px; text-align: center; color: var(--ink-muted); font-size: 13.5px; }
+  .preview-thumb { cursor: pointer; }
+  .modal { background: var(--surface); border-radius: 10px; max-width: 620px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .modal__head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+  .modal__head h3 { font-family: Georgia, serif; font-size: 17px; margin: 0; }
+  .modal__body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-secondary); margin-bottom: 5px; }
+  .field input, .field select, .field textarea { width: 100%; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
+  .modal__foot { padding: 16px 22px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: var(--surface); }
+  .req::after { content: " *"; color: var(--critical); }
+  .photo-upload-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .photo-upload-pair { grid-template-columns: 1fr; } }
+  .upload-box { border: 1px dashed var(--line-strong); border-radius: 12px; padding: 10px; text-align: center; }
+  .upload-box img { max-width: 100%; border-radius: 9px; margin-bottom: 6px; max-height: 120px; object-fit: cover; }
+
+  footer.page { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 12px; text-align: center; }
+  .spin { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <div>
+      <div class="eyebrow">🏭 Engineering Team · Daily Issue Log</div>
+      <h1>บันทึกงานวิศวกรรมประจำวัน</h1>
+      <div class="today mono" id="todayLabel"></div>
+      <div class="greet" id="greetLine"></div>
+    </div>
+    <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <div class="notif-wrap">
+        <button class="icon-btn notif-bell" id="btnNotif" aria-label="การแจ้งเตือน" title="การแจ้งเตือน">
+          🔔<span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+        </button>
+        <div class="notif-dropdown" id="notifDropdown">
+          <div class="notif-dropdown__head">การแจ้งเตือน</div>
+          <div class="notif-dropdown__list" id="notifList"></div>
+        </div>
+      </div>
+      <button class="icon-btn" id="btnThemeToggle" aria-label="สลับธีมสว่าง/มืด" title="สลับธีมสว่าง/มืด">🌗</button>
+    </div>
+  </header>
+
+  <section class="quick-actions" id="quickActions">
+    <button class="qa-btn primary" id="btnAdd">➕<span>เพิ่มปัญหา</span></button>
+    <button class="qa-btn" id="btnMyIssues">🙋<span>งานของฉัน</span></button>
+    <button class="qa-btn" id="btnOverdueIssues">⏰<span>งานค้าง</span></button>
+    <button class="qa-btn" id="btnReport">📄<span>รายงาน</span></button>
+    <button class="qa-btn" id="btnExportPdf">🖨<span>Export PDF</span></button>
+    <button class="qa-btn" id="btnExportExcel">📊<span>Export Excel</span></button>
+    <a class="qa-btn" href="daily-dashboard.html" style="text-decoration:none;">📅<span>Daily Dashboard</span></a>
+  </section>
+
+  <div class="banner warn" id="configBanner">
+    ⚠️ ยังไม่ได้ตั้งค่าฐานข้อมูล — เปิดไฟล์ <code>index.html</code> ด้วยโปรแกรมแก้ไขข้อความ แล้วใส่ค่า
+    <code>SUPABASE_URL</code> และ <code>SUPABASE_ANON_KEY</code> ที่ด้านบนของสคริปต์ (ดูขั้นตอนที่แชทให้ไว้)
+  </div>
+  <div class="banner err" id="errorBanner"></div>
+
+  <section class="stats" id="stats"><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div><div class="skel skel-card"></div></section>
+
+  <section class="card-shell">
+    <h2>สถานะภาพรวม</h2>
+    <div class="dist-bar" id="distBar"></div>
+    <div class="legend" id="distLegend"></div>
+  </section>
+
+  <section class="card-shell">
+    <h2>🗓 Timeline — วันที่รับเรื่อง → วันที่แก้ไขเสร็จ</h2>
+    <div style="font-size:12.5px;color:var(--ink-muted);margin-bottom:14px;">แดง = ยังไม่แก้ไข (Open) · เหลือง = กำลังดำเนินการ · เขียว = ปิดงานแล้ว (ตัวเลขคือจำนวนวัน) — งานที่ยังไม่ปิดจะลากยาวถึงวันนี้โดยอัตโนมัติ</div>
+    <div class="chart-scroll"><div id="timelineChart"><div class="skel skel-chart"></div></div></div>
+    <div class="timeline-legend">
+      <div class="timeline-legend-item"><span class="timeline-legend-swatch" style="background:var(--critical)"></span>Open</div>
+      <div class="timeline-legend-item"><span class="timeline-legend-swatch" style="background:var(--warning)"></span>In Progress</div>
+      <div class="timeline-legend-item"><span class="timeline-legend-swatch" style="background:var(--good)"></span>Closed</div>
+    </div>
+  </section>
+
+  <section class="card-shell" style="padding-bottom: 14px;">
+    <div class="filters">
+      <select id="fStatus">
+        <option value="">สถานะทั้งหมด</option>
+        <option value="Open">Open</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Closed">Closed</option>
+      </select>
+      <select id="fSeverity">
+        <option value="">ความรุนแรงทั้งหมด</option>
+        <option value="Critical">Critical</option>
+        <option value="Major">Major</option>
+        <option value="Minor">Minor</option>
+      </select>
+      <select id="fLine"><option value="">Line ทั้งหมด</option></select>
+      <select id="fMachineFilter"><option value="">Machine ทั้งหมด</option></select>
+      <select id="fProductFilter"><option value="">Product ทั้งหมด</option></select>
+      <select id="fCustomerFilter"><option value="">Customer ทั้งหมด</option></select>
+      <select id="fDepartmentFilter"><option value="">Department ทั้งหมด</option></select>
+      <select id="fEngineerFilter"><option value="">Engineer ทั้งหมด</option></select>
+      <input type="date" id="fDateFrom" title="ตั้งแต่วันที่">
+      <span style="color:var(--ink-muted);font-size:12px;">ถึง</span>
+      <input type="date" id="fDateTo" title="ถึงวันที่">
+      <input type="search" id="fSearch" placeholder="ค้นหา: รหัส, ชื่อปัญหา, Root Cause, Product...">
+      <button class="clear-link" id="btnClearFilters" style="background:none;border:none;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;font-size:12.5px;">ล้างตัวกรอง</button>
+    </div>
+    <div class="list-toolbar">
+      <div class="sort-wrap">
+        <label for="fSort">เรียงตาม</label>
+        <select id="fSort">
+          <option value="newest">ล่าสุด</option>
+          <option value="oldest">เก่าไปใหม่</option>
+          <option value="severity">Severity</option>
+          <option value="progress">Progress</option>
+          <option value="dueDate">Due Date</option>
+        </select>
+      </div>
+      <div class="view-toggle" id="viewToggle">
+        <button class="view-btn active" data-view="card" title="มุมมองการ์ด">🗂 Card</button>
+        <button class="view-btn" data-view="table" title="มุมมองตาราง">📋 Table</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid" id="grid"></section>
+  <section class="table-view-wrap" id="tableViewWrap" style="display:none;">
+    <div class="tablewrap">
+      <table id="issueTable">
+        <thead>
+          <tr>
+            <th>รหัส</th><th>หัวข้อ</th><th>Line</th><th>ความรุนแรง</th><th>สถานะ</th>
+            <th>ความคืบหน้า</th><th>ผู้รับผิดชอบ</th><th>รับเรื่อง</th><th>กำหนดปิด</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="issueTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="page">ข้อมูลและรูปภาพถูกเก็บบน Supabase (ฐานข้อมูลจริง) — ทุกคนที่เปิดลิงก์นี้เห็นข้อมูลชุดเดียวกันแบบเรียลไทม์</footer>
+</div>
+
+<div class="chart-tooltip" id="chartTooltip"></div>
+<div class="toast-stack" id="toastStack"></div>
+
+<div class="backdrop" id="shareBackdrop">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal__head">
+      <h3>🔗 แชร์รายงาน (Read-only)</h3>
+      <button class="icon-btn" id="btnCloseShare">✕</button>
+    </div>
+    <div class="modal__body">
+      <div id="shareStep1">
+        <div class="field">
+          <label>วันหมดอายุของลิงก์</label>
+          <select id="shareExpiry">
+            <option value="1">1 วัน</option>
+            <option value="7" selected>7 วัน</option>
+            <option value="30">30 วัน</option>
+            <option value="">ไม่หมดอายุ</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>รหัสผ่าน (ไม่บังคับ)</label>
+          <input type="text" id="sharePassword" placeholder="เว้นว่างถ้าไม่ต้องการรหัสผ่าน">
+        </div>
+        <div style="font-size:12px;color:var(--ink-muted);">ผู้รับลิงก์จะเห็นเฉพาะรายละเอียดของงานนี้ (รูป/วิดีโอ/RCA/Timeline/Corrective Action) แบบอ่านอย่างเดียว — เข้าถึง Dashboard หรืองานอื่นไม่ได้</div>
+      </div>
+      <div id="shareStep2" style="display:none;">
+        <div class="field">
+          <label>ลิงก์ที่แชร์ได้</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="shareLinkOutput" readonly style="flex:1;">
+            <button class="btn primary small" id="btnCopyShareLink">คัดลอก</button>
+          </div>
+        </div>
+        <div id="sharePasswordNote" style="font-size:12px;color:var(--ink-muted);"></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn ghost" id="btnCancelShare">ปิด</button>
+      <button class="btn primary" id="btnCreateShare">สร้างลิงก์</button>
+    </div>
+  </div>
+</div>
+
+<div class="preview-backdrop" id="previewBackdrop">
+  <div class="preview-box">
+    <div class="preview-box__head">
+      <b id="previewName">—</b>
+      <div style="display:flex;gap:6px;">
+        <a class="icon-btn" id="previewDownload" href="#" target="_blank" title="ดาวน์โหลด">⬇</a>
+        <button class="icon-btn" id="btnClosePreview" title="ปิด">✕</button>
+      </div>
+    </div>
+    <div class="preview-box__body" id="previewBody"></div>
+  </div>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="modal">
+    <div class="modal__head">
+      <h3 id="modalTitle">เพิ่มปัญหาใหม่</h3>
+      <button class="icon-btn" id="btnCloseModal">✕</button>
+    </div>
+    <div class="modal__body">
+      <div class="field">
+        <label class="req">หัวข้อปัญหา</label>
+        <input type="text" id="fTitle" placeholder="เช่น Insertion loss สูงกว่าสเปกที่สถานี test">
+      </div>
+      <div class="field">
+        <label>รายละเอียดปัญหา</label>
+        <textarea id="fDescription" placeholder="อธิบายอาการ/ผลกระทบของปัญหาโดยละเอียด..." style="min-height:70px"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="req">Production Line</label>
+          <input type="text" id="fLine2" placeholder="เช่น SMT Line 3">
+        </div>
+        <div class="field">
+          <label>Machine (เครื่องจักร)</label>
+          <input type="text" id="fMachine" placeholder="เช่น Reflow Oven #2">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="req">ความรุนแรง</label>
+          <select id="fSeverity2"><option>Critical</option><option>Major</option><option selected>Minor</option></select>
+        </div>
+        <div class="field">
+          <label class="req">สถานะ</label>
+          <select id="fStatus2"><option>Open</option><option>In Progress</option><option>Closed</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Defect Category</label>
+          <select id="fDefectCategory">
+            <option value="">— ไม่ระบุ —</option>
+            <option>Dimensional</option>
+            <option>Visual/Cosmetic</option>
+            <option>Functional</option>
+            <option>Material</option>
+            <option>Assembly</option>
+            <option>Electrical</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Root Cause Category</label>
+          <select id="fRootCauseCategory">
+            <option value="">— ไม่ระบุ —</option>
+            <option>Man</option>
+            <option>Machine</option>
+            <option>Method</option>
+            <option>Material</option>
+            <option>Measurement</option>
+            <option>Environment</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>ผู้รับผิดชอบ</label>
+          <input type="text" id="fOwner" placeholder="ชื่อผู้รับผิดชอบ">
+        </div>
+        <div class="field">
+          <label>Downtime (นาที)</label>
+          <input type="number" id="fDowntime" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Quantity NG</label>
+          <input type="number" id="fQtyNg" min="0" step="1" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Quantity OK</label>
+          <input type="number" id="fQtyOk" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="req">วันที่รับเรื่อง</label>
+          <input type="date" id="fReceived">
+        </div>
+        <div class="field">
+          <label>วันที่แก้ไขเสร็จ</label>
+          <input type="date" id="fResolved">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>กำหนดปิดงาน (Due Date)</label>
+          <input type="date" id="fDueDate">
+        </div>
+        <div class="field">
+          <label>ความคืบหน้า (%) — <span id="progressVal">0</span>%</label>
+          <input type="range" id="fProgress" min="0" max="100" step="5" value="0" style="width:100%">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Product</label>
+          <input type="text" id="fProduct" placeholder="รุ่น/Model">
+        </div>
+        <div class="field">
+          <label>Customer</label>
+          <input type="text" id="fCustomer" placeholder="ลูกค้า (ถ้ามี)">
+        </div>
+      </div>
+      <div class="field">
+        <label>Department</label>
+        <input type="text" id="fDepartment" placeholder="เช่น Production, QA, Maintenance">
+      </div>
+      <div class="field" style="background:var(--surface-2); border:1px dashed var(--line-strong); border-radius:10px; padding:12px 14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div>
+            <label style="margin-bottom:2px;">💡 ตัวช่วยแนะนำกรอบ RCA</label>
+            <div style="font-size:11.5px;color:var(--ink-muted);">ใช้ Defect Category / Root Cause Category ด้านบนแนะนำแนวคำถามและตัวอย่างสาเหตุตามกรอบ 6M — เป็นแค่จุดเริ่มต้น ไม่ใช่คำตอบสำเร็จรูป ต้องตรวจสอบกับข้อเท็จจริงหน้างานเสมอ</div>
+          </div>
+          <button type="button" class="btn small" id="btnRcaAssist">💡 แนะนำกรอบ RCA</button>
+        </div>
+        <div id="rcaAssistPanel" style="display:none;margin-top:10px;font-size:12.5px;color:var(--ink-secondary);"></div>
+      </div>
+      <div class="field">
+        <label>สาเหตุที่แท้จริง (Root Cause) — สรุป</label>
+        <textarea id="fRootCause" placeholder="ผลการวิเคราะห์สาเหตุ..."></textarea>
+      </div>
+      <div class="field">
+        <label>5 Why Analysis</label>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <input type="text" id="fWhy1" placeholder="Why 1: ทำไมถึงเกิดปัญหานี้?">
+          <input type="text" id="fWhy2" placeholder="Why 2: ...">
+          <input type="text" id="fWhy3" placeholder="Why 3: ...">
+          <input type="text" id="fWhy4" placeholder="Why 4: ...">
+          <input type="text" id="fWhy5" placeholder="Why 5 (Root Cause): ...">
+        </div>
+      </div>
+      <div class="field">
+        <label>มาตรการแก้ไขเฉพาะหน้า (Corrective Action)</label>
+        <textarea id="fCorrective" placeholder="สิ่งที่ทำเพื่อแก้ปัญหาตอนนี้..."></textarea>
+      </div>
+      <div class="field">
+        <label>มาตรการป้องกันระยะยาว (Preventive Action)</label>
+        <textarea id="fPreventive" placeholder="สิ่งที่ทำเพื่อไม่ให้เกิดซ้ำในระยะยาว..."></textarea>
+      </div>
+      <div class="field">
+        <label>รูปภาพ</label>
+        <div class="photo-upload-pair">
+          <div class="upload-box" id="beforeBox">
+            <div id="beforePreviewWrap"></div>
+            <label class="file-btn">📷 รูปก่อนแก้ปัญหา<input type="file" accept="image/*" id="fPhotoBefore"></label>
+          </div>
+          <div class="upload-box" id="afterBox">
+            <div id="afterPreviewWrap"></div>
+            <label class="file-btn">📷 รูปหลังแก้ปัญหา<input type="file" accept="image/*" id="fPhotoAfter"></label>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Attachments (ไฟล์แนบเพิ่มเติม)</label>
+        <label class="file-btn">📎 แนบไฟล์ (รูป/วิดีโอ/PDF/Excel/Word)<input type="file" id="fAttachments" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple></label>
+        <div id="attachmentsList" style="margin-top:8px;display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn ghost" id="btnCancel">ยกเลิก</button>
+      <button class="btn primary" id="btnSave">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ============================================================
+  // 1) ตั้งค่าตรงนี้หลังจากสร้างโปรเจกต์ Supabase แล้ว (ดูขั้นตอนที่แชทให้)
+  // ============================================================
+  var SUPABASE_URL = window.SUPABASE_URL || "YOUR_SUPABASE_URL";
+  var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+  // ============================================================
+
+  var sb = null;
+  var configured = SUPABASE_URL.indexOf("YOUR_") !== 0 && SUPABASE_ANON_KEY.indexOf("YOUR_") !== 0;
+  if (configured && window.supabase) {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  var DEFECT_CATEGORIES = ["Dimensional", "Visual/Cosmetic", "Functional", "Material", "Assembly", "Electrical", "Other"];
+  var ROOT_CAUSE_CATEGORIES = ["Man", "Machine", "Method", "Material", "Measurement", "Environment", "Other"];
+
+  var issues = [];
+  var expandedId = null;
+  var quickOverdueOnly = false;
+  var quickMineOnly = false;
+  var expandedUpdates = [];
+  var editingId = null;
+  var pendingPhotoBefore = null; // {file, url}
+  var pendingPhotoAfter = null;
+  var pendingAttachments = []; // [{name, url}] — already uploaded
+  var newAttachmentFiles = []; // File[] — selected this session, uploaded on save
+
+  function $(id) { return document.getElementById(id); }
+  function showConfigBanner() { $("configBanner").classList.add("show"); }
+  function showError(msg) {
+    var b = $("errorBanner");
+    b.textContent = msg;
+    b.classList.add("show");
+    setTimeout(function () { b.classList.remove("show"); }, 6000);
+    showToast(msg, "error");
+  }
+  function showToast(msg, type) {
+    var stack = $("toastStack");
+    var t = document.createElement("div"); t.className = "toast" + (type ? " " + type : "");
+    var icon = document.createElement("span"); icon.className = "icon";
+    icon.textContent = type === "success" ? "✅" : type === "error" ? "⚠️" : "ℹ️";
+    var text = document.createElement("span"); text.textContent = msg;
+    t.appendChild(icon); t.appendChild(text);
+    stack.appendChild(t);
+    setTimeout(function () {
+      t.style.transition = "opacity .3s ease";
+      t.style.opacity = "0";
+      setTimeout(function () { t.remove(); }, 300);
+    }, 4000);
+  }
+
+  function fmtDate(s) {
+    if (!s) return "—";
+    var d = new Date(s + "T00:00:00");
+    var months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+    return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+  }
+  function statusClass(s) { return s === "Open" ? "Open" : s === "In Progress" ? "InProgress" : "Closed"; }
+  function fmtDateShort(s) {
+    var d = new Date(s + "T00:00:00");
+    var months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+    return d.getDate() + " " + months[d.getMonth()];
+  }
+
+  // ---------- Chart tooltip (shared) ----------
+  var chartTooltipEl;
+  function showChartTooltip(evt, rows) {
+    chartTooltipEl.innerHTML = "";
+    rows.forEach(function (r, idx) {
+      var row = document.createElement("div"); row.className = idx === 0 && rows.length > 1 ? "" : "tt-row";
+      if (idx === 0 && rows.length > 1) { row.style.fontWeight = "700"; row.style.marginBottom = "4px"; row.textContent = r[0]; }
+      else {
+        var l = document.createElement("span"); l.textContent = r[0] + ": ";
+        var v = document.createElement("span"); v.className = "tt-val"; v.textContent = r[1];
+        row.appendChild(l); row.appendChild(v);
+      }
+      chartTooltipEl.appendChild(row);
+    });
+    chartTooltipEl.style.display = "block";
+    var x = evt.clientX + 12, y = evt.clientY + 12;
+    if (x + 180 > window.innerWidth) x = evt.clientX - 180 - 12;
+    if (y + 60 > window.innerHeight) y = evt.clientY - 60 - 12;
+    chartTooltipEl.style.left = x + "px";
+    chartTooltipEl.style.top = y + "px";
+  }
+  function hideChartTooltip() { chartTooltipEl.style.display = "none"; }
+
+  // ---------- Timeline (Gantt): received → resolved, auto "today" cutoff ----------
+  function renderTimelineChart(list) {
+    var el = $("timelineChart");
+    var withDates = list.filter(function (i) { return i.received_date; });
+    if (!withDates.length) { el.innerHTML = '<div class="chart-empty">ไม่มีข้อมูล</div>'; return; }
+
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    function parseDate(s) { return new Date(s + "T00:00:00"); }
+    function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+
+    var minDate = null, maxDate = today;
+    withDates.forEach(function (i) {
+      var r = parseDate(i.received_date);
+      if (!minDate || r < minDate) minDate = r;
+      var res = i.resolved_date ? parseDate(i.resolved_date) : null;
+      if (res && res > maxDate) maxDate = res;
+    });
+    var span = Math.max(daysBetween(minDate, maxDate), 1);
+    var pad = Math.max(Math.round(span * 0.04), 1);
+    var rangeStart = new Date(minDate); rangeStart.setDate(rangeStart.getDate() - pad);
+    var rangeEnd = new Date(maxDate); rangeEnd.setDate(rangeEnd.getDate() + pad);
+    var totalSpan = daysBetween(rangeStart, rangeEnd);
+
+    var wrap = document.createElement("div");
+    var axisEl = document.createElement("div"); axisEl.className = "timeline-axis";
+    [rangeStart, new Date((rangeStart.getTime() + rangeEnd.getTime()) / 2), rangeEnd].forEach(function (d, idx) {
+      var s = document.createElement("span"); s.className = "tabular"; s.textContent = fmtDateShort(d.toISOString().slice(0, 10));
+      if (idx === 2) s.textContent += " (วันนี้: " + fmtDateShort(today.toISOString().slice(0, 10)) + ")";
+      axisEl.appendChild(s);
+    });
+    wrap.appendChild(axisEl);
+
+    var rows = document.createElement("div"); rows.className = "timeline-rows";
+    withDates.slice().sort(function (a, b) { return (a.received_date || "").localeCompare(b.received_date || ""); }).forEach(function (issue) {
+      var received = parseDate(issue.received_date);
+      var endRef = issue.status === "Closed" && issue.resolved_date ? parseDate(issue.resolved_date) : today;
+      var days = Math.max(daysBetween(received, endRef), 0);
+
+      var row = document.createElement("div"); row.className = "t-row";
+      var label = document.createElement("div"); label.className = "t-label";
+      var b = document.createElement("b"); b.textContent = issue.code || "";
+      label.appendChild(b); label.appendChild(document.createTextNode(" " + issue.title));
+      row.appendChild(label);
+
+      var track = document.createElement("div"); track.className = "t-track";
+      var leftPct = daysBetween(rangeStart, received) / totalSpan * 100;
+      var widthPct = Math.max(days / totalSpan * 100, 0.8);
+      var bar = document.createElement("div"); bar.className = "t-bar st-" + statusClass(issue.status) + (widthPct < 4 ? " tiny" : "");
+      bar.style.left = leftPct + "%"; bar.style.width = widthPct + "%";
+      var dEl = document.createElement("span"); dEl.className = "t-days"; dEl.textContent = days + "d";
+      bar.appendChild(dEl);
+      (function (issue, days) {
+        bar.addEventListener("pointermove", function (evt) {
+          showChartTooltip(evt, [[(issue.code || "") + " " + issue.title], ["รับเรื่อง", fmtDate(issue.received_date)], ["สถานะ", issue.status], ["ระยะเวลา", days + " วัน"]]);
+        });
+        bar.addEventListener("pointerleave", hideChartTooltip);
+      })(issue, days);
+      track.appendChild(bar);
+      row.appendChild(track);
+      rows.appendChild(row);
+    });
+    wrap.appendChild(rows);
+
+    el.innerHTML = "";
+    el.appendChild(wrap);
+  }
+
+  function niceMax(max) {
+    if (max <= 0) return 1;
+    var step = max <= 5 ? 1 : max <= 10 ? 2 : max <= 25 ? 5 : max <= 100 ? 10 : Math.ceil(max / 5 / 50) * 50;
+    return Math.ceil(max / step) * step;
+  }
+  function playIn(cardId) {
+    var el = $(cardId);
+    el.classList.remove("in");
+    void el.offsetWidth;
+    requestAnimationFrame(function () { requestAnimationFrame(function () { el.classList.add("in"); }); });
+  }
+
+  // ---------- Donut: Severity Distribution ----------
+  function renderDonut(list) {
+    var el = $("donutChart");
+    var order = [["Critical", "var(--sev-critical)"], ["Major", "var(--sev-major)"], ["Minor", "var(--sev-minor)"]];
+    var counts = { Critical: 0, Major: 0, Minor: 0 };
+    list.forEach(function (i) { if (counts.hasOwnProperty(i.severity)) counts[i.severity]++; });
+    var total = list.length;
+    if (!total) { el.innerHTML = '<div class="chart-empty">No Data Available</div>'; playIn("cardDonut"); return; }
+
+    var size = 168, stroke = 30, r = (size - stroke) / 2, c = size / 2;
+    var circumference = 2 * Math.PI * r;
+    var gapDeg = 2;
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("width", size); svg.setAttribute("height", size);
+    svg.setAttribute("viewBox", "0 0 " + size + " " + size);
+    svg.setAttribute("class", "donut-svg");
+
+    var track = document.createElementNS(svgNS, "circle");
+    track.setAttribute("cx", c); track.setAttribute("cy", c); track.setAttribute("r", r);
+    track.setAttribute("fill", "none"); track.setAttribute("stroke", "var(--surface-2)"); track.setAttribute("stroke-width", stroke);
+    svg.appendChild(track);
+
+    var offsetDeg = 0;
+    var legend = document.createElement("div"); legend.className = "donut-legend";
+    order.forEach(function (o) {
+      var key = o[0], color = o[1];
+      var count = counts[key] || 0;
+      var pct = count / total * 100;
+      if (count > 0) {
+        var segDeg = pct / 100 * 360;
+        var drawDeg = Math.max(segDeg - gapDeg, 0.001);
+        var dash = (drawDeg / 360) * circumference;
+        var circle = document.createElementNS(svgNS, "circle");
+        circle.setAttribute("cx", c); circle.setAttribute("cy", c); circle.setAttribute("r", r);
+        circle.setAttribute("fill", "none"); circle.setAttribute("stroke", color); circle.setAttribute("stroke-width", stroke);
+        circle.setAttribute("stroke-dasharray", dash + " " + (circumference - dash));
+        circle.setAttribute("stroke-dashoffset", -(offsetDeg / 360 * circumference));
+        circle.setAttribute("transform", "rotate(-90 " + c + " " + c + ")");
+        (function (key, count, pct) {
+          circle.addEventListener("pointermove", function (evt) { showChartTooltip(evt, [[key, count + " งาน (" + pct.toFixed(0) + "%)"]]); });
+          circle.addEventListener("pointerleave", hideChartTooltip);
+        })(key, count, pct);
+        svg.appendChild(circle);
+      }
+      offsetDeg += pct / 100 * 360;
+
+      var item = document.createElement("div"); item.className = "donut-legend-item";
+      var sw = document.createElement("span"); sw.className = "donut-legend-swatch"; sw.style.background = color;
+      var name = document.createElement("span"); name.className = "donut-legend-name"; name.textContent = key;
+      var cnt = document.createElement("span"); cnt.className = "donut-legend-count"; cnt.textContent = "(" + count + ")";
+      var pctEl = document.createElement("span"); pctEl.className = "donut-legend-pct tabular"; pctEl.textContent = pct.toFixed(0) + "%";
+      item.appendChild(sw); item.appendChild(name); item.appendChild(cnt); item.appendChild(pctEl);
+      legend.appendChild(item);
+    });
+
+    var centerLabel = document.createElementNS(svgNS, "text");
+    centerLabel.setAttribute("x", c); centerLabel.setAttribute("y", c - 2);
+    centerLabel.setAttribute("text-anchor", "middle"); centerLabel.setAttribute("class", "donut-center-label");
+    centerLabel.textContent = total;
+    svg.appendChild(centerLabel);
+    var centerSub = document.createElementNS(svgNS, "text");
+    centerSub.setAttribute("x", c); centerSub.setAttribute("y", c + 14);
+    centerSub.setAttribute("text-anchor", "middle"); centerSub.setAttribute("class", "donut-center-sub");
+    centerSub.textContent = "Total Cases";
+    svg.appendChild(centerSub);
+
+    el.innerHTML = "";
+    var wrap = document.createElement("div"); wrap.className = "donut-wrap";
+    wrap.appendChild(svg); wrap.appendChild(legend);
+    el.appendChild(wrap);
+    playIn("cardDonut");
+  }
+
+  // ---------- Shared column-chart renderer (single series, one color) ----------
+  function renderColumnChartInto(elId, cardId, entries, unitLabel) {
+    var el = $(elId);
+    if (!entries.length) { el.innerHTML = '<div class="chart-empty">No Data Available</div>'; playIn(cardId); return; }
+    var maxV = Math.max.apply(null, entries.map(function (e) { return e.value; }));
+    var nMax = niceMax(maxV);
+
+    el.innerHTML = "";
+    var wrap = document.createElement("div");
+    var chart = document.createElement("div"); chart.className = "col-chart";
+    var grid = document.createElement("div"); grid.className = "col-chart__grid";
+    for (var g = 0; g <= 4; g++) {
+      var val = Math.round(nMax * g / 4);
+      var gl = document.createElement("div"); gl.className = "col-chart__gridline"; gl.style.bottom = (g / 4 * 100) + "%";
+      var tick = document.createElement("span"); tick.className = "tick tabular"; tick.textContent = val;
+      gl.appendChild(tick); grid.appendChild(gl);
+    }
+    chart.appendChild(grid);
+
+    var bars = document.createElement("div"); bars.className = "col-chart__bars";
+    entries.forEach(function (e) {
+      var col = document.createElement("div"); col.className = "col-chart__col";
+      var v = document.createElement("div"); v.className = "col-chart__val"; v.textContent = e.value;
+      var bar = document.createElement("div"); bar.className = "col-chart__bar" + (e.other ? " other" : "");
+      bar.style.height = "0%";
+      bar.addEventListener("pointermove", function (evt) { showChartTooltip(evt, [[e.label, e.value + " " + unitLabel]]); });
+      bar.addEventListener("pointerleave", hideChartTooltip);
+      col.appendChild(v); col.appendChild(bar);
+      bars.appendChild(col);
+      requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.height = Math.max(nMax > 0 ? (e.value / nMax * 100) : 0, 2) + "%"; }); });
+    });
+    chart.appendChild(bars);
+    wrap.appendChild(chart);
+
+    var labels = document.createElement("div"); labels.className = "col-chart__labels";
+    entries.forEach(function (e) {
+      var lab = document.createElement("div"); lab.className = "col-chart__label"; lab.textContent = e.label; lab.title = e.label;
+      labels.appendChild(lab);
+    });
+    wrap.appendChild(labels);
+    el.appendChild(wrap);
+    playIn(cardId);
+  }
+
+  // ---------- Bar: Issue Count by Line ----------
+  function renderBarChart(list) {
+    var counts = {};
+    list.forEach(function (i) { var k = i.line || "ไม่ระบุ"; counts[k] = (counts[k] || 0) + 1; });
+    var entries = Object.keys(counts).map(function (k) { return { label: k, value: counts[k] }; }).sort(function (a, b) { return b.value - a.value; });
+    if (entries.length > 7) {
+      var head = entries.slice(0, 7);
+      var otherSum = entries.slice(7).reduce(function (s, e) { return s + e.value; }, 0);
+      entries = head.concat([{ label: "อื่นๆ", value: otherSum, other: true }]);
+    }
+    renderColumnChartInto("barChart", "cardBar", entries, "งาน");
+  }
+
+  // ---------- Bar: Issue Count by Root Cause Category ----------
+  function renderRootCauseBarChart(list) {
+    var counts = {};
+    ROOT_CAUSE_CATEGORIES.forEach(function (c) { counts[c] = 0; });
+    var unspecified = 0;
+    list.forEach(function (i) {
+      if (i.root_cause_category && counts.hasOwnProperty(i.root_cause_category)) counts[i.root_cause_category]++;
+      else unspecified++;
+    });
+    var entries = ROOT_CAUSE_CATEGORIES.map(function (c) { return { label: c, value: counts[c] }; }).filter(function (e) { return e.value > 0; });
+    if (unspecified > 0) entries.push({ label: "Unspecified", value: unspecified, other: true });
+    entries.sort(function (a, b) { return b.value - a.value; });
+    renderColumnChartInto("rootCauseBarChart", "cardRootCauseBar", entries, "งาน");
+  }
+
+  // ---------- Pareto: NG Qty by Root Cause Category ----------
+  function renderParetoChart(list) {
+    var el = $("paretoChart");
+    var sums = {};
+    ROOT_CAUSE_CATEGORIES.forEach(function (c) { sums[c] = 0; });
+    var unspecified = 0;
+    list.forEach(function (i) {
+      var qty = Number(i.qty_ng) || 0;
+      if (qty <= 0) return;
+      if (i.root_cause_category && sums.hasOwnProperty(i.root_cause_category)) sums[i.root_cause_category] += qty;
+      else unspecified += qty;
+    });
+    var entries = ROOT_CAUSE_CATEGORIES.map(function (c) { return { label: c, value: sums[c] }; }).filter(function (e) { return e.value > 0; });
+    if (unspecified > 0) entries.push({ label: "Unspecified", value: unspecified });
+    entries.sort(function (a, b) { return b.value - a.value; });
+
+    var totalQty = entries.reduce(function (s, e) { return s + e.value; }, 0);
+    if (!totalQty) { el.innerHTML = '<div class="chart-empty">No Data Available</div>'; playIn("cardPareto"); return; }
+
+    var W = Math.max(420, entries.length * 90), H = 260;
+    var mL = 40, mR = 42, mB = 44, mT = 14;
+    var plotW = W - mL - mR, plotH = H - mT - mB;
+    var n = entries.length;
+    var slot = plotW / n, barW = Math.min(slot * 0.5, 40);
+    var maxV = niceMax(Math.max.apply(null, entries.map(function (e) { return e.value; })));
+
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("class", "svg-chart"); svg.style.minWidth = W + "px";
+
+    for (var g = 0; g <= 4; g++) {
+      var y = mT + plotH - (plotH * g / 4);
+      var gl = document.createElementNS(svgNS, "line");
+      gl.setAttribute("x1", mL); gl.setAttribute("x2", mL + plotW); gl.setAttribute("y1", y); gl.setAttribute("y2", y);
+      gl.setAttribute("class", "grid-line");
+      svg.appendChild(gl);
+      var tl = document.createElementNS(svgNS, "text");
+      tl.setAttribute("x", mL - 6); tl.setAttribute("y", y + 3); tl.setAttribute("text-anchor", "end"); tl.setAttribute("class", "tick-label");
+      tl.textContent = Math.round(maxV * g / 4);
+      svg.appendChild(tl);
+    }
+    [0, 20, 40, 60, 80, 100].forEach(function (p) {
+      var y = mT + plotH - (plotH * p / 100);
+      var tl = document.createElementNS(svgNS, "text");
+      tl.setAttribute("x", mL + plotW + 6); tl.setAttribute("y", y + 3); tl.setAttribute("class", "tick-label");
+      tl.textContent = p + "%";
+      svg.appendChild(tl);
+    });
+    var y80 = mT + plotH - (plotH * 80 / 100);
+    var thLine = document.createElementNS(svgNS, "line");
+    thLine.setAttribute("x1", mL); thLine.setAttribute("x2", mL + plotW); thLine.setAttribute("y1", y80); thLine.setAttribute("y2", y80);
+    thLine.setAttribute("class", "threshold-line");
+    svg.appendChild(thLine);
+    var thLabel = document.createElementNS(svgNS, "text");
+    thLabel.setAttribute("x", mL + 4); thLabel.setAttribute("y", y80 - 4); thLabel.setAttribute("class", "tick-label");
+    thLabel.textContent = "80% line";
+    svg.appendChild(thLabel);
+
+    var pathPts = [];
+    var cum = 0;
+    entries.forEach(function (e, i) {
+      var x = mL + i * slot + (slot - barW) / 2;
+      var barH = (e.value / maxV) * plotH;
+      var y = mT + plotH - barH;
+      var rect = document.createElementNS(svgNS, "rect");
+      rect.setAttribute("x", x); rect.setAttribute("y", mT + plotH); rect.setAttribute("width", barW); rect.setAttribute("height", 0);
+      rect.setAttribute("rx", 3); rect.setAttribute("class", "bar");
+      (function (label, value) {
+        rect.addEventListener("pointermove", function (evt) { showChartTooltip(evt, [[label, value.toLocaleString() + " NG"]]); });
+        rect.addEventListener("pointerleave", hideChartTooltip);
+      })(e.label, e.value);
+      svg.appendChild(rect);
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        rect.setAttribute("y", y); rect.setAttribute("height", barH);
+        rect.style.transition = "y .5s cubic-bezier(.2,.8,.2,1), height .5s cubic-bezier(.2,.8,.2,1)";
+      }); });
+
+      cum += e.value;
+      var cumPct = cum / totalQty * 100;
+      var px = x + barW / 2;
+      var py = mT + plotH - (plotH * cumPct / 100);
+      pathPts.push([px, py, e.label, cumPct]);
+
+      var catLabel = document.createElementNS(svgNS, "text");
+      catLabel.setAttribute("x", x + barW / 2); catLabel.setAttribute("y", H - mB + 16); catLabel.setAttribute("text-anchor", "middle"); catLabel.setAttribute("class", "cat-label");
+      catLabel.textContent = e.label.length > 10 ? e.label.slice(0, 9) + "…" : e.label;
+      svg.appendChild(catLabel);
+    });
+
+    var path = document.createElementNS(svgNS, "path");
+    var d = pathPts.map(function (p, i) { return (i === 0 ? "M" : "L") + p[0] + " " + p[1]; }).join(" ");
+    path.setAttribute("d", d); path.setAttribute("class", "pareto-line");
+    path.style.strokeDasharray = "1000"; path.style.strokeDashoffset = "1000"; path.style.transition = "stroke-dashoffset .7s ease";
+    svg.appendChild(path);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { path.style.strokeDashoffset = "0"; }); });
+
+    pathPts.forEach(function (p, i) {
+      var dot = document.createElementNS(svgNS, "circle");
+      dot.setAttribute("cx", p[0]); dot.setAttribute("cy", p[1]); dot.setAttribute("r", 4.5); dot.setAttribute("class", "pareto-dot");
+      (function (label, pct) {
+        dot.addEventListener("pointermove", function (evt) { showChartTooltip(evt, [["สะสมถึง " + label, pct.toFixed(1) + "%"]]); });
+        dot.addEventListener("pointerleave", hideChartTooltip);
+      })(p[2], p[3]);
+      svg.appendChild(dot);
+      if (i === pathPts.length - 1) {
+        var lbl = document.createElementNS(svgNS, "text");
+        lbl.setAttribute("x", p[0]); lbl.setAttribute("y", p[1] - 10); lbl.setAttribute("text-anchor", "middle");
+        lbl.setAttribute("class", "end-label"); lbl.setAttribute("fill", "var(--pareto-line)");
+        lbl.textContent = p[3].toFixed(0) + "%";
+        svg.appendChild(lbl);
+      }
+    });
+
+    el.innerHTML = "";
+    el.appendChild(svg);
+    playIn("cardPareto");
+  }
+
+  // ---------- Line: Daily Qty OK vs Qty NG ----------
+  var currentTrendPeriod = "daily";
+  function bucketKeyOf(dateStr, period) {
+    if (period === "monthly") return dateStr.slice(0, 7);
+    if (period === "weekly") {
+      var d = new Date(dateStr + "T00:00:00");
+      var day = d.getDay();
+      var diffToMonday = (day === 0 ? -6 : 1 - day);
+      var monday = new Date(d); monday.setDate(d.getDate() + diffToMonday);
+      return monday.toISOString().slice(0, 10);
+    }
+    return dateStr;
+  }
+  function bucketLabelOf(key, period) {
+    if (period === "monthly") {
+      var parts = key.split("-");
+      var months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+      return months[parseInt(parts[1], 10) - 1] + " " + parts[0];
+    }
+    if (period === "weekly") return "wk " + fmtDateShort(key);
+    return fmtDateShort(key);
+  }
+  function bucketFullLabelOf(key, period) {
+    if (period === "monthly") return bucketLabelOf(key, period);
+    if (period === "weekly") return "สัปดาห์ที่เริ่ม " + fmtDate(key);
+    return fmtDate(key);
+  }
+
+  function renderTrendChart(list) {
+    var el = $("trendChart");
+    var period = currentTrendPeriod;
+    var byDate = {};
+    list.forEach(function (i) {
+      if (!i.received_date) return;
+      if (i.qty_ok == null && i.qty_ng == null) return;
+      var key = bucketKeyOf(i.received_date, period);
+      if (!byDate[key]) byDate[key] = { ok: 0, ng: 0 };
+      byDate[key].ok += Number(i.qty_ok) || 0;
+      byDate[key].ng += Number(i.qty_ng) || 0;
+    });
+    var dates = Object.keys(byDate).sort();
+    if (!dates.length) { el.innerHTML = '<div class="chart-empty">No Data Available</div>'; playIn("cardTrend"); return; }
+
+    var W = Math.max(420, dates.length * 70), H = 240;
+    var mL = 40, mR = 16, mB = 34, mT = 14;
+    var plotW = W - mL - mR, plotH = H - mT - mB;
+    var n = dates.length;
+    var slot = n > 1 ? plotW / (n - 1) : 0;
+    var maxV = niceMax(Math.max.apply(null, dates.map(function (d) { return Math.max(byDate[d].ok, byDate[d].ng); })));
+
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("class", "svg-chart"); svg.style.minWidth = W + "px";
+
+    for (var g = 0; g <= 4; g++) {
+      var y = mT + plotH - (plotH * g / 4);
+      var gl = document.createElementNS(svgNS, "line");
+      gl.setAttribute("x1", mL); gl.setAttribute("x2", mL + plotW); gl.setAttribute("y1", y); gl.setAttribute("y2", y);
+      gl.setAttribute("class", "grid-line");
+      svg.appendChild(gl);
+      var tl = document.createElementNS(svgNS, "text");
+      tl.setAttribute("x", mL - 6); tl.setAttribute("y", y + 3); tl.setAttribute("text-anchor", "end"); tl.setAttribute("class", "tick-label");
+      tl.textContent = Math.round(maxV * g / 4);
+      svg.appendChild(tl);
+    }
+
+    function xOf(i) { return n > 1 ? mL + i * slot : mL + plotW / 2; }
+    function yOf(v) { return mT + plotH - (v / maxV * plotH); }
+
+    function buildLine(key, cls, dotCls) {
+      var pts = dates.map(function (d, i) { return [xOf(i), yOf(byDate[d][key])]; });
+      var path = document.createElementNS(svgNS, "path");
+      var d2 = pts.map(function (p, i) { return (i === 0 ? "M" : "L") + p[0] + " " + p[1]; }).join(" ");
+      path.setAttribute("d", d2); path.setAttribute("class", cls);
+      path.style.strokeDasharray = "2000"; path.style.strokeDashoffset = "2000"; path.style.transition = "stroke-dashoffset .8s ease";
+      svg.appendChild(path);
+      requestAnimationFrame(function () { requestAnimationFrame(function () { path.style.strokeDashoffset = "0"; }); });
+      pts.forEach(function (p) {
+        var dot = document.createElementNS(svgNS, "circle");
+        dot.setAttribute("cx", p[0]); dot.setAttribute("cy", p[1]); dot.setAttribute("r", 3.5); dot.setAttribute("class", dotCls);
+        svg.appendChild(dot);
+      });
+      var last = pts[pts.length - 1];
+      var lastVal = byDate[dates[dates.length - 1]][key];
+      var lbl = document.createElementNS(svgNS, "text");
+      lbl.setAttribute("x", last[0]); lbl.setAttribute("y", last[1] - 8); lbl.setAttribute("text-anchor", "end");
+      lbl.setAttribute("class", "end-label"); lbl.setAttribute("fill", key === "ok" ? "var(--good)" : "var(--critical)");
+      lbl.textContent = lastVal;
+      svg.appendChild(lbl);
+    }
+    buildLine("ok", "ok-line", "ok-dot");
+    buildLine("ng", "ng-line", "ng-dot");
+
+    var labelEvery = Math.max(1, Math.ceil(n / 8));
+    dates.forEach(function (d, i) {
+      if (i % labelEvery !== 0 && i !== n - 1) return;
+      var t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", xOf(i)); t.setAttribute("y", H - mB + 16); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "cat-label");
+      t.textContent = bucketLabelOf(d, period);
+      svg.appendChild(t);
+    });
+
+    dates.forEach(function (d, i) {
+      var hx = n > 1 ? xOf(i) - slot / 2 : mL;
+      var hw = n > 1 ? slot : plotW;
+      var hit = document.createElementNS(svgNS, "rect");
+      hit.setAttribute("x", Math.max(hx, mL)); hit.setAttribute("y", mT); hit.setAttribute("width", hw); hit.setAttribute("height", plotH);
+      hit.setAttribute("class", "hit-col");
+      hit.addEventListener("pointermove", function (evt) {
+        showChartTooltip(evt, [[bucketFullLabelOf(d, period)], ["Qty OK", byDate[d].ok, "var(--good)"], ["Qty NG", byDate[d].ng, "var(--critical)"]]);
+      });
+      hit.addEventListener("pointerleave", hideChartTooltip);
+      svg.appendChild(hit);
+    });
+
+    el.innerHTML = "";
+    var legend = document.createElement("div"); legend.className = "line-legend";
+    legend.innerHTML = '<div class="line-legend-item"><span class="line-legend-key" style="background:var(--good)"></span>Qty OK</div>' +
+      '<div class="line-legend-item"><span class="line-legend-key" style="background:var(--critical)"></span>Qty NG</div>';
+    el.appendChild(legend);
+    el.appendChild(svg);
+    playIn("cardTrend");
+  }
+
+  // ---------- Data access (Supabase) ----------
+  async function loadIssues() {
+    if (!sb) { showConfigBanner(); return; }
+    var res = await sb.from("issues").select("*").order("received_date", { ascending: false });
+    if (res.error) { showError("โหลดข้อมูลไม่สำเร็จ: " + res.error.message); return; }
+    issues = res.data || [];
+    renderAll();
+  }
+
+  async function loadUpdates(issueId) {
+    var res = await sb.from("issue_updates").select("*").eq("issue_id", issueId).order("update_date", { ascending: false }).order("created_at", { ascending: false });
+    if (res.error) { showError("โหลดบันทึกไม่สำเร็จ: " + res.error.message); return []; }
+    return res.data || [];
+  }
+
+  async function uploadPhoto(file, prefix) {
+    var ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    var path = prefix + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 7) + "." + ext;
+    var res = await sb.storage.from("issue-photos").upload(path, file, { upsert: false });
+    if (res.error) { throw new Error(res.error.message); }
+    var pub = sb.storage.from("issue-photos").getPublicUrl(path);
+    return pub.data.publicUrl;
+  }
+
+  // ---------- Stats / dist ----------
+  var xlsxLoadPromise = null;
+  function loadXLSX() {
+    if (window.XLSX) return Promise.resolve();
+    if (xlsxLoadPromise) return xlsxLoadPromise;
+    xlsxLoadPromise = new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+      s.onload = function () { resolve(); };
+      s.onerror = function () { xlsxLoadPromise = null; reject(new Error("โหลดไลบรารี Excel ไม่สำเร็จ")); };
+      document.head.appendChild(s);
+    });
+    return xlsxLoadPromise;
+  }
+
+  async function exportExcel(list) {
+    if (!list.length) { showToast("ไม่มีรายการให้ export ตามตัวกรองปัจจุบัน", "error"); return; }
+    var btn = $("btnExportExcel"); var origHTML = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span><span>กำลังเตรียมไฟล์...</span>';
+    try {
+      await loadXLSX();
+    } catch (e) {
+      showError(e.message);
+      btn.disabled = false; btn.innerHTML = origHTML;
+      return;
+    }
+    btn.disabled = false; btn.innerHTML = origHTML;
+    var rows = list.map(function (i) {
+      return {
+        "รหัส": i.code, "หัวข้อ": i.title, "Production Line": i.line, "Machine": i.machine || "",
+        "Product": i.product || "", "Customer": i.customer || "", "Department": i.department || "",
+        "ความรุนแรง": i.severity, "สถานะ": i.status, "ผู้รับผิดชอบ": i.owner || "",
+        "วันที่รับเรื่อง": i.received_date, "วันที่แก้ไขเสร็จ": i.resolved_date || "", "กำหนดปิดงาน": i.due_date || "",
+        "ความคืบหน้า (%)": i.progress || 0, "Defect Category": i.defect_category || "", "Root Cause Category": i.root_cause_category || "",
+        "Downtime (นาที)": i.downtime_minutes != null ? i.downtime_minutes : "", "Qty NG": i.qty_ng != null ? i.qty_ng : "", "Qty OK": i.qty_ok != null ? i.qty_ok : "",
+        "สาเหตุที่แท้จริง": i.root_cause || "", "มาตรการแก้ไข": i.corrective_action || "", "มาตรการป้องกัน": i.preventive_action || ""
+      };
+    });
+    var ws = XLSX.utils.json_to_sheet(rows);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Issues");
+    var stamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, "engineering-issues-" + stamp + ".xlsx");
+    showToast("Export Excel สำเร็จ (" + list.length + " รายการ)", "success");
+  }
+
+  var IMAGE_EXT = ["jpg","jpeg","png","gif","webp","svg","bmp","heic"];
+  var VIDEO_EXT = ["mp4","webm","mov","ogg","m4v"];
+  var OFFICE_EXT = ["doc","docx","xls","xlsx","ppt","pptx"];
+  function extOf(name) { return (name || "").split(".").pop().toLowerCase(); }
+  function fileIconFor(name) {
+    var ext = extOf(name);
+    if (IMAGE_EXT.indexOf(ext) !== -1) return "🖼";
+    if (VIDEO_EXT.indexOf(ext) !== -1) return "🎬";
+    if (ext === "pdf") return "📕";
+    if (ext === "doc" || ext === "docx") return "📄";
+    if (ext === "xls" || ext === "xlsx") return "📊";
+    if (ext === "ppt" || ext === "pptx") return "📽";
+    return "📎";
+  }
+
+  function openPreview(url, name) {
+    var ext = extOf(name || url);
+    $("previewName").textContent = name || url;
+    $("previewDownload").href = url;
+    var body = $("previewBody");
+    body.innerHTML = "";
+    if (IMAGE_EXT.indexOf(ext) !== -1) {
+      var img = document.createElement("img"); img.src = url; img.alt = name || "";
+      body.appendChild(img);
+    } else if (VIDEO_EXT.indexOf(ext) !== -1) {
+      var vid = document.createElement("video"); vid.src = url; vid.controls = true; vid.autoplay = true;
+      body.appendChild(vid);
+    } else if (ext === "pdf") {
+      var frame = document.createElement("iframe"); frame.src = url;
+      body.appendChild(frame);
+    } else if (OFFICE_EXT.indexOf(ext) !== -1) {
+      var frame2 = document.createElement("iframe");
+      frame2.src = "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(url);
+      body.appendChild(frame2);
+    } else {
+      body.innerHTML = '<div class="preview-box__fallback">ไม่รองรับการแสดงตัวอย่างไฟล์ประเภทนี้ในเบราว์เซอร์<br>กด ⬇ เพื่อดาวน์โหลด/เปิดไฟล์</div>';
+    }
+    $("previewBackdrop").classList.add("show");
+  }
+  function closePreview() {
+    $("previewBackdrop").classList.remove("show");
+    $("previewBody").innerHTML = "";
+  }
+
+  // ---------- Share Report ----------
+  var shareTargetIssue = null;
+  async function sha256Hex(text) {
+    var enc = new TextEncoder().encode(text);
+    var buf = await crypto.subtle.digest("SHA-256", enc);
+    return Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+  }
+  function randomToken() {
+    var arr = new Uint8Array(18);
+    crypto.getRandomValues(arr);
+    return Array.prototype.map.call(arr, function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+  }
+  function openShareDialog(issue) {
+    shareTargetIssue = issue;
+    $("shareStep1").style.display = "";
+    $("shareStep2").style.display = "none";
+    $("shareExpiry").value = "7";
+    $("sharePassword").value = "";
+    $("btnCreateShare").style.display = "";
+    $("btnCreateShare").disabled = false;
+    $("btnCreateShare").textContent = "สร้างลิงก์";
+    $("shareBackdrop").classList.add("show");
+  }
+  function closeShareDialog() { $("shareBackdrop").classList.remove("show"); }
+
+  async function createShareLink() {
+    if (!shareTargetIssue) return;
+    var btn = $("btnCreateShare");
+    btn.disabled = true; btn.textContent = "กำลังสร้างลิงก์...";
+    try {
+      var token = randomToken();
+      var days = $("shareExpiry").value;
+      var expiresAt = days ? new Date(Date.now() + parseInt(days, 10) * 86400000).toISOString() : null;
+      var pw = $("sharePassword").value.trim();
+      var pwHash = pw ? await sha256Hex(pw) : null;
+      var res = await sb.from("shares").insert({ token: token, issue_id: shareTargetIssue.id, expires_at: expiresAt, password_hash: pwHash });
+      if (res.error) throw new Error(res.error.message);
+      var link = window.location.origin + window.location.pathname.replace(/index\.html$/, "") + "share.html?t=" + token;
+      $("shareLinkOutput").value = link;
+      $("sharePasswordNote").textContent = pw ? "🔒 ลิงก์นี้ต้องใส่รหัสผ่านที่ตั้งไว้จึงจะเปิดดูได้" : "ลิงก์นี้เปิดดูได้ทุกคนที่มีลิงก์ (ไม่ต้องใส่รหัสผ่าน)";
+      $("shareStep1").style.display = "none";
+      $("shareStep2").style.display = "";
+      btn.style.display = "none";
+      showToast("สร้างลิงก์แชร์แล้ว", "success");
+    } catch (e) {
+      showError("สร้างลิงก์ไม่สำเร็จ: " + e.message);
+      btn.disabled = false; btn.textContent = "สร้างลิงก์";
+    }
+  }
+
+  function isOverdue(i) {
+    if (i.status === "Closed" || !i.due_date) return false;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    return new Date(i.due_date + "T00:00:00") < today;
+  }
+
+  function renderStats() {
+    var total = issues.length;
+    var open = issues.filter(function (i) { return i.status === "Open"; }).length;
+    var prog = issues.filter(function (i) { return i.status === "In Progress"; }).length;
+    var closed = issues.filter(function (i) { return i.status === "Closed"; }).length;
+    var critical = issues.filter(function (i) { return i.severity === "Critical"; }).length;
+    var major = issues.filter(function (i) { return i.severity === "Major"; }).length;
+    var minor = issues.filter(function (i) { return i.severity === "Minor"; }).length;
+    var overdue = issues.filter(isOverdue).length;
+    var closedWithDates = issues.filter(function (i) { return i.status === "Closed" && i.received_date && i.resolved_date; });
+    var avg = closedWithDates.length
+      ? (closedWithDates.reduce(function (s, i) { return s + (new Date(i.resolved_date) - new Date(i.received_date)) / 86400000; }, 0) / closedWithDates.length)
+      : null;
+    var tiles = [
+      ["📋 งานทั้งหมด", total, "", null],
+      ["🔓 ยังไม่แก้ไข (Open)", open, "critical", function () { setQuickFilter({ status: "Open" }); }],
+      ["⏳ กำลังดำเนินการ", prog, "warning-c", function () { setQuickFilter({ status: "In Progress" }); }],
+      ["✅ ปิดงานแล้ว", closed, "good-c", function () { setQuickFilter({ status: "Closed" }); }],
+      ["🔴 Critical", critical, "critical", function () { setQuickFilter({ severity: "Critical" }); }],
+      ["🟠 Major", major, "warning-c", function () { setQuickFilter({ severity: "Major" }); }],
+      ["🟢 Minor", minor, "good-c", function () { setQuickFilter({ severity: "Minor" }); }],
+      ["⚠️ เกินกำหนด (Overdue)", overdue, overdue > 0 ? "critical" : "", function () { setQuickFilter({ overdue: true }); }],
+      ["⏱ เวลาแก้ไขเฉลี่ย (วัน)", avg === null ? "—" : avg.toFixed(1), "", null]
+    ];
+    var el = $("stats"); el.innerHTML = "";
+    tiles.forEach(function (t) {
+      var d = document.createElement("div"); d.className = "stat";
+      if (t[3]) { d.classList.add("clickable"); d.addEventListener("click", t[3]); d.tabIndex = 0; }
+      var l = document.createElement("div"); l.className = "label"; l.textContent = t[0];
+      var v = document.createElement("div"); v.className = "value tabular" + (t[2] ? " " + t[2] : ""); v.textContent = t[1];
+      d.appendChild(l); d.appendChild(v); el.appendChild(d);
+    });
+  }
+
+  function renderDist() {
+    var open = issues.filter(function (i) { return i.status === "Open"; }).length;
+    var prog = issues.filter(function (i) { return i.status === "In Progress"; }).length;
+    var closed = issues.filter(function (i) { return i.status === "Closed"; }).length;
+    var total = Math.max(open + prog + closed, 1);
+    var bar = $("distBar"); bar.innerHTML = "";
+    [["Open", open], ["progress-seg", prog], ["Closed", closed]].forEach(function (seg) {
+      if (seg[1] <= 0) return;
+      var d = document.createElement("div"); d.className = "dist-seg " + seg[0];
+      d.style.width = (seg[1] / total * 100) + "%";
+      var n = document.createElement("span"); n.className = "n"; n.textContent = seg[1];
+      d.appendChild(n); bar.appendChild(d);
+    });
+    var legend = $("distLegend"); legend.innerHTML = "";
+    [["Open", "Open", open], ["progress-seg", "In Progress", prog], ["Closed", "Closed", closed]].forEach(function (it) {
+      var li = document.createElement("div"); li.className = "legend-item";
+      var sw = document.createElement("span"); sw.className = "legend-swatch " + it[0];
+      var lab = document.createElement("span"); lab.textContent = it[1] + " · " + it[2] + " งาน";
+      li.appendChild(sw); li.appendChild(lab); legend.appendChild(li);
+    });
+  }
+
+  function populateFilterSelect(id, field, allLabel) {
+    var sel = $(id); var cur = sel.value;
+    var values = Array.from(new Set(issues.map(function (i) { return i[field]; }).filter(Boolean))).sort();
+    sel.innerHTML = '<option value="">' + allLabel + '</option>';
+    values.forEach(function (v) { var o = document.createElement("option"); o.value = v; o.textContent = v; sel.appendChild(o); });
+    sel.value = cur;
+  }
+  function populateLineFilter() {
+    populateFilterSelect("fLine", "line", "Line ทั้งหมด");
+    populateFilterSelect("fMachineFilter", "machine", "Machine ทั้งหมด");
+    populateFilterSelect("fProductFilter", "product", "Product ทั้งหมด");
+    populateFilterSelect("fCustomerFilter", "customer", "Customer ทั้งหมด");
+    populateFilterSelect("fDepartmentFilter", "department", "Department ทั้งหมด");
+    populateFilterSelect("fEngineerFilter", "owner", "Engineer ทั้งหมด");
+  }
+
+  function currentFilters() {
+    return {
+      status: $("fStatus").value, severity: $("fSeverity").value, line: $("fLine").value,
+      machine: $("fMachineFilter").value, product: $("fProductFilter").value, customer: $("fCustomerFilter").value,
+      department: $("fDepartmentFilter").value, engineer: $("fEngineerFilter").value,
+      dateFrom: $("fDateFrom").value, dateTo: $("fDateTo").value,
+      search: $("fSearch").value.trim().toLowerCase()
+    };
+  }
+  function getMyName() { return localStorage.getItem("eng-log-my-name") || ""; }
+  function setMyName(name) { localStorage.setItem("eng-log-my-name", name); }
+
+  var SEVERITY_RANK = { Critical: 0, Major: 1, Minor: 2 };
+  function sortIssues(list) {
+    var mode = $("fSort") ? $("fSort").value : "newest";
+    var sorted = list.slice();
+    if (mode === "newest") sorted.sort(function (a, b) { return (b.received_date || "").localeCompare(a.received_date || ""); });
+    else if (mode === "oldest") sorted.sort(function (a, b) { return (a.received_date || "").localeCompare(b.received_date || ""); });
+    else if (mode === "severity") sorted.sort(function (a, b) { return SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]; });
+    else if (mode === "progress") sorted.sort(function (a, b) { return (b.progress || 0) - (a.progress || 0); });
+    else if (mode === "dueDate") sorted.sort(function (a, b) {
+      if (!a.due_date && !b.due_date) return 0;
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return a.due_date.localeCompare(b.due_date);
+    });
+    return sorted;
+  }
+
+  function filteredIssues() {
+    var f = currentFilters();
+    var myName = getMyName();
+    var result = issues.filter(function (i) {
+      if (f.status && i.status !== f.status) return false;
+      if (f.severity && i.severity !== f.severity) return false;
+      if (f.line && i.line !== f.line) return false;
+      if (f.machine && i.machine !== f.machine) return false;
+      if (f.product && i.product !== f.product) return false;
+      if (f.customer && i.customer !== f.customer) return false;
+      if (f.department && i.department !== f.department) return false;
+      if (f.engineer && i.owner !== f.engineer) return false;
+      if (f.dateFrom && (!i.received_date || i.received_date < f.dateFrom)) return false;
+      if (f.dateTo && (!i.received_date || i.received_date > f.dateTo)) return false;
+      if (f.search && !((i.title || "") + " " + (i.code || "") + " " + (i.root_cause || "") + " " + (i.product || "")).toLowerCase().includes(f.search)) return false;
+      if (quickOverdueOnly && !isOverdue(i)) return false;
+      if (quickMineOnly && myName && (i.owner || "").trim().toLowerCase() !== myName.trim().toLowerCase()) return false;
+      return true;
+    });
+    return sortIssues(result);
+  }
+
+  // ---------- Progress ring (SVG) ----------
+  function ringSVG(pct, size) {
+    size = size || 54;
+    var stroke = 5;
+    var r = (size - stroke) / 2;
+    var c = size / 2;
+    var circumference = 2 * Math.PI * r;
+    var offset = circumference * (1 - pct / 100);
+    var trackColor = "var(--line-strong)";
+    var fillColor = "var(--accent)";
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' +
+      '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="' + trackColor + '" stroke-width="' + stroke + '"/>' +
+      '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="none" stroke="' + fillColor + '" stroke-width="' + stroke + '" ' +
+        'stroke-dasharray="' + circumference + '" stroke-dashoffset="' + offset + '" stroke-linecap="round" ' +
+        'transform="rotate(-90 ' + c + ' ' + c + ')"/>' +
+      '<text x="' + c + '" y="' + (c + 4) + '" text-anchor="middle" font-size="' + (size * 0.26) + '" font-weight="700" fill="var(--ink)" font-family="ui-monospace, monospace">' + pct + '%</text>' +
+    '</svg>';
+  }
+
+  // ---------- Card rendering ----------
+  function photoSlotHTML(url, label) {
+    if (url) {
+      return '<div class="photo-slot preview-thumb" onclick="openPreview(' + JSON.stringify(url) + ',' + JSON.stringify(label) + ')"><img src="' + url + '" alt="' + label + '"><div class="cap">' + label + '</div></div>';
+    }
+    return '<div class="photo-slot"><div class="empty-hint">ยังไม่มีรูป' + label + '</div></div>';
+  }
+
+  var currentView = localStorage.getItem("eng-log-view") || "card";
+
+  function renderTableBody(list) {
+    var tbody = $("issueTableBody");
+    tbody.innerHTML = "";
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-muted);padding:30px;">ไม่พบงานที่ตรงกับตัวกรอง</td></tr>';
+      return;
+    }
+    list.forEach(function (issue) {
+      var tr = document.createElement("tr");
+      tr.addEventListener("click", function () { openModal(issue); });
+      function td(content, isNode) {
+        var cell = document.createElement("td");
+        if (isNode) cell.appendChild(content); else cell.textContent = content;
+        tr.appendChild(cell);
+      }
+      td(issue.code || "");
+      td(issue.title);
+      td(issue.line || "—");
+      var sev = document.createElement("span"); sev.className = "sev " + issue.severity; sev.textContent = issue.severity;
+      td(sev, true);
+      var pill = document.createElement("span"); pill.className = "pill st-" + statusClass(issue.status); pill.textContent = issue.status;
+      td(pill, true);
+      td((issue.progress || 0) + "%");
+      td(issue.owner || "—");
+      td(fmtDate(issue.received_date));
+      var dueSpan = document.createElement("span");
+      dueSpan.textContent = issue.due_date ? fmtDate(issue.due_date) : "—";
+      if (isOverdue(issue)) dueSpan.style.color = "var(--critical)";
+      td(dueSpan, true);
+      var actionsWrap = document.createElement("div"); actionsWrap.style.cssText = "display:flex;gap:2px;";
+      var shareBtn = document.createElement("button"); shareBtn.className = "icon-btn"; shareBtn.textContent = "🔗"; shareBtn.title = "แชร์";
+      shareBtn.addEventListener("click", function (e) { e.stopPropagation(); openShareDialog(issue); });
+      var editBtn = document.createElement("button"); editBtn.className = "icon-btn"; editBtn.textContent = "✎";
+      editBtn.addEventListener("click", function (e) { e.stopPropagation(); openModal(issue); });
+      actionsWrap.appendChild(shareBtn); actionsWrap.appendChild(editBtn);
+      td(actionsWrap, true);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function applyViewMode() {
+    $("grid").style.display = currentView === "card" ? "" : "none";
+    $("tableViewWrap").style.display = currentView === "table" ? "" : "none";
+    document.querySelectorAll("#viewToggle .view-btn").forEach(function (b) { b.classList.toggle("active", b.dataset.view === currentView); });
+  }
+
+  function renderGrid() {
+    var list = filteredIssues();
+    renderTableBody(list);
+    applyViewMode();
+    var grid = $("grid");
+    grid.innerHTML = "";
+    if (!list.length) {
+      grid.innerHTML = '<div class="empty">ไม่พบงานที่ตรงกับตัวกรอง — ลองล้างตัวกรอง หรือกด "เพิ่มปัญหาใหม่"</div>';
+      return;
+    }
+    list.forEach(function (issue) {
+      var card = document.createElement("div");
+      card.className = "issue-card";
+
+      var top = document.createElement("div"); top.className = "issue-card__top";
+      var main = document.createElement("div"); main.className = "issue-card__main";
+      var badges = document.createElement("div"); badges.className = "issue-card__badges";
+      var pill = document.createElement("span"); pill.className = "pill st-" + statusClass(issue.status); pill.textContent = issue.status;
+      var sev = document.createElement("span"); sev.className = "sev " + issue.severity; sev.textContent = issue.severity;
+      badges.appendChild(pill); badges.appendChild(sev);
+      if (issue.defect_category) {
+        var dc = document.createElement("span"); dc.className = "sev Neutral"; dc.textContent = issue.defect_category;
+        badges.appendChild(dc);
+      }
+      var title = document.createElement("div"); title.className = "issue-card__title";
+      title.textContent = (issue.code || "") + " · " + issue.title;
+      var meta = document.createElement("div"); meta.className = "issue-card__meta";
+      meta.textContent = (issue.line || "—") + " · " + (issue.owner || "ยังไม่ระบุผู้รับผิดชอบ") + " · รับเรื่อง " + fmtDate(issue.received_date);
+      var desc = document.createElement("div"); desc.className = "issue-card__desc"; desc.textContent = issue.description || "";
+      main.appendChild(badges); main.appendChild(title); main.appendChild(meta);
+      if (issue.description) main.appendChild(desc);
+
+      var ringWrap = document.createElement("div"); ringWrap.className = "ring-wrap";
+      ringWrap.innerHTML = ringSVG(issue.progress || 0) + '<span class="ring-label">คืบหน้า</span>';
+
+      top.appendChild(main); top.appendChild(ringWrap);
+      card.appendChild(top);
+
+      var photoRow = document.createElement("div"); photoRow.className = "photo-row";
+      photoRow.innerHTML = photoSlotHTML(issue.photo_before, "ก่อนแก้") + photoSlotHTML(issue.photo_after, "หลังแก้");
+      card.appendChild(photoRow);
+
+      var foot = document.createElement("div"); foot.className = "issue-card__foot";
+      var toggleBtn = document.createElement("button"); toggleBtn.className = "btn small";
+      toggleBtn.textContent = expandedId === issue.id ? "▾ ซ่อนรายละเอียด" : "▸ ดูรายละเอียด / ลงบันทึกวันนี้";
+      toggleBtn.addEventListener("click", function () { toggleExpand(issue.id); });
+      var shareBtn = document.createElement("button"); shareBtn.className = "icon-btn"; shareBtn.textContent = "🔗"; shareBtn.title = "แชร์รายงาน (read-only)";
+      shareBtn.addEventListener("click", function () { openShareDialog(issue); });
+      var editBtn = document.createElement("button"); editBtn.className = "icon-btn"; editBtn.textContent = "✎"; editBtn.title = "แก้ไข";
+      editBtn.addEventListener("click", function () { openModal(issue); });
+      var delBtn = document.createElement("button"); delBtn.className = "icon-btn"; delBtn.textContent = "🗑"; delBtn.title = "ลบ";
+      delBtn.addEventListener("click", function () { deleteIssue(issue); });
+      var rightBtns = document.createElement("div");
+      rightBtns.appendChild(shareBtn); rightBtns.appendChild(editBtn); rightBtns.appendChild(delBtn);
+      foot.appendChild(toggleBtn); foot.appendChild(rightBtns);
+      card.appendChild(foot);
+
+      if (expandedId === issue.id) {
+        var detail = buildDetail(issue);
+        card.appendChild(detail);
+      }
+
+      grid.appendChild(card);
+    });
+  }
+
+  function sectionTitle(text) {
+    var t = document.createElement("div"); t.className = "detail-section__title"; t.textContent = text;
+    return t;
+  }
+  function fieldBlock(label, value) {
+    var d = document.createElement("div"); d.className = "detail-field";
+    var k = document.createElement("div"); k.className = "k"; k.textContent = label;
+    var v = document.createElement("div"); v.className = "v"; v.textContent = value || "—";
+    d.appendChild(k); d.appendChild(v);
+    return d;
+  }
+
+  function buildDetail(issue) {
+    var wrap = document.createElement("div"); wrap.className = "detail";
+
+    // 1) Basic Information
+    var s1 = document.createElement("div"); s1.className = "detail-section";
+    s1.appendChild(sectionTitle("1. Basic Information"));
+    var g1 = document.createElement("div"); g1.className = "detail-grid";
+    [["Production Line", issue.line], ["Machine", issue.machine], ["Product", issue.product], ["Customer", issue.customer],
+     ["Department", issue.department], ["ผู้รับผิดชอบ (Engineer)", issue.owner], ["Defect Category", issue.defect_category],
+     ["Root Cause Category", issue.root_cause_category]].forEach(function (f) { g1.appendChild(fieldBlock(f[0], f[1])); });
+    s1.appendChild(g1);
+    if (issue.description) {
+      var descBlock = fieldBlock("รายละเอียดปัญหา", issue.description);
+      descBlock.style.marginTop = "10px";
+      s1.appendChild(descBlock);
+    }
+    wrap.appendChild(s1);
+
+    // 2) Before / After Images
+    var s2 = document.createElement("div"); s2.className = "detail-section";
+    s2.appendChild(sectionTitle("2. Before / After Images"));
+    var s2note = document.createElement("div");
+    s2note.style.cssText = "font-size:12.5px;color:var(--ink-muted);";
+    s2note.textContent = (issue.photo_before || issue.photo_after) ? "ดูรูปก่อน/หลังแก้ปัญหาที่ด้านบนของการ์ดนี้ ↑" : "ยังไม่มีรูปแนบ";
+    s2.appendChild(s2note);
+    wrap.appendChild(s2);
+
+    // 3) Root Cause
+    var s3 = document.createElement("div"); s3.className = "detail-section";
+    s3.appendChild(sectionTitle("3. Root Cause"));
+    s3.appendChild(fieldBlock("สาเหตุที่แท้จริง", issue.root_cause));
+    wrap.appendChild(s3);
+
+    // 4) 5 Why
+    var whys = [issue.why1, issue.why2, issue.why3, issue.why4, issue.why5];
+    if (whys.some(Boolean)) {
+      var s4 = document.createElement("div"); s4.className = "detail-section";
+      s4.appendChild(sectionTitle("4. 5 Why Analysis"));
+      var whyList = document.createElement("div"); whyList.className = "why-list";
+      whys.forEach(function (w, idx) {
+        if (!w) return;
+        var item = document.createElement("div"); item.className = "why-item";
+        var num = document.createElement("span"); num.className = "num"; num.textContent = idx + 1;
+        var txt = document.createElement("span"); txt.textContent = w;
+        item.appendChild(num); item.appendChild(txt);
+        whyList.appendChild(item);
+      });
+      s4.appendChild(whyList);
+      wrap.appendChild(s4);
+    }
+
+    // 5-6) Corrective / Preventive Action
+    var s56 = document.createElement("div"); s56.className = "detail-section";
+    s56.appendChild(sectionTitle("5–6. Corrective & Preventive Action"));
+    var g56 = document.createElement("div"); g56.className = "detail-grid";
+    g56.appendChild(fieldBlock("มาตรการแก้ไขเฉพาะหน้า (Corrective)", issue.corrective_action));
+    g56.appendChild(fieldBlock("มาตรการป้องกันระยะยาว (Preventive)", issue.preventive_action));
+    s56.appendChild(g56);
+    wrap.appendChild(s56);
+
+    // 7) Daily Progress
+    var s7 = document.createElement("div"); s7.className = "detail-section";
+    s7.appendChild(sectionTitle("7. Daily Progress"));
+    var listEl = document.createElement("div"); listEl.className = "updates-list"; listEl.id = "updates-" + issue.id;
+    listEl.innerHTML = '<div style="font-size:12.5px;color:var(--ink-muted)"><span class="spin"></span> กำลังโหลด...</div>';
+    s7.appendChild(listEl);
+    s7.appendChild(buildQuickUpdate(issue));
+    wrap.appendChild(s7);
+
+    // 8) Attachments
+    var s8 = document.createElement("div"); s8.className = "detail-section";
+    s8.appendChild(sectionTitle("8. Attachments"));
+    if (issue.attachments && issue.attachments.length) {
+      issue.attachments.forEach(function (a) {
+        var row = document.createElement("div"); row.className = "attach-item";
+        row.style.cursor = "pointer";
+        var icon = fileIconFor(a.name);
+        var link = document.createElement("a"); link.href = a.url; link.textContent = icon + " " + a.name;
+        link.addEventListener("click", function (e) { e.preventDefault(); openPreview(a.url, a.name); });
+        row.appendChild(link);
+        s8.appendChild(row);
+      });
+    } else {
+      s8.appendChild(fieldBlock("ไฟล์แนบ", null));
+    }
+    wrap.appendChild(s8);
+
+    // 9) Timeline (per-issue)
+    var s9 = document.createElement("div"); s9.className = "detail-section";
+    s9.appendChild(sectionTitle("9. Timeline"));
+    s9.appendChild(buildMiniTimeline(issue));
+    wrap.appendChild(s9);
+
+    // 10) Approval History
+    var s10 = document.createElement("div"); s10.className = "detail-section";
+    s10.appendChild(sectionTitle("10. Approval History"));
+    var apEl = document.createElement("div"); apEl.id = "approvals-" + issue.id;
+    apEl.innerHTML = '<div style="font-size:12.5px;color:var(--ink-muted)"><span class="spin"></span> กำลังโหลด...</div>';
+    s10.appendChild(apEl);
+    s10.appendChild(buildApprovalForm(issue));
+    wrap.appendChild(s10);
+
+    loadUpdates(issue.id).then(function (updates) {
+      renderUpdatesList(issue.id, updates.filter(function (u) { return u.type !== "approval"; }));
+      renderApprovalList(issue.id, updates.filter(function (u) { return u.type === "approval"; }));
+    });
+
+    return wrap;
+  }
+
+  function buildMiniTimeline(issue) {
+    var wrap = document.createElement("div"); wrap.className = "mini-timeline";
+    var today = new Date().toISOString().slice(0, 10);
+    var points = [
+      { label: "รับเรื่อง", date: issue.received_date, state: "done" },
+      { label: "กำหนดปิด", date: issue.due_date, state: issue.due_date && isOverdue(issue) ? "overdue" : (issue.status === "Closed" ? "done" : "now") },
+      { label: "แก้ไขเสร็จ", date: issue.resolved_date, state: issue.resolved_date ? "done" : "" }
+    ];
+    points.forEach(function (p, idx) {
+      if (idx > 0) { var ln = document.createElement("div"); ln.className = "ln"; wrap.appendChild(ln); }
+      var pt = document.createElement("div"); pt.className = "pt" + (p.state ? " " + p.state : "");
+      var mk = document.createElement("div"); mk.className = "mk";
+      var lab = document.createElement("div"); lab.textContent = p.label;
+      var dt = document.createElement("div"); dt.style.color = "var(--ink-muted)"; dt.textContent = p.date ? fmtDate(p.date) : "—";
+      pt.appendChild(mk); pt.appendChild(lab); pt.appendChild(dt);
+      wrap.appendChild(pt);
+    });
+    return wrap;
+  }
+
+  function buildApprovalForm(issue) {
+    var box = document.createElement("div"); box.className = "quick-update";
+    var row = document.createElement("div"); row.className = "quick-update__row";
+    var ta = document.createElement("textarea"); ta.placeholder = "บันทึกการตรวจสอบ/อนุมัติ...";
+    row.appendChild(ta);
+    box.appendChild(row);
+    var row2 = document.createElement("div"); row2.className = "quick-update__row";
+    var saveBtn = document.createElement("button"); saveBtn.className = "btn primary small"; saveBtn.textContent = "บันทึกการอนุมัติ";
+    saveBtn.addEventListener("click", async function () {
+      if (!ta.value.trim()) return;
+      saveBtn.disabled = true;
+      try {
+        var res = await sb.from("issue_updates").insert({ issue_id: issue.id, note: ta.value.trim(), type: "approval" });
+        if (res.error) throw new Error(res.error.message);
+        ta.value = "";
+        var updates = await loadUpdates(issue.id);
+        renderApprovalList(issue.id, updates.filter(function (u) { return u.type === "approval"; }));
+        showToast("บันทึกการอนุมัติแล้ว", "success");
+      } catch (e) { showError("บันทึกไม่สำเร็จ: " + e.message); }
+      finally { saveBtn.disabled = false; }
+    });
+    row2.appendChild(saveBtn);
+    box.appendChild(row2);
+    return box;
+  }
+
+  function renderApprovalList(issueId, approvals) {
+    var el = $("approvals-" + issueId);
+    if (!el) return;
+    el.innerHTML = "";
+    if (!approvals.length) { el.innerHTML = '<div style="font-size:12.5px;color:var(--ink-muted)">ยังไม่มีประวัติการอนุมัติ</div>'; return; }
+    approvals.forEach(function (u) {
+      var item = document.createElement("div"); item.className = "approval-item";
+      var badge = document.createElement("div"); badge.className = "badge"; badge.textContent = "✔ " + fmtDate(u.update_date);
+      var note = document.createElement("div"); note.textContent = u.note || "";
+      item.appendChild(badge); item.appendChild(note);
+      el.appendChild(item);
+    });
+  }
+
+  function renderUpdatesList(issueId, updates) {
+    var el = $("updates-" + issueId);
+    if (!el) return;
+    el.innerHTML = "";
+    if (!updates.length) {
+      el.innerHTML = '<div style="font-size:12.5px;color:var(--ink-muted)">ยังไม่มีบันทึกความคืบหน้า</div>';
+      return;
+    }
+    updates.forEach(function (u) {
+      var item = document.createElement("div"); item.className = "update-item";
+      if (u.photo_url) {
+        var img = document.createElement("img"); img.src = u.photo_url; img.alt = "รูปตรวจสอบ"; img.style.cursor = "pointer";
+        img.addEventListener("click", function () { openPreview(u.photo_url, "รูปตรวจสอบ " + fmtDate(u.update_date)); });
+        item.appendChild(img);
+      }
+      var body = document.createElement("div"); body.className = "body";
+      var date = document.createElement("div"); date.className = "date";
+      date.textContent = fmtDate(u.update_date) + (u.progress != null ? " · ความคืบหน้า " : "");
+      if (u.progress != null) {
+        var prog = document.createElement("span"); prog.className = "prog"; prog.textContent = u.progress + "%";
+        date.appendChild(prog);
+      }
+      var note = document.createElement("div"); note.className = "note"; note.textContent = u.note || "(ไม่มีบันทึกข้อความ)";
+      body.appendChild(date); body.appendChild(note);
+      item.appendChild(body);
+      el.appendChild(item);
+    });
+  }
+
+  function buildQuickUpdate(issue) {
+    var box = document.createElement("div"); box.className = "quick-update";
+    var row1 = document.createElement("div"); row1.className = "quick-update__row";
+    var ta = document.createElement("textarea"); ta.placeholder = "วันนี้ทำอะไรไปบ้าง / พบอะไรเพิ่มเติม...";
+    row1.appendChild(ta);
+    box.appendChild(row1);
+
+    var row2 = document.createElement("div"); row2.className = "quick-update__row";
+    var sliderWrap = document.createElement("div"); sliderWrap.className = "slider-wrap";
+    var slider = document.createElement("input"); slider.type = "range"; slider.min = 0; slider.max = 100; slider.step = 5;
+    slider.value = issue.progress || 0;
+    var sliderVal = document.createElement("span"); sliderVal.className = "mono tabular"; sliderVal.textContent = slider.value + "%";
+    slider.addEventListener("input", function () { sliderVal.textContent = slider.value + "%"; });
+    sliderWrap.appendChild(document.createTextNode("ความคืบหน้า:"));
+    sliderWrap.appendChild(slider); sliderWrap.appendChild(sliderVal);
+
+    var fileBtn = document.createElement("label"); fileBtn.className = "file-btn";
+    fileBtn.innerHTML = '📷 แนบรูปตรวจสอบ<input type="file" accept="image/*">';
+    var fileInput = fileBtn.querySelector("input");
+    var fileNameSpan = document.createElement("span"); fileNameSpan.style.fontSize = "12px"; fileNameSpan.style.color = "var(--ink-muted)";
+    fileInput.addEventListener("change", function () {
+      fileNameSpan.textContent = fileInput.files[0] ? fileInput.files[0].name : "";
+    });
+
+    var saveBtn = document.createElement("button"); saveBtn.className = "btn primary small"; saveBtn.textContent = "บันทึกวันนี้";
+    saveBtn.addEventListener("click", async function () {
+      saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spin"></span> กำลังบันทึก...';
+      try {
+        var photoUrl = null;
+        if (fileInput.files[0]) photoUrl = await uploadPhoto(fileInput.files[0], issue.id + "/updates");
+        var payload = { issue_id: issue.id, note: ta.value.trim() || null, progress: parseInt(slider.value, 10), photo_url: photoUrl };
+        var res = await sb.from("issue_updates").insert(payload);
+        if (res.error) throw new Error(res.error.message);
+        await sb.from("issues").update({ progress: parseInt(slider.value, 10) }).eq("id", issue.id);
+        ta.value = ""; fileInput.value = ""; fileNameSpan.textContent = "";
+        await loadIssues();
+        expandedId = issue.id;
+        renderGrid();
+        showToast("บันทึกความคืบหน้าแล้ว", "success");
+      } catch (e) {
+        showError("บันทึกไม่สำเร็จ: " + e.message);
+      } finally {
+        saveBtn.disabled = false; saveBtn.textContent = "บันทึกวันนี้";
+      }
+    });
+
+    row2.appendChild(sliderWrap); row2.appendChild(fileBtn); row2.appendChild(fileNameSpan); row2.appendChild(saveBtn);
+    box.appendChild(row2);
+    return box;
+  }
+
+  function toggleExpand(id) {
+    expandedId = expandedId === id ? null : id;
+    renderGrid();
+  }
+
+  async function deleteIssue(issue) {
+    if (!confirm('ลบงาน "' + issue.title + '" ใช่หรือไม่? (รูปภาพและบันทึกทั้งหมดจะถูกลบด้วย)')) return;
+    var res = await sb.from("issues").delete().eq("id", issue.id);
+    if (res.error) { showError("ลบไม่สำเร็จ: " + res.error.message); return; }
+    await loadIssues();
+    showToast("ลบงานแล้ว", "success");
+  }
+
+  // ---------- Modal (add/edit) ----------
+  function previewPhoto(wrapId, url) {
+    $(wrapId).innerHTML = url ? '<img src="' + url + '">' : "";
+  }
+
+  function renderAttachmentsList() {
+    var el = $("attachmentsList"); el.innerHTML = "";
+    pendingAttachments.forEach(function (a, idx) {
+      var row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;";
+      var link = document.createElement("a"); link.href = a.url; link.target = "_blank"; link.textContent = "📎 " + a.name;
+      link.style.cssText = "color:var(--accent);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+      var rm = document.createElement("button"); rm.className = "icon-btn"; rm.textContent = "✕"; rm.type = "button";
+      rm.addEventListener("click", function () { pendingAttachments.splice(idx, 1); renderAttachmentsList(); });
+      row.appendChild(link); row.appendChild(rm);
+      el.appendChild(row);
+    });
+    newAttachmentFiles.forEach(function (f, idx) {
+      var row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-muted);";
+      var span = document.createElement("span"); span.textContent = "📎 " + f.name + " (รอบันทึก)";
+      span.style.cssText = "flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+      var rm = document.createElement("button"); rm.className = "icon-btn"; rm.textContent = "✕"; rm.type = "button";
+      rm.addEventListener("click", function () { newAttachmentFiles.splice(idx, 1); renderAttachmentsList(); });
+      row.appendChild(span); row.appendChild(rm);
+      el.appendChild(row);
+    });
+  }
+
+  function openModal(issue) {
+    editingId = issue ? issue.id : null;
+    pendingPhotoBefore = issue ? { url: issue.photo_before } : null;
+    pendingPhotoAfter = issue ? { url: issue.photo_after } : null;
+    $("modalTitle").textContent = issue ? "แก้ไข " + issue.code : "เพิ่มปัญหาใหม่";
+    $("fTitle").value = issue ? issue.title : "";
+    $("fDescription").value = issue ? (issue.description || "") : "";
+    $("fLine2").value = issue ? issue.line : "";
+    $("fMachine").value = issue ? (issue.machine || "") : "";
+    $("fSeverity2").value = issue ? issue.severity : "Minor";
+    $("fOwner").value = issue ? (issue.owner || "") : "";
+    $("fStatus2").value = issue ? issue.status : "Open";
+    $("fDefectCategory").value = issue ? (issue.defect_category || "") : "";
+    $("fRootCauseCategory").value = issue ? (issue.root_cause_category || "") : "";
+    $("fDowntime").value = issue && issue.downtime_minutes != null ? issue.downtime_minutes : "";
+    $("fQtyNg").value = issue && issue.qty_ng != null ? issue.qty_ng : "";
+    $("fQtyOk").value = issue && issue.qty_ok != null ? issue.qty_ok : "";
+    $("fReceived").value = issue ? issue.received_date : new Date().toISOString().slice(0, 10);
+    $("fResolved").value = issue ? (issue.resolved_date || "") : "";
+    $("fDueDate").value = issue ? (issue.due_date || "") : "";
+    $("fProduct").value = issue ? (issue.product || "") : "";
+    $("fCustomer").value = issue ? (issue.customer || "") : "";
+    $("fDepartment").value = issue ? (issue.department || "") : "";
+    $("fWhy1").value = issue ? (issue.why1 || "") : "";
+    $("fWhy2").value = issue ? (issue.why2 || "") : "";
+    $("fWhy3").value = issue ? (issue.why3 || "") : "";
+    $("fWhy4").value = issue ? (issue.why4 || "") : "";
+    $("fWhy5").value = issue ? (issue.why5 || "") : "";
+    $("fProgress").value = issue ? (issue.progress || 0) : 0;
+    $("progressVal").textContent = $("fProgress").value;
+    $("fRootCause").value = issue ? (issue.root_cause || "") : "";
+    $("fCorrective").value = issue ? (issue.corrective_action || "") : "";
+    $("fPreventive").value = issue ? (issue.preventive_action || "") : "";
+    previewPhoto("beforePreviewWrap", issue ? issue.photo_before : null);
+    previewPhoto("afterPreviewWrap", issue ? issue.photo_after : null);
+    $("fPhotoBefore").value = ""; $("fPhotoAfter").value = "";
+    pendingAttachments = issue && issue.attachments ? issue.attachments.slice() : [];
+    newAttachmentFiles = [];
+    $("fAttachments").value = "";
+    renderAttachmentsList();
+    $("backdrop").classList.add("show");
+    $("fTitle").focus();
+  }
+  function closeModal() { $("backdrop").classList.remove("show"); editingId = null; }
+
+  async function saveModal() {
+    var title = $("fTitle").value.trim();
+    var line = $("fLine2").value.trim();
+    var received = $("fReceived").value;
+    if (!title || !line || !received) { alert("กรุณากรอกหัวข้อปัญหา, Line/เครื่องจักร และวันที่รับเรื่อง"); return; }
+
+    var saveBtn = $("btnSave"); saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spin"></span> กำลังบันทึก...';
+    try {
+      var id = editingId || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+
+      var photoBeforeUrl = pendingPhotoBefore ? pendingPhotoBefore.url : null;
+      var photoAfterUrl = pendingPhotoAfter ? pendingPhotoAfter.url : null;
+      if ($("fPhotoBefore").files[0]) photoBeforeUrl = await uploadPhoto($("fPhotoBefore").files[0], id + "/before");
+      if ($("fPhotoAfter").files[0]) photoAfterUrl = await uploadPhoto($("fPhotoAfter").files[0], id + "/after");
+
+      for (var ai = 0; ai < newAttachmentFiles.length; ai++) {
+        var af = newAttachmentFiles[ai];
+        var url = await uploadPhoto(af, id + "/attachments");
+        pendingAttachments.push({ name: af.name, url: url });
+      }
+      newAttachmentFiles = [];
+
+      var payload = {
+        title: title, description: $("fDescription").value.trim() || null,
+        line: line, machine: $("fMachine").value.trim() || null,
+        severity: $("fSeverity2").value, owner: $("fOwner").value.trim() || null,
+        status: $("fStatus2").value, received_date: received, resolved_date: $("fResolved").value || null,
+        due_date: $("fDueDate").value || null,
+        product: $("fProduct").value.trim() || null,
+        customer: $("fCustomer").value.trim() || null,
+        department: $("fDepartment").value.trim() || null,
+        progress: parseInt($("fProgress").value, 10),
+        defect_category: $("fDefectCategory").value || null,
+        root_cause_category: $("fRootCauseCategory").value || null,
+        downtime_minutes: $("fDowntime").value !== "" ? parseFloat($("fDowntime").value) : null,
+        qty_ng: $("fQtyNg").value !== "" ? parseFloat($("fQtyNg").value) : null,
+        qty_ok: $("fQtyOk").value !== "" ? parseFloat($("fQtyOk").value) : null,
+        why1: $("fWhy1").value.trim() || null,
+        why2: $("fWhy2").value.trim() || null,
+        why3: $("fWhy3").value.trim() || null,
+        why4: $("fWhy4").value.trim() || null,
+        why5: $("fWhy5").value.trim() || null,
+        root_cause: $("fRootCause").value.trim() || null,
+        corrective_action: $("fCorrective").value.trim() || null,
+        preventive_action: $("fPreventive").value.trim() || null,
+        photo_before: photoBeforeUrl, photo_after: photoAfterUrl,
+        attachments: pendingAttachments
+      };
+
+      if (editingId) {
+        var res = await sb.from("issues").update(payload).eq("id", editingId);
+        if (res.error) throw new Error(res.error.message);
+      } else {
+        payload.id = id;
+        var res2 = await sb.from("issues").insert(payload);
+        if (res2.error) throw new Error(res2.error.message);
+      }
+      var wasEditing = !!editingId;
+      closeModal();
+      await loadIssues();
+      showToast(wasEditing ? "บันทึกการแก้ไขแล้ว" : "เพิ่มปัญหาใหม่แล้ว", "success");
+    } catch (e) {
+      showError("บันทึกไม่สำเร็จ: " + e.message);
+    } finally {
+      saveBtn.disabled = false; saveBtn.textContent = "บันทึก";
+    }
+  }
+
+  // ---------- Notifications ----------
+  function renderNotifications() {
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    var items = [];
+    issues.forEach(function (i) {
+      if (i.status === "Closed") return;
+      if (isOverdue(i)) {
+        items.push({ type: "crit", issue: i, title: (i.code || "") + " เกินกำหนดแล้ว", detail: "ครบกำหนด " + fmtDate(i.due_date) });
+      } else if (i.due_date) {
+        var due = new Date(i.due_date + "T00:00:00");
+        var daysLeft = Math.round((due - today) / 86400000);
+        if (daysLeft >= 0 && daysLeft <= 2) {
+          items.push({ type: "warn", issue: i, title: (i.code || "") + " ใกล้ครบกำหนด", detail: "อีก " + daysLeft + " วัน (" + fmtDate(i.due_date) + ")" });
+        }
+      }
+      if (i.severity === "Critical") {
+        items.push({ type: "crit", issue: i, title: (i.code || "") + " เป็นงาน Critical", detail: i.title });
+      }
+      var lastActivityStr = i.updated_at || i.created_at || i.received_date;
+      if (lastActivityStr) {
+        var lastActivity = new Date(lastActivityStr);
+        if (lastActivity < threeDaysAgo) {
+          items.push({ type: "warn", issue: i, title: (i.code || "") + " ไม่มีการอัปเดตเกิน 3 วัน", detail: "อัปเดตล่าสุด " + fmtDate(String(lastActivityStr).slice(0, 10)) });
+        }
+      }
+    });
+    items.sort(function (a, b) { return (a.type === "crit" ? 0 : 1) - (b.type === "crit" ? 0 : 1); });
+
+    var badge = $("notifBadge");
+    if (items.length) { badge.style.display = "flex"; badge.textContent = items.length > 99 ? "99+" : items.length; }
+    else { badge.style.display = "none"; }
+
+    var list = $("notifList"); list.innerHTML = "";
+    if (!items.length) {
+      list.innerHTML = '<div class="notif-empty">ไม่มีการแจ้งเตือนตอนนี้</div>';
+      return;
+    }
+    items.forEach(function (it) {
+      var el = document.createElement("div"); el.className = "notif-item";
+      var dot = document.createElement("span"); dot.className = "dot " + (it.type === "crit" ? "crit" : "warn");
+      var body = document.createElement("div"); body.className = "body";
+      var b = document.createElement("b"); b.textContent = it.title;
+      var s = document.createElement("span"); s.textContent = it.detail;
+      body.appendChild(b); body.appendChild(s);
+      el.appendChild(dot); el.appendChild(body);
+      el.addEventListener("click", function () {
+        $("notifDropdown").classList.remove("show");
+        openModal(it.issue);
+      });
+      list.appendChild(el);
+    });
+  }
+
+  function renderAll() {
+    populateLineFilter();
+    renderStats();
+    renderDist();
+    renderTimelineChart(filteredIssues());
+    renderGrid();
+    renderNotifications();
+  }
+
+  function setQuickFilter(opts) {
+    ["fStatus", "fSeverity"].forEach(function (id) { $(id).value = ""; });
+    quickOverdueOnly = false; quickMineOnly = false;
+    if (opts.status) $("fStatus").value = opts.status;
+    if (opts.severity) $("fSeverity").value = opts.severity;
+    if (opts.overdue) quickOverdueOnly = true;
+    if (opts.mine) quickMineOnly = true;
+    expandedId = null;
+    renderAll();
+    var gridSection = document.querySelector("section.grid");
+    if (gridSection) gridSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    chartTooltipEl = $("chartTooltip");
+    var months = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+    var now = new Date();
+    $("todayLabel").textContent = "วันนี้: " + now.getDate() + " " + months[now.getMonth()] + " " + now.getFullYear();
+    var myNameForGreet = getMyName();
+    $("greetLine").textContent = myNameForGreet ? ("👋 สวัสดีคุณ " + myNameForGreet + " — ยินดีต้อนรับกลับสู่ระบบ") : "👋 ยินดีต้อนรับ — ติดตามและจัดการปัญหางานวิศวกรรมได้ในที่เดียว";
+
+    $("btnAdd").addEventListener("click", function () { openModal(null); });
+    function reportURL(extra) {
+      var f = currentFilters();
+      var params = new URLSearchParams();
+      if (f.status) params.set("status", f.status);
+      if (f.severity) params.set("severity", f.severity);
+      if (f.line) params.set("line", f.line);
+      if (f.search) params.set("search", f.search);
+      if (extra) Object.keys(extra).forEach(function (k) { params.set(k, extra[k]); });
+      var qs = params.toString();
+      return "report.html" + (qs ? "?" + qs : "");
+    }
+    $("btnReport").addEventListener("click", function () { window.open(reportURL(), "_blank"); });
+    $("btnExportPdf").addEventListener("click", function () { window.open(reportURL({ autoprint: "1" }), "_blank"); });
+    $("btnExportExcel").addEventListener("click", function () { exportExcel(filteredIssues()); });
+
+    $("btnMyIssues").addEventListener("click", function () {
+      var name = getMyName();
+      if (!name) {
+        name = prompt("กรอกชื่อของคุณ (ใช้จำไว้ในเบราว์เซอร์นี้ เพื่อกรองงานที่คุณรับผิดชอบ):", "");
+        if (!name) return;
+        setMyName(name.trim());
+      }
+      setQuickFilter({ mine: true });
+      showToast("กรองเฉพาะงานของ \"" + getMyName() + "\" — เปลี่ยนชื่อได้จากไอคอน ✎ ข้างปุ่มนี้", "success");
+    });
+    $("btnMyIssues").addEventListener("contextmenu", function (e) {
+      e.preventDefault();
+      var name = prompt("แก้ไขชื่อของคุณ:", getMyName());
+      if (name !== null) setMyName(name.trim());
+    });
+    $("btnOverdueIssues").addEventListener("click", function () { setQuickFilter({ overdue: true }); });
+
+    $("btnNotif").addEventListener("click", function (e) {
+      e.stopPropagation();
+      $("notifDropdown").classList.toggle("show");
+    });
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".notif-wrap")) $("notifDropdown").classList.remove("show");
+    });
+
+    $("btnThemeToggle").addEventListener("click", function () {
+      var root = document.documentElement;
+      var cur = root.getAttribute("data-theme");
+      var next = cur === "dark" ? "light" : cur === "light" ? "" : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+      if (next) { root.setAttribute("data-theme", next); localStorage.setItem("eng-log-theme", next); }
+      else { root.removeAttribute("data-theme"); localStorage.removeItem("eng-log-theme"); }
+    });
+    var savedTheme = localStorage.getItem("eng-log-theme");
+    if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+    $("btnCloseShare").addEventListener("click", closeShareDialog);
+    $("btnCancelShare").addEventListener("click", closeShareDialog);
+    $("btnCreateShare").addEventListener("click", createShareLink);
+    $("shareBackdrop").addEventListener("click", function (e) { if (e.target.id === "shareBackdrop") closeShareDialog(); });
+    $("btnCopyShareLink").addEventListener("click", function () {
+      var input = $("shareLinkOutput");
+      input.select();
+      navigator.clipboard && navigator.clipboard.writeText(input.value).then(function () { showToast("คัดลอกลิงก์แล้ว", "success"); });
+    });
+
+    $("btnClosePreview").addEventListener("click", closePreview);
+    $("previewBackdrop").addEventListener("click", function (e) { if (e.target.id === "previewBackdrop") closePreview(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closePreview(); });
+
+    // ---------- Rule-based RCA Assist (Module 4) ----------
+    // ไม่ใช้ LLM จริง — เป็นชุดตัวอย่าง/กรอบคำถามตามกรอบ 6M สำหรับโรงงานผลิต Fiber Optic Connector/Cable
+    // เติมค่าเฉพาะช่องที่ยังว่างเท่านั้น ไม่เขียนทับข้อมูลที่ผู้ใช้กรอกไว้แล้ว
+    var RCA_6M_EXAMPLES = {
+      Man: { causes: ["ผู้ปฏิบัติงานไม่คุ้นเคยกับ SOP ล่าสุด", "ขาดการอบรมทักษะเฉพาะจุดนี้", "ส่งต่องานระหว่างกะไม่ครบถ้วน (Shift Handover)"],
+        corrective: "ทบทวน/สอนงานผู้ปฏิบัติงานที่เกี่ยวข้องตาม SOP ปัจจุบันทันที",
+        preventive: "จัดทำ Visual Work Instruction ประจำจุดงาน และประเมินทักษะผู้ปฏิบัติงานเป็นระยะ" },
+      Machine: { causes: ["เครื่องจักร/อุปกรณ์ Calibration คลาดเคลื่อน", "ชิ้นส่วนสึกหรอเกินรอบ PM", "พารามิเตอร์เครื่องจักรตั้งค่าไม่ตรงสเปก"],
+        corrective: "Calibrate หรือเปลี่ยนชิ้นส่วนที่สึกหรอ ปรับพารามิเตอร์ให้ตรงสเปกทันที",
+        preventive: "ปรับรอบ PM ให้ถี่ขึ้น หรือเพิ่ม Condition Monitoring ที่จุดนี้" },
+      Method: { causes: ["ขั้นตอนใน SOP ไม่ครอบคลุมกรณีนี้", "พารามิเตอร์กระบวนการ (เวลา/อุณหภูมิ/แรงดัน) หลุดช่วงควบคุม", "Jig/Fixture ยังไม่ผ่านการ Validate"],
+        corrective: "ปรับพารามิเตอร์กระบวนการให้กลับสู่ช่วงควบคุมที่กำหนด",
+        preventive: "ปรับปรุง SOP ให้ครอบคลุม และทำ Process Capability Study (Cpk) ยืนยันซ้ำ" },
+      Material: { causes: ["วัตถุดิบ/ชิ้นส่วนนอกสเปกจาก Supplier", "ความแปรปรวนระหว่าง Lot การผลิต", "เก็บรักษาวัตถุดิบผิดเงื่อนไข (อุณหภูมิ/ความชื้น)"],
+        corrective: "กักกัน (Quarantine) Lot ที่สงสัย และเปลี่ยนไปใช้ Lot ที่ผ่านการตรวจสอบแล้ว",
+        preventive: "เข้มงวด Incoming Inspection (AQL) และออก SCAR ถึง Supplier ที่เกี่ยวข้อง" },
+      Measurement: { causes: ["เครื่องมือวัดไม่ได้ Calibrate ตามรอบ", "วิธีการวัดไม่สอดคล้องกันระหว่างผู้ตรวจสอบ (Gauge R&R)", "จุดวัด/มุมวัดไม่เป็นมาตรฐานเดียวกัน"],
+        corrective: "Calibrate เครื่องมือวัดที่เกี่ยวข้องทันที และวัดซ้ำด้วยเครื่องที่ยืนยันความแม่นยำแล้ว",
+        preventive: "ปรับรอบ Calibration ให้ถี่ขึ้น และทำ Gauge R&R Study ประจำปี" },
+      Environment: { causes: ["อุณหภูมิ/ความชื้นในพื้นที่ผลิตนอกช่วงกำหนด", "การปนเปื้อนฝุ่นในพื้นที่ Cleanroom", "ปัญหา ESD ในจุดที่ไวต่อไฟฟ้าสถิต"],
+        corrective: "ปรับสภาพแวดล้อม (อุณหภูมิ/ความชื้น/ความสะอาด) ให้กลับสู่ช่วงควบคุมทันที",
+        preventive: "ติดตั้งระบบ Monitoring + Alarm สภาพแวดล้อมแบบต่อเนื่อง" },
+      Other: { causes: ["สาเหตุนอกกรอบ 6M มาตรฐาน — ระบุเพิ่มเติมจากหน้างานจริง"],
+        corrective: "ระบุมาตรการแก้ไขเฉพาะหน้าตามลักษณะปัญหาที่พบจริง",
+        preventive: "ระบุมาตรการป้องกันระยะยาวตามสาเหตุที่ยืนยันได้จากหน้างาน" }
+    };
+    var RCA_DEFECT_FOCUS = {
+      "Dimensional": ["Machine", "Measurement", "Method"],
+      "Visual/Cosmetic": ["Man", "Environment", "Material"],
+      "Functional": ["Method", "Machine", "Material"],
+      "Material": ["Material", "Measurement"],
+      "Assembly": ["Man", "Method", "Machine"],
+      "Electrical": ["Machine", "Method", "Environment"],
+      "Other": ["Man", "Machine", "Method", "Material", "Measurement", "Environment"]
+    };
+    function fillIfEmpty(id, val) { var el = $(id); if (el && !el.value.trim()) el.value = val; }
+    $("btnRcaAssist").addEventListener("click", function () {
+      var defect = $("fDefectCategory").value;
+      var rootCat = $("fRootCauseCategory").value;
+      if (!defect && !rootCat) {
+        showToast("กรุณาเลือก Defect Category หรือ Root Cause Category ก่อน เพื่อให้แนะนำกรอบที่เกี่ยวข้อง", "error");
+        return;
+      }
+      var focusList = rootCat ? [rootCat] : (RCA_DEFECT_FOCUS[defect] || ["Man", "Machine", "Method"]);
+      var panel = $("rcaAssistPanel");
+      var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+      focusList.forEach(function (m) {
+        var ex = RCA_6M_EXAMPLES[m];
+        if (!ex) return;
+        html += '<div><b style="color:var(--ink);">' + m + '</b> — ' + ex.causes.join(" · ") + '</div>';
+      });
+      html += '</div>';
+      panel.innerHTML = html;
+      panel.style.display = "block";
+
+      var primary = RCA_6M_EXAMPLES[focusList[0]];
+      if (primary) {
+        fillIfEmpty("fWhy1", "ทำไมจึงเกิดปัญหานี้? — ตรวจสอบด้าน " + focusList[0] + ": " + primary.causes[0]);
+        fillIfEmpty("fWhy2", "ทำไมจึงเป็นเช่นนั้น? — ระบุสาเหตุย่อยที่ทำให้เกิด Why 1");
+        fillIfEmpty("fWhy3", "ทำไมจึงเป็นเช่นนั้น? — ขยายลึกลงไปอีกระดับ");
+        fillIfEmpty("fWhy4", "ทำไมจึงเป็นเช่นนั้น? — ใกล้สาเหตุรากมากขึ้น");
+        fillIfEmpty("fWhy5", "สาเหตุรากที่แท้จริง (Root Cause): ระบุจากการไล่ Why 1-4 ข้างต้น");
+        fillIfEmpty("fRootCause", "(ร่างเบื้องต้นจากหมวด " + focusList[0] + " — โปรดตรวจสอบกับข้อเท็จจริงหน้างานก่อนยืนยัน)");
+        fillIfEmpty("fCorrective", primary.corrective + " (ปรับให้ตรงกับสถานการณ์จริง)");
+        fillIfEmpty("fPreventive", primary.preventive + " (ปรับให้ตรงกับสถานการณ์จริง)");
+      }
+      showToast("เติมกรอบ RCA เบื้องต้นแล้ว — กรุณาตรวจสอบและแก้ไขให้ตรงกับข้อเท็จจริงก่อนบันทึก", "success");
+    });
+
+    $("btnCloseModal").addEventListener("click", closeModal);
+    $("btnCancel").addEventListener("click", closeModal);
+    $("btnSave").addEventListener("click", saveModal);
+    $("backdrop").addEventListener("click", function (e) { if (e.target.id === "backdrop") closeModal(); });
+    $("fProgress").addEventListener("input", function () { $("progressVal").textContent = this.value; });
+
+    $("fPhotoBefore").addEventListener("change", function () {
+      if (this.files[0]) { pendingPhotoBefore = { url: URL.createObjectURL(this.files[0]) }; previewPhoto("beforePreviewWrap", pendingPhotoBefore.url); }
+    });
+    $("fPhotoAfter").addEventListener("change", function () {
+      if (this.files[0]) { pendingPhotoAfter = { url: URL.createObjectURL(this.files[0]) }; previewPhoto("afterPreviewWrap", pendingPhotoAfter.url); }
+    });
+    $("fAttachments").addEventListener("change", function () {
+      Array.prototype.forEach.call(this.files, function (f) { newAttachmentFiles.push(f); });
+      this.value = "";
+      renderAttachmentsList();
+    });
+
+    document.querySelectorAll("#periodToggle .period-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll("#periodToggle .period-btn").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        currentTrendPeriod = btn.dataset.period;
+        renderTrendChart(filteredIssues());
+      });
+    });
+
+    function refreshOnFilter() { expandedId = null; quickOverdueOnly = false; quickMineOnly = false; renderAll(); }
+    ["fStatus", "fSeverity", "fLine", "fMachineFilter", "fProductFilter", "fCustomerFilter", "fDepartmentFilter", "fEngineerFilter", "fDateFrom", "fDateTo"].forEach(function (id) {
+      $(id).addEventListener("change", refreshOnFilter);
+    });
+    $("fSearch").addEventListener("input", refreshOnFilter);
+    $("fSort").addEventListener("change", function () { expandedId = null; renderGrid(); });
+
+    $("btnClearFilters").addEventListener("click", function () {
+      ["fStatus", "fSeverity", "fLine", "fMachineFilter", "fProductFilter", "fCustomerFilter", "fDepartmentFilter", "fEngineerFilter"].forEach(function (id) { $(id).value = ""; });
+      $("fDateFrom").value = ""; $("fDateTo").value = ""; $("fSearch").value = "";
+      refreshOnFilter();
+    });
+
+    document.querySelectorAll("#viewToggle .view-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        currentView = btn.dataset.view;
+        localStorage.setItem("eng-log-view", currentView);
+        applyViewMode();
+      });
+    });
+
+    if (!configured) { showConfigBanner(); renderAll(); }
+    else { loadIssues(); }
+  });
+})();
+</script>
+</body>
+</html>

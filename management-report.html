@@ -127,6 +127,32 @@
   .cc-result-box .rr { font-size: 7.6px; color: #6b5c1f; padding: 1.5px 0; }
   .cc-result-box .rr b { color: #16294D; }
 
+  .ev-panel { margin-top: 8px; border-top: 1px dashed #dde3ea; padding-top: 6px; }
+  .ev-panel-toggle { display: flex; align-items: center; gap: 5px; font-size: 8px; font-weight: 800; color: #16294D; text-transform: uppercase; letter-spacing: .02em; cursor: pointer; padding: 2px 0; user-select: none; }
+  .ev-panel-toggle svg { width: 10px; height: 10px; transition: transform .15s; flex: none; }
+  .ev-panel.open .ev-panel-toggle svg { transform: rotate(90deg); }
+  .ev-panel-body { display: none; padding-top: 6px; }
+  .ev-panel.open .ev-panel-body { display: block; }
+  .ev-sec { margin-bottom: 8px; }
+  .ev-sec-h { display: flex; align-items: center; gap: 4px; font-size: 7px; font-weight: 800; color: #667; text-transform: uppercase; margin-bottom: 3px; letter-spacing: .02em; }
+  .ev-sec-h svg { width: 9px; height: 9px; color: #1E4FA0; flex: none; }
+  .ev-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 4px; }
+  .ev-gallery .ph { aspect-ratio: 1; border-radius: 4px; }
+  .ev-row-ro { display: flex; justify-content: space-between; gap: 6px; font-size: 7.4px; padding: 1.5px 0; border-bottom: 1px dashed #eef1f6; }
+  .ev-row-ro .ev-l { color: #889; flex: none; }
+  .ev-row-ro .ev-v { color: #223; font-weight: 700; text-align: right; }
+  .ev-row { display: flex; gap: 3px; margin-bottom: 3px; align-items: center; flex-wrap: wrap; }
+  .ev-in { font-size: 7.2px; padding: 2px 4px; border: 1px solid #dde3ea; border-radius: 3px; min-width: 0; flex: 1; }
+  .ev-rm { width: 14px; height: 14px; border: none; background: #fbe4e1; color: #c93a2e; border-radius: 3px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none; padding: 0; }
+  .ev-rm svg { width: 8px; height: 8px; }
+  .ev-add-btn { font-size: 7px; font-weight: 700; padding: 3px 8px; border-radius: 4px; border: 1px dashed #a8b8cc; background: #fff; color: #1E4FA0; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+  .ev-add-btn svg { width: 9px; height: 9px; }
+  .ev-preset-row { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
+  .ev-preset-chip { font-size: 6.5px; padding: 2px 6px; border-radius: 999px; border: 1px solid #dde3ea; background: #f4f6f9; color: #667; cursor: pointer; }
+  .ev-comment-ta { width: 100%; font-size: 7.6px; border: 1px solid #dde3ea; border-radius: 4px; padding: 4px 6px; font-family: var(--font-sans); resize: vertical; min-height: 32px; box-sizing: border-box; }
+  .ev-doc-link { color: #1E4FA0; text-decoration: underline; font-size: 7.4px; }
+  .ev-compare-btn { font-size: 7px; font-weight: 700; padding: 3px 8px; gap: 4px; display: inline-flex; align-items: center; width: auto; height: auto; background: #e3ecfb; border-radius: 4px; color: #1E4FA0; border: 1px solid #cddaf0; }
+
   .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .two-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .chk-item { display: flex; gap: 5px; align-items: flex-start; font-size: 8px; line-height: 1.5; margin-bottom: 3px; }
@@ -280,6 +306,10 @@
             <label class="chk-row" style="padding-left:16px;"><input type="checkbox" id="incChartRootCause" checked>Root Cause Distribution</label>
             <label class="chk-row"><input type="checkbox" id="incCases" checked>Include Selected Cases</label>
             <label class="chk-row"><input type="checkbox" id="incImprovement" checked>Include Improvement Summary</label>
+            <label class="chk-row"><input type="checkbox" id="incEvidence">Include Evidence Panel</label>
+            <label class="chk-row" style="padding-left:16px;"><input type="checkbox" id="incMeasurement" checked>Measurement Result</label>
+            <label class="chk-row" style="padding-left:16px;"><input type="checkbox" id="incTrial" checked>Trial Result</label>
+            <label class="chk-row" style="padding-left:16px;"><input type="checkbox" id="incRelatedDocs" checked>Related Documents</label>
           </div>
 
           <div class="card card__pad side-card" id="caseSelectCard" style="display:none;">
@@ -493,6 +523,49 @@
       if (ac) openAnnotModal(ac, annotBtn.dataset.annotSlot);
       return;
     }
+    var evToggle = e.target.closest(".ev-panel-toggle");
+    if (evToggle) {
+      var evCard = e.target.closest(".case-card-doc"); if (!evCard || !currentReportData) return;
+      var evC = currentReportData.cases.find(function (x) { return String(x.id) === evCard.dataset.caseId; });
+      if (evC) { evC._evidenceOpen = !evC._evidenceOpen; renderPreview(currentReportData); }
+      return;
+    }
+    var evAdd = e.target.closest("[data-add-list]");
+    if (evAdd) {
+      var evCard2 = e.target.closest(".case-card-doc"); if (!evCard2 || !currentReportData) return;
+      var evC2 = currentReportData.cases.find(function (x) { return String(x.id) === evCard2.dataset.caseId; });
+      if (evC2) {
+        var listName = evAdd.dataset.addList;
+        if (!evC2[listName]) evC2[listName] = [];
+        evC2[listName].push({});
+        evC2._evidenceOpen = true;
+        renderPreview(currentReportData);
+      }
+      return;
+    }
+    var evPreset = e.target.closest("[data-preset-measure]");
+    if (evPreset) {
+      var evCard3 = e.target.closest(".case-card-doc"); if (!evCard3 || !currentReportData) return;
+      var evC3 = currentReportData.cases.find(function (x) { return String(x.id) === evCard3.dataset.caseId; });
+      if (evC3) {
+        if (!evC3.measurements) evC3.measurements = [];
+        evC3.measurements.push({ label: evPreset.dataset.presetMeasure, value: "", unit: "" });
+        evC3._evidenceOpen = true;
+        renderPreview(currentReportData);
+      }
+      return;
+    }
+    var evRm = e.target.closest(".ev-rm");
+    if (evRm) {
+      var evCard4 = e.target.closest(".case-card-doc"); if (!evCard4 || !currentReportData) return;
+      var evC4 = currentReportData.cases.find(function (x) { return String(x.id) === evCard4.dataset.caseId; });
+      if (evC4 && evC4[evRm.dataset.list]) {
+        evC4[evRm.dataset.list].splice(parseInt(evRm.dataset.idx, 10), 1);
+        evC4._evidenceOpen = true;
+        renderPreview(currentReportData);
+      }
+      return;
+    }
     var img = e.target.closest(".ph img, .attach-thumb-doc img");
     if (img) { $("lightboxImg").src = img.src; $("lightbox").classList.add("show"); return; }
     var upBtn = e.target.closest(".cc-up"), downBtn = e.target.closest(".cc-down"), rmBtn = e.target.closest(".cc-remove");
@@ -517,9 +590,26 @@
   });
   $("docPreview").addEventListener("input", function (e) {
     var el = e.target;
+    if (!currentReportData) return;
+    if (el.tagName === "INPUT" && el.dataset.list) {
+      var evCard5 = el.closest(".case-card-doc"); if (!evCard5) return;
+      var evC5 = currentReportData.cases.find(function (cc) { return String(cc.id) === evCard5.dataset.caseId; });
+      if (!evC5) return;
+      var listName2 = el.dataset.list, idx2 = parseInt(el.dataset.idx, 10);
+      if (!evC5[listName2]) evC5[listName2] = [];
+      if (!evC5[listName2][idx2]) evC5[listName2][idx2] = {};
+      evC5[listName2][idx2][el.dataset.field] = el.value;
+      return;
+    }
+    if (el.tagName === "TEXTAREA" && el.dataset.field === "engineerComment") {
+      var evCard6 = el.closest(".case-card-doc"); if (!evCard6) return;
+      var evC6 = currentReportData.cases.find(function (cc) { return String(cc.id) === evCard6.dataset.caseId; });
+      if (evC6) evC6.engineerComment = el.value;
+      return;
+    }
     if (!el.getAttribute || el.getAttribute("contenteditable") !== "true") return;
     var field = el.dataset.editField;
-    if (!field || !currentReportData) return;
+    if (!field) return;
     if (field === "execSummaryHtml") { currentReportData.execSummaryHtml = el.innerHTML; return; }
     var card = el.closest(".case-card-doc"); if (!card) return;
     var cid = card.dataset.caseId;
@@ -557,7 +647,7 @@
   $("btnSaveDraft").addEventListener("click", function () {
     if (!currentReportData) return;
     var chartFlags = {};
-    ["incExec", "incProdKpi", "incEngKpi", "incChartLine", "incChartFamily", "incChartPareto", "incChartRootCause", "incCases", "incImprovement"].forEach(function (id) { chartFlags[id] = $(id).checked; });
+    ["incExec", "incProdKpi", "incEngKpi", "incChartLine", "incChartFamily", "incChartPareto", "incChartRootCause", "incCases", "incImprovement", "incEvidence", "incMeasurement", "incTrial", "incRelatedDocs"].forEach(function (id) { chartFlags[id] = $(id).checked; });
     var draft = {
       dateIso: currentReportData.dateIso, reportNo: currentReportData.reportNo,
       execSummaryHtml: currentReportData.execSummaryHtml != null ? currentReportData.execSummaryHtml : currentReportData.execSummary.join(" "),
@@ -790,6 +880,80 @@
     return "<" + tag + ' class="' + cls + '"' + t + ">" + esc(text) + "</" + tag + ">";
   }
 
+  var MEASURE_PRESETS = ["Return Loss (RL)", "Insertion Loss (IL)", "3D Geometry", "Fiber Height", "Apex Offset", "Radius of Curvature", "Dimension", "Torque", "Temperature", "Pressure", "Time", "Cycle Time"];
+
+  function evidenceGalleryHtml(c) {
+    var items = [];
+    if (c.photoBefore) items.push(c.annotBeforePreview || c.photoBefore);
+    if (c.photoAfter) items.push(c.annotAfterPreview || c.photoAfter);
+    if (!items.length) return '<div style="font-size:7px;color:#aab;">— ไม่มีรูปภาพ —</div>';
+    return '<div class="ev-gallery">' + items.map(function (u) { return '<div class="ph"><img src="' + u + '"></div>'; }).join("") + '</div>';
+  }
+
+  function evidencePanelHtml(c, editModeOn, evFlags) {
+    var open = c._evidenceOpen ? " open" : "";
+    var measureRows = c.measurements || [], trialRows = c.trials || [], docRows = c.relatedDocs || [];
+
+    var measureHtml = editModeOn
+      ? ('<div class="ev-preset-row">' + MEASURE_PRESETS.map(function (p) { return '<button type="button" class="ev-preset-chip" data-preset-measure="' + esc(p) + '">' + esc(p) + '</button>'; }).join("") + '</div>' +
+        measureRows.map(function (r, i) {
+          return '<div class="ev-row">' +
+            '<input type="text" class="ev-in" style="flex:1.4" placeholder="รายการ" value="' + esc(r.label || "") + '" data-list="measurements" data-idx="' + i + '" data-field="label">' +
+            '<input type="text" class="ev-in" placeholder="ค่า" value="' + esc(r.value || "") + '" data-list="measurements" data-idx="' + i + '" data-field="value">' +
+            '<input type="text" class="ev-in" style="flex:.6" placeholder="หน่วย" value="' + esc(r.unit || "") + '" data-list="measurements" data-idx="' + i + '" data-field="unit">' +
+            '<button type="button" class="ev-rm" data-list="measurements" data-idx="' + i + '">' + window.icon("x", 8) + '</button></div>';
+        }).join("") +
+        '<button type="button" class="ev-add-btn" data-add-list="measurements">' + window.icon("plus", 9) + 'เพิ่มค่าวัด</button>')
+      : (measureRows.length ? measureRows.map(function (r) { return '<div class="ev-row-ro"><span class="ev-l">' + esc(r.label) + '</span><span class="ev-v">' + esc(r.value) + (r.unit ? " " + esc(r.unit) : "") + '</span></div>'; }).join("") : '<div style="font-size:7px;color:#aab;">— ไม่มีข้อมูล —</div>');
+
+    var trialHtml = editModeOn
+      ? (trialRows.map(function (r, i) {
+          return '<div class="ev-row">' +
+            '<input type="text" class="ev-in" style="flex:.5" placeholder="Trial No." value="' + esc(r.no || "") + '" data-list="trials" data-idx="' + i + '" data-field="no">' +
+            '<input type="date" class="ev-in" style="flex:.9" value="' + esc(r.date || "") + '" data-list="trials" data-idx="' + i + '" data-field="date">' +
+            '<input type="text" class="ev-in" placeholder="ผู้ทดสอบ" value="' + esc(r.engineer || "") + '" data-list="trials" data-idx="' + i + '" data-field="engineer">' +
+            '<button type="button" class="ev-rm" data-list="trials" data-idx="' + i + '">' + window.icon("x", 8) + '</button>' +
+            '<input type="text" class="ev-in" placeholder="Parameter ก่อน" value="' + esc(r.paramBefore || "") + '" data-list="trials" data-idx="' + i + '" data-field="paramBefore">' +
+            '<input type="text" class="ev-in" placeholder="Parameter หลัง" value="' + esc(r.paramAfter || "") + '" data-list="trials" data-idx="' + i + '" data-field="paramAfter">' +
+            '<input type="text" class="ev-in" placeholder="ผลลัพธ์" value="' + esc(r.result || "") + '" data-list="trials" data-idx="' + i + '" data-field="result">' +
+            '<input type="text" class="ev-in" style="flex:.6" placeholder="Pass/Fail" value="' + esc(r.passFail || "") + '" data-list="trials" data-idx="' + i + '" data-field="passFail">' +
+            '</div>';
+        }).join("") +
+        '<button type="button" class="ev-add-btn" data-add-list="trials">' + window.icon("plus", 9) + 'เพิ่ม Trial</button>')
+      : (trialRows.length ? trialRows.map(function (r) { return '<div class="ev-row-ro"><span class="ev-l">Trial ' + esc(r.no || "-") + ' (' + esc(r.date || "—") + ')</span><span class="ev-v">' + esc(r.result || "—") + (r.passFail ? " · " + esc(r.passFail) : "") + '</span></div>'; }).join("") : '<div style="font-size:7px;color:#aab;">— ไม่มีข้อมูล —</div>');
+
+    var docHtml = editModeOn
+      ? (docRows.map(function (r, i) {
+          return '<div class="ev-row">' +
+            '<input type="text" class="ev-in" style="flex:.7" placeholder="ประเภท (WI/SOP/...)" value="' + esc(r.type || "") + '" data-list="relatedDocs" data-idx="' + i + '" data-field="type">' +
+            '<input type="text" class="ev-in" placeholder="ชื่อเอกสาร" value="' + esc(r.name || "") + '" data-list="relatedDocs" data-idx="' + i + '" data-field="name">' +
+            '<input type="text" class="ev-in" placeholder="URL / ที่อยู่ไฟล์" value="' + esc(r.url || "") + '" data-list="relatedDocs" data-idx="' + i + '" data-field="url">' +
+            '<button type="button" class="ev-rm" data-list="relatedDocs" data-idx="' + i + '">' + window.icon("x", 8) + '</button></div>';
+        }).join("") +
+        '<button type="button" class="ev-add-btn" data-add-list="relatedDocs">' + window.icon("plus", 9) + 'เพิ่มเอกสารอ้างอิง</button>')
+      : (docRows.length ? docRows.map(function (r) { return '<div class="ev-row-ro"><span class="ev-l">[' + esc(r.type || "Doc") + ']</span>' + (r.url ? '<a class="ev-doc-link" href="' + esc(r.url) + '" target="_blank" rel="noopener">' + esc(r.name || r.url) + '</a>' : '<span class="ev-v">' + esc(r.name || "—") + '</span>') + '</div>'; }).join("") : '<div style="font-size:7px;color:#aab;">— ไม่มีข้อมูล —</div>');
+
+    var commentHtml = editModeOn
+      ? '<textarea class="ev-comment-ta" placeholder="บันทึกความเห็นวิศวกร..." data-field="engineerComment">' + esc(c.engineerComment || "") + '</textarea>'
+      : (c.engineerComment ? '<div style="font-size:7.4px;color:#223;white-space:pre-wrap;">' + esc(c.engineerComment) + '</div>' : '<div style="font-size:7px;color:#aab;">— ไม่มีความเห็น —</div>');
+
+    var compareBtnHtml = (c.photoBefore && c.photoAfter) ? '<button type="button" class="compare-btn ev-compare-btn">' + window.icon("compareTool", 9) + 'เปรียบเทียบ' + '</button>' : "";
+
+    var sections = '<div class="ev-sec"><div class="ev-sec-h">' + window.icon("camera", 9) + 'Photo &amp; Comparison</div>' + evidenceGalleryHtml(c) + compareBtnHtml + '</div>' +
+      '<div class="ev-sec"><div class="ev-sec-h">' + window.icon("factory", 9) + 'Production Reference</div>' +
+        '<div class="ev-row-ro"><span class="ev-l">Line</span><span class="ev-v">' + esc(c.line) + '</span></div>' +
+        '<div class="ev-row-ro"><span class="ev-l">Lot No.</span><span class="ev-v">' + esc(c.lotNo) + '</span></div>' +
+        '<div class="ev-row-ro"><span class="ev-l">Owner</span><span class="ev-v">' + esc(c.owner) + '</span></div>' +
+      '</div>';
+    if (evFlags.measurement) sections += '<div class="ev-sec"><div class="ev-sec-h">' + window.icon("target", 9) + 'Measurement Result</div>' + measureHtml + '</div>';
+    if (evFlags.trial) sections += '<div class="ev-sec"><div class="ev-sec-h">' + window.icon("checkCircle", 9) + 'Trial Result</div>' + trialHtml + '</div>';
+    if (evFlags.docs) sections += '<div class="ev-sec"><div class="ev-sec-h">' + window.icon("paperclip", 9) + 'Related WI / SOP / Documents</div>' + docHtml + '</div>';
+    sections += '<div class="ev-sec"><div class="ev-sec-h">' + window.icon("edit", 9) + 'Engineer Comment</div>' + commentHtml + '</div>';
+
+    return '<div class="ev-panel' + open + '"><div class="ev-panel-toggle">' + window.icon("chevronRight", 10) + 'Engineering Evidence Panel</div>' +
+      '<div class="ev-panel-body">' + sections + '</div></div>';
+  }
+
   function annotBtnHtml(slot) {
     return '<button type="button" class="annot-btn" data-annot-slot="' + slot + '" title="Annotate">' + window.icon("edit", 10) + '</button>';
   }
@@ -800,7 +964,7 @@
     if (count) inner += '<span class="annot-count">' + count + '</span>';
     return '<div class="ph">' + inner + '</div>';
   }
-  function caseCardHtml(c, num, editModeOn) {
+  function caseCardHtml(c, num, editModeOn, evFlags) {
     var photos = "";
     if (c.photoBefore || c.photoAfter) {
       photos = '<div class="case-card-doc__photos">' +
@@ -835,6 +999,7 @@
       '<div class="cc-divider"></div>' +
       '<div class="kv-row"><span class="k">Owner</span><span class="v">' + esc(c.owner) + '</span></div>' +
       '<div class="kv-row"><span class="k">Completed</span><span class="v">' + (c.completedDate ? fmtThaiShort(c.completedDate) : "—") + '</span></div>' +
+      (evFlags && evFlags.show ? evidencePanelHtml(c, editModeOn, evFlags) : "") +
       "</div></div>";
   }
 
@@ -898,11 +1063,12 @@
     // content genuinely overflows the printable area.
     if ($("incCases").checked) {
       var selected = rep.cases.filter(function (c) { return !selectedCaseIds || selectedCaseIds.indexOf(c.id) !== -1; });
+      var evFlags = { show: $("incEvidence").checked, measurement: $("incMeasurement").checked, trial: $("incTrial").checked, docs: $("incRelatedDocs").checked };
       html += '<div class="sec">' + headEl("Daily Engineering Activities (Problem Detail)", "folder");
       if (!selected.length) {
         html += '<div style="text-align:center;color:#aab;padding:30px 0;">No cases selected for this report</div>';
       } else {
-        html += '<div class="case-grid cols-' + colsPerRow + '">' + selected.map(function (c, idx) { return caseCardHtml(c, idx + 1, editMode); }).join("") + '</div>';
+        html += '<div class="case-grid cols-' + colsPerRow + '">' + selected.map(function (c, idx) { return caseCardHtml(c, idx + 1, editMode, evFlags); }).join("") + '</div>';
       }
       html += '</div>';
     }
@@ -948,7 +1114,7 @@
     } catch (err) { showToast("สร้างรายงานไม่สำเร็จ: " + err.message, "error"); }
     finally { btn.disabled = false; btn.innerHTML = window.icon("refresh", 16) + "Generate Report"; }
   });
-  [$("incExec"), $("incProdKpi"), $("incEngKpi"), $("incChartLine"), $("incChartFamily"), $("incChartPareto"), $("incChartRootCause"), $("incCases"), $("incImprovement")].forEach(function (cb) { cb.addEventListener("change", function () { if (currentReportData) renderPreview(currentReportData); }); });
+  [$("incExec"), $("incProdKpi"), $("incEngKpi"), $("incChartLine"), $("incChartFamily"), $("incChartPareto"), $("incChartRootCause"), $("incCases"), $("incImprovement"), $("incEvidence"), $("incMeasurement"), $("incTrial"), $("incRelatedDocs")].forEach(function (cb) { cb.addEventListener("change", function () { if (currentReportData) renderPreview(currentReportData); }); });
 
   // ---------- Annotation Mode ----------
   var HANDLES = [{ name: "nw", dx: 0, dy: 0 }, { name: "ne", dx: 1, dy: 0 }, { name: "sw", dx: 0, dy: 1 }, { name: "se", dx: 1, dy: 1 }];
@@ -1894,6 +2060,45 @@
             });
             y += thisRows * (cardH + 3);
             idx += take;
+          }
+        }
+
+        if ($("incEvidence").checked) {
+          var withEvidence = selected.filter(function (c) { return (c.measurements && c.measurements.length) || (c.trials && c.trials.length) || (c.relatedDocs && c.relatedDocs.length) || c.engineerComment; });
+          if (withEvidence.length) {
+            ensureSpace(20);
+            sec++; secTitle(sec, "Engineering Evidence Panel");
+            withEvidence.forEach(function (c) {
+              ensureSpace(14);
+              doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(22, 41, 77);
+              doc.text(c.code + " — " + String(c.problem).slice(0, 60), marginX, y);
+              y += 4;
+              if ($("incMeasurement").checked && c.measurements && c.measurements.length) {
+                doc.autoTable({ startY: y, margin: { left: marginX, right: marginX }, styles: { fontSize: 6.5, cellPadding: 1.3 }, head: [["Measurement", "Value", "Unit"]], body: c.measurements.map(function (m) { return [m.label || "", m.value || "", m.unit || ""]; }), headStyles: { fillColor: [22, 41, 77], textColor: 255 } });
+                y = doc.lastAutoTable.finalY + 2;
+              }
+              if ($("incTrial").checked && c.trials && c.trials.length) {
+                ensureSpace(14);
+                doc.autoTable({ startY: y, margin: { left: marginX, right: marginX }, styles: { fontSize: 6, cellPadding: 1.2 }, head: [["No.", "Date", "Before", "After", "Result", "Pass/Fail", "Engineer"]], body: c.trials.map(function (t) { return [t.no || "", t.date || "", t.paramBefore || "", t.paramAfter || "", t.result || "", t.passFail || "", t.engineer || ""]; }), headStyles: { fillColor: [22, 41, 77], textColor: 255 } });
+                y = doc.lastAutoTable.finalY + 2;
+              }
+              if ($("incRelatedDocs").checked && c.relatedDocs && c.relatedDocs.length) {
+                ensureSpace(10);
+                doc.setFontSize(6.5); doc.setFont(undefined, "normal"); doc.setTextColor(90, 100, 110);
+                var docLine = c.relatedDocs.map(function (d) { return "[" + (d.type || "Doc") + "] " + (d.name || d.url || ""); }).join("   ·   ");
+                var docWrapped = doc.splitTextToSize(docLine, pageW - marginX * 2);
+                doc.text(docWrapped, marginX, y); y += docWrapped.length * 2.6 + 2;
+              }
+              if (c.engineerComment) {
+                ensureSpace(10);
+                doc.setFontSize(6.5); doc.setFont(undefined, "italic"); doc.setTextColor(60, 68, 78);
+                var cmtWrapped = doc.splitTextToSize("Comment: " + c.engineerComment, pageW - marginX * 2);
+                doc.text(cmtWrapped, marginX, y); y += cmtWrapped.length * 2.6 + 2;
+                doc.setFont(undefined, "normal");
+              }
+              y += 2;
+              doc.setDrawColor(230, 234, 240); doc.line(marginX, y - 1, pageW - marginX, y - 1); y += 3;
+            });
           }
         }
       }

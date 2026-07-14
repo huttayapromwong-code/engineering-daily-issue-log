@@ -374,7 +374,12 @@
     var totalProblems = received.length, cumPct = 0;
     var pareto = byProblemTitle.slice(0, 6).map(function (e) { var p = pct(e.n, totalProblems); cumPct = Math.round((cumPct + (p || 0)) * 10) / 10; return { name: e.name, n: e.n, pct: p, cum: cumPct }; });
 
-    var cases = resolved.map(function (r) {
+    // Case pool = everything the team handled today (any status), not just fully-closed —
+    // most DailyActivity-sourced records never get a resolved_date (that column only exists
+    // on the old `issues` table), so filtering by resolved_date alone left this section
+    // almost always empty. Status badge still reflects the real status per case.
+    var STATUS_LABEL = { "Open": "OPEN", "In Progress": "MONITORING", "Closed": "CLOSED" };
+    var cases = received.map(function (r) {
       var prod = productById[r.product_id];
       var caseYield = (r.qty_ok != null && r.qty_ng != null && (r.qty_ok + r.qty_ng) > 0) ? pct(r.qty_ok, r.qty_ok + r.qty_ng) : null;
       var results = [];
@@ -383,19 +388,19 @@
       if (caseYield != null) results.push({ k: "Yield", v: caseYield + "%" });
       if (r.cost_saving_thb) results.push({ k: "Cost Saving", v: "฿" + r.cost_saving_thb.toLocaleString() });
       return {
-        id: r.id, code: r.code || r.id.slice(0, 8), status: r.status, priority: r.priority || "Medium",
+        id: r.id, code: r.code || r.id.slice(0, 8), status: r.status, statusLabel: STATUS_LABEL[r.status] || r.status.toUpperCase(), priority: r.priority || "Medium",
         photoBefore: r.photo_before, photoAfter: r.photo_after,
         family: prod ? (prod.category || "—") : "—", model: prod ? prod.model_name : "—",
         line: lineById[r.line_id] || "—", machine: r.machine_id ? "Assigned" : "—", lotNo: r.lot_no || "—",
         problem: r.title || "(ไม่มีหัวข้อ)", rootCause: rootCauseById[r.root_cause_category_id] || "ยังไม่ระบุ",
         impact: r.severity === "Critical" ? "High" : r.severity === "Major" ? "Medium" : "Low",
         corrective: r.corrective_action || "—", preventive: r.preventive_action || "—",
-        results: results, owner: r.owner_name || "—", completedDate: r.resolved_date, remark: r.remark || ""
+        results: results, owner: r.owner_name || "—", completedDate: r.resolved_date || (r.status === "Closed" ? r.received_date : null), remark: r.remark || ""
       };
     });
 
     var attachments = [];
-    resolved.forEach(function (r) {
+    received.forEach(function (r) {
       if (r.photo_before) attachments.push({ url: r.photo_before, label: "Before", sub: (lineById[r.line_id] || "") + " · " + (r.title || "") });
       if (r.photo_after) attachments.push({ url: r.photo_after, label: "After", sub: (lineById[r.line_id] || "") + " · " + (r.title || "") });
       (r.attachments || []).forEach(function (a) { attachments.push({ url: a.url, label: a.name || "Attachment", sub: r.title || "" }); });
@@ -504,7 +509,7 @@
     }
     var resultHtml = c.results.length ? '<div class="cc-result-box">' + c.results.map(function (r) { return '<div class="rr">• ' + r.k + ' : <b>' + esc(r.v) + '</b></div>'; }).join("") + '</div>' : "";
     return '<div class="case-card-doc">' +
-      '<div class="case-card-doc__head"><span class="badge-c">' + num + '</span><span class="code">' + esc(c.code) + '</span><span class="cc-badge status-' + c.status.replace(" ", "") + '">' + esc(c.status) + '</span></div>' +
+      '<div class="case-card-doc__head"><span class="badge-c">' + num + '</span><span class="code">' + esc(c.code) + '</span><span class="cc-badge status-' + c.status.replace(" ", "") + '">' + esc(c.statusLabel) + '</span></div>' +
       photos +
       '<div class="case-card-doc__body">' +
       '<div class="kv-row"><span class="k">Product Family</span><span class="v">' + esc(c.family) + '</span></div>' +
@@ -761,7 +766,7 @@
     doc.setFillColor(22, 41, 77); doc.circle(x + 3, y + 2.5, 1.6, "F");
     doc.setFontSize(5); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold"); doc.text(String(num), x + 3, y + 3.3, { align: "center" });
     doc.setFontSize(6.5); doc.setTextColor(30, 30, 30); doc.text(c.code, x + 6, y + 3.3);
-    doc.setFontSize(5); doc.setTextColor(90, 100, 110); doc.text(c.status.toUpperCase(), x + w - 2, y + 3.3, { align: "right" });
+    doc.setFontSize(5); doc.setTextColor(90, 100, 110); doc.text(c.statusLabel, x + w - 2, y + 3.3, { align: "right" });
 
     var innerY = y + 7.5, photoH = w * 0.24;
     if (c.photoBefore || c.photoAfter) {

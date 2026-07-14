@@ -114,7 +114,7 @@
   .cc-badge.status-InProgress { background: #fdeecb; color: #c9821a; }
   .case-card-doc__photos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px 10px 0; }
   .case-card-doc__photos figure { margin: 0; }
-  .case-card-doc__photos .ph { aspect-ratio: 4/3; border-radius: 5px; overflow: hidden; background: #f4f6f9; cursor: zoom-in; }
+  .case-card-doc__photos .ph { aspect-ratio: 1/1; border-radius: 5px; overflow: hidden; background: #f4f6f9; cursor: zoom-in; }
   .case-card-doc__photos img { width: 100%; height: 100%; object-fit: cover; }
   .case-card-doc__photos figcaption { text-align: center; font-size: 6.8px; color: #889; margin-top: 2px; }
   .case-card-doc__body { padding: 9px 10px; }
@@ -207,7 +207,6 @@
             <label class="chk-row"><input type="checkbox" id="incCharts" checked>Include Charts</label>
             <label class="chk-row"><input type="checkbox" id="incCases" checked>Include Selected Cases</label>
             <label class="chk-row"><input type="checkbox" id="incImprovement" checked>Include Improvement Summary</label>
-            <label class="chk-row"><input type="checkbox" id="incAttachments" checked>Include Attachments</label>
           </div>
 
           <div class="card card__pad side-card" id="caseSelectCard" style="display:none;">
@@ -215,7 +214,7 @@
             <label class="chk-row"><input type="checkbox" id="incAllCases" checked>Include All Cases</label>
             <div class="case-pick-list" id="casePickList"></div>
             <div class="field" style="margin:12px 0 0;"><label>จำนวน Case ต่อแถว</label>
-              <div class="cols-select" id="colsSelect"><div class="cols-btn" data-c="2">2</div><div class="cols-btn active" data-c="3">3</div><div class="cols-btn" data-c="4">4</div><div class="cols-btn" data-c="5">5</div></div>
+              <div class="cols-select" id="colsSelect"><div class="cols-btn active" data-c="2">2</div><div class="cols-btn" data-c="3">3</div><div class="cols-btn" data-c="4">4</div><div class="cols-btn" data-c="5">5</div></div>
             </div>
           </div>
 
@@ -319,7 +318,7 @@
   $("fReportDate").value = todayIso();
   document.querySelectorAll(".type-tab.disabled").forEach(function (t) { t.addEventListener("click", function () { showToast("ประเภทรายงานนี้จะเปิดใช้งานใน Phase ถัดไป", "error"); }); });
 
-  var colsPerRow = 3;
+  var colsPerRow = 2;
   document.querySelectorAll(".cols-btn").forEach(function (b) {
     b.addEventListener("click", function () { document.querySelectorAll(".cols-btn").forEach(function (x) { x.classList.remove("active"); }); b.classList.add("active"); colsPerRow = parseInt(b.dataset.c, 10); if (currentReportData) renderPreview(currentReportData); });
   });
@@ -380,16 +379,17 @@
     // on the old `issues` table), so filtering by resolved_date alone left this section
     // almost always empty. Status badge still reflects the real status per case.
     var STATUS_LABEL = { "Open": "OPEN", "In Progress": "MONITORING", "Closed": "CLOSED" };
-    var cases = received.map(function (r) {
+    var dateCompact = dateIso.replace(/-/g, "");
+    var cases = received.map(function (r, idx) {
       var prod = productById[r.product_id];
       var caseYield = (r.qty_ok != null && r.qty_ng != null && (r.qty_ok + r.qty_ng) > 0) ? pct(r.qty_ok, r.qty_ok + r.qty_ng) : null;
       var results = [];
       if (r.ng_reduced_qty) results.push({ k: "NG Reduced", v: r.ng_reduced_qty + " PCS" });
       if (r.downtime_saved_minutes) results.push({ k: "Downtime Reduced", v: r.downtime_saved_minutes + " min" });
       if (caseYield != null) results.push({ k: "Yield", v: caseYield + "%" });
-      if (r.cost_saving_thb) results.push({ k: "Cost Saving", v: "฿" + r.cost_saving_thb.toLocaleString() });
+      var runningCode = "ENG-" + dateCompact + "-" + String(idx + 1).padStart(2, "0");
       return {
-        id: r.id, code: r.code || r.id.slice(0, 8), status: r.status, statusLabel: STATUS_LABEL[r.status] || r.status.toUpperCase(), priority: r.priority || "Medium",
+        id: r.id, code: r.code || runningCode, status: r.status, statusLabel: STATUS_LABEL[r.status] || r.status.toUpperCase(), priority: r.priority || "Medium",
         photoBefore: r.photo_before, photoAfter: r.photo_after,
         family: prod ? (prod.category || "—") : "—", model: prod ? prod.model_name : "—",
         line: lineById[r.line_id] || "—", machine: r.machine_id ? "Assigned" : "—", lotNo: r.lot_no || "—",
@@ -568,7 +568,6 @@
         '<div class="ev-card"><div class="ic tone-green">' + window.icon("target", 13) + '</div><div class="l">Success Rate</div><div class="v">' + (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—") + '</div></div>' +
         '<div class="ev-card"><div class="ic tone-red">' + window.icon("trendingDown", 13) + '</div><div class="l">NG Reduced</div><div class="v" style="color:#c93a2e;">' + rep.engineering.ngReduction + '</div></div>' +
         '<div class="ev-card"><div class="ic tone-amber">' + window.icon("clock", 13) + '</div><div class="l">Downtime Cut</div><div class="v" style="color:#c9821a;">' + rep.engineering.downtimeReduction + '</div></div>' +
-        '<div class="ev-card"><div class="ic tone-green">' + window.icon("coin", 13) + '</div><div class="l">Cost Saving</div><div class="v">฿' + rep.engineering.costSaving.toLocaleString() + '</div></div>' +
         '</div></div>';
       html += '</div>';
     }
@@ -598,25 +597,14 @@
       html += '</div>';
     }
 
-    if ($("incImprovement").checked || $("incAttachments").checked) {
-      var pE = "";
-      if ($("incImprovement").checked) {
-        var im = rep.improvement;
-        pE += '<div class="sec">' + headEl("Engineering Improvement Summary", "trendingUp") + '<div class="ev-grid" style="grid-template-columns:repeat(5,1fr);">' +
-          '<div class="ev-card"><div class="ic tone-red">' + window.icon("trendingDown", 13) + '</div><div class="l">NG Reduction</div><div class="v">' + im.ngReduction + '</div></div>' +
-          '<div class="ev-card"><div class="ic tone-amber">' + window.icon("clock", 13) + '</div><div class="l">Downtime Reduction</div><div class="v">' + im.downtimeReduction + '</div></div>' +
-          '<div class="ev-card"><div class="ic tone-green">' + window.icon("checkCircle", 13) + '</div><div class="l">Yield Improvement</div><div class="v">' + (im.yieldBefore != null && im.yieldAfter != null ? (im.yieldAfter - im.yieldBefore >= 0 ? "+" : "") + Math.round((im.yieldAfter - im.yieldBefore) * 10) / 10 + "%" : "—") + '</div></div>' +
-          '<div class="ev-card"><div class="ic tone-blue">' + window.icon("trendingDown", 13) + '</div><div class="l">Scrap Reduction</div><div class="v">' + im.scrapReduction + '</div></div>' +
-          '<div class="ev-card"><div class="ic tone-green">' + window.icon("coin", 13) + '</div><div class="l">Cost Saving</div><div class="v">฿' + im.costSaving.toLocaleString() + '</div></div>' +
-          '</div></div>';
-      }
-
-      if ($("incAttachments").checked) {
-        pE += '<div class="sec">' + headEl("Attachments", "paperclip");
-        pE += rep.attachments.length ? '<div class="attach-grid-doc">' + rep.attachments.slice(0, 12).map(function (a) { return '<div><div class="attach-thumb-doc"><img src="' + a.url + '"></div><div class="attach-cap">' + esc(a.label) + '<br>' + esc((a.sub || "").slice(0, 24)) + '</div></div>'; }).join("") + '</div>' : '<div style="text-align:center;color:#aab;padding:20px 0;">No attachments for this date</div>';
-        pE += '</div>';
-      }
-      html += pE;
+    if ($("incImprovement").checked) {
+      var im = rep.improvement;
+      html += '<div class="sec">' + headEl("Engineering Improvement Summary", "trendingUp") + '<div class="ev-grid" style="grid-template-columns:repeat(4,1fr);">' +
+        '<div class="ev-card"><div class="ic tone-red">' + window.icon("trendingDown", 13) + '</div><div class="l">NG Reduction</div><div class="v">' + im.ngReduction + '</div></div>' +
+        '<div class="ev-card"><div class="ic tone-amber">' + window.icon("clock", 13) + '</div><div class="l">Downtime Reduction</div><div class="v">' + im.downtimeReduction + '</div></div>' +
+        '<div class="ev-card"><div class="ic tone-green">' + window.icon("checkCircle", 13) + '</div><div class="l">Yield Improvement</div><div class="v">' + (im.yieldBefore != null && im.yieldAfter != null ? (im.yieldAfter - im.yieldBefore >= 0 ? "+" : "") + Math.round((im.yieldAfter - im.yieldBefore) * 10) / 10 + "%" : "—") + '</div></div>' +
+        '<div class="ev-card"><div class="ic tone-blue">' + window.icon("trendingDown", 13) + '</div><div class="l">Scrap Reduction</div><div class="v">' + im.scrapReduction + '</div></div>' +
+        '</div></div>';
     }
 
     $("docPreview").innerHTML = html + "</div>";
@@ -643,7 +631,7 @@
     } catch (err) { showToast("สร้างรายงานไม่สำเร็จ: " + err.message, "error"); }
     finally { btn.disabled = false; btn.innerHTML = window.icon("refresh", 16) + "Generate Report"; }
   });
-  [$("incExec"), $("incKpi"), $("incCharts"), $("incCases"), $("incImprovement"), $("incAttachments")].forEach(function (cb) { cb.addEventListener("change", function () { if (currentReportData) renderPreview(currentReportData); }); });
+  [$("incExec"), $("incKpi"), $("incCharts"), $("incCases"), $("incImprovement")].forEach(function (cb) { cb.addEventListener("change", function () { if (currentReportData) renderPreview(currentReportData); }); });
 
   // ---------- PDF ----------
   var jspdfLoaded = null;
@@ -746,7 +734,7 @@
     doc.setFontSize(6.5); doc.setTextColor(30, 30, 30); doc.text(c.code, x + 6, y + 3.3);
     doc.setFontSize(5); doc.setTextColor(90, 100, 110); doc.text(c.statusLabel, x + w - 2, y + 3.3, { align: "right" });
 
-    var innerY = y + 7.5, photoH = w * 0.24;
+    var innerY = y + 7.5, photoH = w * 0.44;
     if (c.photoBefore || c.photoAfter) {
       try {
         if (c.photoBefore) doc.addImage(c.photoBefore, "JPEG", x + 1.5, innerY, w / 2 - 2, photoH, undefined, "FAST");
@@ -876,7 +864,7 @@
           doc.setFontSize(8.5); doc.setTextColor(22, 41, 77); doc.text("ENGINEERING VALUE CONTRIBUTION", ex + 6, y);
         }
         sec++;
-        var evItems = [["users", "Activities", rep.engineering.casesHandled, [30, 79, 160]], ["wrench", "Resolved", rep.engineering.casesResolved, [30, 79, 160]], ["target", "Success Rate", (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—"), [30, 142, 90]], ["trendingDown", "NG Reduced", rep.engineering.ngReduction, [201, 58, 46]], ["clock", "Downtime Cut", rep.engineering.downtimeReduction, [201, 130, 26]], ["coin", "Cost Saving", "฿" + rep.engineering.costSaving.toLocaleString(), [30, 142, 90]]];
+        var evItems = [["users", "Activities", rep.engineering.casesHandled, [30, 79, 160]], ["wrench", "Resolved", rep.engineering.casesResolved, [30, 79, 160]], ["target", "Success Rate", (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—"), [30, 142, 90]], ["trendingDown", "NG Reduced", rep.engineering.ngReduction, [201, 58, 46]], ["clock", "Downtime Cut", rep.engineering.downtimeReduction, [201, 130, 26]]];
         var evColW = (colW2 - 8) / 3;
         evItems.forEach(function (it, i) {
           var col = i % 3, row = Math.floor(i / 3);
@@ -911,7 +899,7 @@
         var selected = rep.cases.filter(function (c) { return !selectedCaseIds || selectedCaseIds.indexOf(c.id) !== -1; });
         var cols = colsPerRow;
         var cardW = (pageW - marginX * 2 - (cols - 1) * 3) / cols;
-        var cardH = cols >= 4 ? 78 : (cols === 3 ? 90 : 104);
+        var cardH = cols >= 4 ? 90 : (cols === 3 ? 108 : 130);
         var caseSec = ++sec;
         ensureSpace(14);
         if (!selected.length) {
@@ -938,29 +926,19 @@
         }
       }
 
-      if ($("incImprovement").checked || $("incAttachments").checked) {
-        if ($("incImprovement").checked) {
-          ensureSpace(26);
-          sec++; secTitle(sec, "Engineering Improvement Summary");
-          var im = rep.improvement;
-          var imItems = [["trendingDown", "NG Reduction", im.ngReduction, [201, 58, 46]], ["clock", "Downtime Reduction", im.downtimeReduction, [201, 130, 26]], ["checkCircle", "Yield Improvement", (im.yieldBefore != null && im.yieldAfter != null ? (im.yieldAfter - im.yieldBefore >= 0 ? "+" : "") + Math.round((im.yieldAfter - im.yieldBefore) * 10) / 10 + "%" : "—"), [30, 142, 90]], ["trendingDown", "Scrap Reduction", im.scrapReduction, [30, 79, 160]], ["coin", "Cost Saving", "฿" + im.costSaving.toLocaleString(), [30, 142, 90]]];
-          var imColW = (pageW - marginX * 2 - 16) / 5;
-          imItems.forEach(function (it, i) {
-            var bx = marginX + i * (imColW + 4);
-            doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, y, imColW, 15, 1.2, 1.2);
-            doc.setFontSize(4.6); doc.setTextColor(136, 150, 160); doc.text(it[1].toUpperCase(), bx + imColW / 2, y + 10, { align: "center" });
-            doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + imColW / 2, y + 5.5, { align: "center" });
-          });
-          y += 20;
-        }
-        if ($("incAttachments").checked) {
-          ensureSpace(14);
-          sec++; secTitle(sec, "Attachments");
-          if (rep.attachments.length) {
-            doc.setFontSize(7); doc.setTextColor(80, 90, 100);
-            doc.text(rep.attachments.length + " files attached — see Knowledge Base / Case Detail for full-size images.", marginX, y);
-          } else { doc.setFontSize(7.5); doc.setTextColor(160, 170, 180); doc.text("No attachments for this date", marginX, y); }
-        }
+      if ($("incImprovement").checked) {
+        ensureSpace(26);
+        sec++; secTitle(sec, "Engineering Improvement Summary");
+        var im = rep.improvement;
+        var imItems = [["trendingDown", "NG Reduction", im.ngReduction, [201, 58, 46]], ["clock", "Downtime Reduction", im.downtimeReduction, [201, 130, 26]], ["checkCircle", "Yield Improvement", (im.yieldBefore != null && im.yieldAfter != null ? (im.yieldAfter - im.yieldBefore >= 0 ? "+" : "") + Math.round((im.yieldAfter - im.yieldBefore) * 10) / 10 + "%" : "—"), [30, 142, 90]], ["trendingDown", "Scrap Reduction", im.scrapReduction, [30, 79, 160]]];
+        var imColW = (pageW - marginX * 2 - 12) / 4;
+        imItems.forEach(function (it, i) {
+          var bx = marginX + i * (imColW + 4);
+          doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, y, imColW, 15, 1.2, 1.2);
+          doc.setFontSize(4.6); doc.setTextColor(136, 150, 160); doc.text(it[1].toUpperCase(), bx + imColW / 2, y + 10, { align: "center" });
+          doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + imColW / 2, y + 5.5, { align: "center" });
+        });
+        y += 20;
       }
 
       var pageCount = doc.internal.getNumberOfPages();

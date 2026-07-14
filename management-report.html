@@ -178,6 +178,33 @@
   #annotCanvas { background: #000; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
   .annot-text-input { position: absolute; z-index: 610; border: 2px solid #1E4FA0; border-radius: 4px; padding: 3px 6px; font-size: 13px; font-family: var(--font-sans); min-width: 60px; }
   .annot-title { color: #cdd6e2; font-size: 12px; font-weight: 700; margin-right: 4px; }
+  .case-card-doc__head .compare-btn { width: 18px; height: 18px; border-radius: 4px; background: rgba(30,79,160,.15); color: #1E4FA0; border: 1px solid rgba(30,79,160,.3); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; margin-left: 4px; }
+  .case-card-doc__head .compare-btn svg { width: 10px; height: 10px; }
+
+  .compare-modal { position: fixed; inset: 0; background: rgba(10,15,20,.96); display: none; z-index: 650; flex-direction: column; }
+  .compare-modal.show { display: flex; }
+  .compare-modes { display: flex; gap: 4px; background: #0e151d; border-radius: 6px; padding: 2px; }
+  .compare-modes button { font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 4px; border: none; background: transparent; color: #8a97a6; cursor: pointer; }
+  .compare-modes button.active { background: #1E4FA0; color: #fff; }
+  .compare-opacity-row { display: none; align-items: center; gap: 10px; }
+  .compare-opacity-row input[type=range] { width: 110px; }
+  .compare-body { flex: 1; overflow: hidden; position: relative; background: #05080b; }
+  .compare-side { display: flex; height: 100%; }
+  .compare-pane { flex: 1; position: relative; overflow: hidden; border-right: 1px solid #1c2530; }
+  .compare-pane:last-child { border-right: none; }
+  .compare-label { position: absolute; top: 10px; left: 10px; z-index: 2; background: rgba(22,41,77,.85); color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; padding: 3px 9px; border-radius: 4px; }
+  .compare-imgwrap { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: grab; }
+  .compare-imgwrap img, .csl-img, .ovl-img { max-width: none; display: block; user-select: none; -webkit-user-drag: none; }
+  .compare-slider-wrap { position: relative; width: 100%; height: 100%; overflow: hidden; cursor: col-resize; }
+  .compare-overlay-wrap { position: relative; width: 100%; height: 100%; overflow: hidden; cursor: grab; }
+  .csl-layer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .csl-before-clip { clip-path: inset(0 50% 0 0); }
+  .csl-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; z-index: 3; pointer-events: none; }
+  .csl-handle::before { content: ""; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: #fff; box-shadow: 0 0 8px rgba(0,0,0,.6); }
+  .csl-grip { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 34px; height: 34px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #16294D; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+  .csl-tag { position: absolute; top: 10px; z-index: 4; background: rgba(22,41,77,.85); color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; padding: 3px 9px; border-radius: 4px; }
+  .csl-tag-after { right: 10px; }
+  .csl-tag-before { left: 10px; }
 
   .editor-mode [contenteditable="true"] { outline: 1px dashed #1E4FA0; outline-offset: 2px; border-radius: 3px; cursor: text; }
   .editor-mode [contenteditable="true"]:hover { background: #f7faff; }
@@ -332,6 +359,36 @@
   </div>
 </div>
 
+<div class="compare-modal" id="compareModal">
+  <div class="annot-toolbar">
+    <span class="annot-title" id="compareTitle"></span>
+    <div class="compare-modes" id="compareModes">
+      <button type="button" data-mode="side" class="active">Side by Side</button>
+      <button type="button" data-mode="slider">Comparison Slider</button>
+      <button type="button" data-mode="overlay">Difference Overlay</button>
+    </div>
+    <div class="compare-opacity-row" id="compareOpacityRow">
+      <input type="range" id="compareOpacitySlider" min="0" max="100" value="100">
+      <div class="annot-zoom" id="compareOpacityPresets">
+        <button type="button" data-op="0">0%</button><button type="button" data-op="25">25%</button><button type="button" data-op="50">50%</button><button type="button" data-op="75">75%</button><button type="button" data-op="100" class="active">100%</button>
+      </div>
+    </div>
+    <div class="annot-actions">
+      <div class="annot-zoom" id="compareZoom">
+        <button type="button" data-zoom="fitw" class="active">Fit W</button>
+        <button type="button" data-zoom="fith">Fit H</button>
+        <button type="button" data-zoom="1">100%</button>
+        <button type="button" data-zoom="2">200%</button>
+        <button type="button" data-zoom="4">400%</button>
+      </div>
+      <button type="button" id="compareRotate" title="Rotate"></button>
+      <button type="button" id="compareFullscreen" title="Full Screen"></button>
+      <button type="button" class="btn primary" id="compareClose">ปิด</button>
+    </div>
+  </div>
+  <div class="compare-body" id="compareBody"></div>
+</div>
+
 <script>
 (function () {
   "use strict";
@@ -420,6 +477,14 @@
 
   $("lightbox").addEventListener("click", function () { $("lightbox").classList.remove("show"); });
   $("docPreview").addEventListener("click", function (e) {
+    var cmpBtn = e.target.closest(".compare-btn");
+    if (cmpBtn) {
+      var ccard = e.target.closest(".case-card-doc"); if (!ccard || !currentReportData) return;
+      var ccid = ccard.dataset.caseId;
+      var cc = currentReportData.cases.find(function (x) { return String(x.id) === ccid; });
+      if (cc) openCompareModal(cc);
+      return;
+    }
     var annotBtn = e.target.closest(".annot-btn");
     if (annotBtn) {
       var acard = e.target.closest(".case-card-doc"); if (!acard || !currentReportData) return;
@@ -748,8 +813,9 @@
       '<button type="button" class="cc-down" title="เลื่อนลง">' + window.icon("chevronDown", 10) + '</button>' +
       '<button type="button" class="cc-remove" title="ลบ Case นี้">' + window.icon("x", 10) + '</button>' +
       '</div>' : "";
+    var compareBtn = (c.photoBefore && c.photoAfter) ? '<button type="button" class="compare-btn" title="เปรียบเทียบ Before/After">' + window.icon("compareTool", 10) + '</button>' : "";
     return '<div class="case-card-doc" data-case-id="' + esc(c.id) + '">' +
-      '<div class="case-card-doc__head"><span class="badge-c">' + num + '</span><span class="code">' + esc(c.code) + '</span><span class="cc-badge status-' + c.status.replace(" ", "") + '">' + esc(c.statusLabel) + '</span>' + editBar + '</div>' +
+      '<div class="case-card-doc__head"><span class="badge-c">' + num + '</span><span class="code">' + esc(c.code) + '</span><span class="cc-badge status-' + c.status.replace(" ", "") + '">' + esc(c.statusLabel) + '</span>' + compareBtn + editBar + '</div>' +
       photos +
       '<div class="case-card-doc__body">' +
       '<div class="kv-row"><span class="k">Product Family</span><span class="v">' + esc(c.family) + '</span></div>' +
@@ -1335,6 +1401,170 @@
     else if (e.key === "Escape") { closeAnnotModal(); }
     else if ((e.ctrlKey || e.metaKey) && e.key === "z") { e.preventDefault(); if (e.shiftKey) annotRedo(); else annotUndo(); }
   });
+
+  // ---------- Comparison Mode ----------
+  var compareSession = null;
+  var compareDrag = { active: false, startX: 0, startY: 0, startTx: 0, startTy: 0 };
+  var sliderDrag = { active: false };
+
+  function computeZoomScale(zoomMode, imgEl, wrapEl) {
+    if (!imgEl || !imgEl.naturalWidth || !wrapEl) return 1;
+    var cw = wrapEl.clientWidth, ch = wrapEl.clientHeight;
+    if (zoomMode === "fitw") return cw / imgEl.naturalWidth;
+    if (zoomMode === "fith") return ch / imgEl.naturalHeight;
+    return parseFloat(zoomMode);
+  }
+
+  function applyCompareTransform() {
+    if (!compareSession) return;
+    var cs = compareSession;
+    var t = "translate(" + cs.tx + "px," + cs.ty + "px) scale(" + cs.scale + ") rotate(" + cs.rotate + "deg)";
+    if (cs.mode === "side") {
+      var b = $("cmpImgBefore"), a = $("cmpImgAfter");
+      if (b) b.style.transform = t; if (a) a.style.transform = t;
+    } else if (cs.mode === "slider") {
+      var sb = $("cmpSliderBefore"), sa = $("cmpSliderAfter");
+      if (sb) sb.style.transform = t; if (sa) sa.style.transform = t;
+      var clip = $("cslClip"), handle = $("cslHandle");
+      if (clip) clip.style.clipPath = "inset(0 " + (100 - cs.sliderPos) + "% 0 0)";
+      if (handle) handle.style.left = cs.sliderPos + "%";
+    } else if (cs.mode === "overlay") {
+      var ob = $("cmpOvlBefore"), oa = $("cmpOvlAfter");
+      if (ob) ob.style.transform = t;
+      if (oa) { oa.style.transform = t; oa.style.opacity = cs.opacity / 100; }
+    }
+  }
+
+  function compareDragDown(e) {
+    if (!compareSession || compareSession.mode === "slider") return;
+    compareDrag.active = true; compareDrag.startX = e.clientX; compareDrag.startY = e.clientY;
+    compareDrag.startTx = compareSession.tx; compareDrag.startTy = compareSession.ty;
+    e.preventDefault();
+  }
+  function updateSliderFromEvent(e) {
+    var wrap = $("cmpSliderWrap"); if (!wrap || !compareSession) return;
+    var rect = wrap.getBoundingClientRect();
+    var pct = ((e.clientX - rect.left) / rect.width) * 100;
+    compareSession.sliderPos = Math.max(0, Math.min(100, pct));
+    applyCompareTransform();
+  }
+  window.addEventListener("mousemove", function (e) {
+    if (compareDrag.active && compareSession) {
+      compareSession.tx = compareDrag.startTx + (e.clientX - compareDrag.startX);
+      compareSession.ty = compareDrag.startTy + (e.clientY - compareDrag.startY);
+      applyCompareTransform();
+    }
+    if (sliderDrag.active) updateSliderFromEvent(e);
+  });
+  window.addEventListener("mouseup", function () { compareDrag.active = false; sliderDrag.active = false; });
+
+  function fitCompareZoom(mode) {
+    if (!compareSession) return;
+    var refImg, refWrap;
+    if (mode === "side") { refImg = $("cmpImgBefore"); refWrap = $("cmpWrapBefore"); }
+    else if (mode === "slider") { refImg = $("cmpSliderAfter"); refWrap = $("cmpSliderWrap"); }
+    else { refImg = $("cmpOvlBefore"); refWrap = $("cmpOverlayWrap"); }
+    function doFit() { compareSession.scale = computeZoomScale("fitw", refImg, refWrap); compareSession.tx = 0; compareSession.ty = 0; applyCompareTransform(); }
+    if (refImg && refImg.complete && refImg.naturalWidth) doFit();
+    else if (refImg) refImg.onload = doFit;
+  }
+
+  function renderCompareBody() {
+    var cs = compareSession, body = $("compareBody");
+    if (cs.mode === "side") {
+      body.innerHTML =
+        '<div class="compare-side">' +
+          '<div class="compare-pane"><div class="compare-label">BEFORE</div><div class="compare-imgwrap" id="cmpWrapBefore"><img id="cmpImgBefore" src="' + cs.before + '"></div></div>' +
+          '<div class="compare-pane"><div class="compare-label">AFTER</div><div class="compare-imgwrap" id="cmpWrapAfter"><img id="cmpImgAfter" src="' + cs.after + '"></div></div>' +
+        '</div>';
+      ["cmpWrapBefore", "cmpWrapAfter"].forEach(function (id) { var el = $(id); if (el) el.addEventListener("mousedown", compareDragDown); });
+    } else if (cs.mode === "slider") {
+      body.innerHTML =
+        '<div class="compare-slider-wrap" id="cmpSliderWrap">' +
+          '<div class="csl-layer" id="cslAfterLayer"><img id="cmpSliderAfter" class="csl-img" src="' + cs.after + '"></div>' +
+          '<div class="csl-layer csl-before-clip" id="cslClip"><img id="cmpSliderBefore" class="csl-img" src="' + cs.before + '"></div>' +
+          '<span class="csl-tag csl-tag-after">AFTER</span><span class="csl-tag csl-tag-before">BEFORE</span>' +
+          '<div class="csl-handle" id="cslHandle"><div class="csl-grip">' + window.icon("arrowTool", 14) + '</div></div>' +
+        '</div>';
+      var wrap = $("cmpSliderWrap");
+      wrap.addEventListener("mousedown", function (e) { sliderDrag.active = true; updateSliderFromEvent(e); e.preventDefault(); });
+    } else if (cs.mode === "overlay") {
+      body.innerHTML =
+        '<div class="compare-overlay-wrap" id="cmpOverlayWrap">' +
+          '<div class="csl-layer"><img id="cmpOvlBefore" class="ovl-img" src="' + cs.before + '"></div>' +
+          '<div class="csl-layer"><img id="cmpOvlAfter" class="ovl-img" src="' + cs.after + '"></div>' +
+        '</div>';
+      var ow = $("cmpOverlayWrap"); if (ow) ow.addEventListener("mousedown", compareDragDown);
+    }
+    applyCompareTransform();
+  }
+
+  function setCompareMode(mode) {
+    if (!compareSession) return;
+    compareSession.mode = mode; compareSession.zoomMode = "fitw";
+    document.querySelectorAll("#compareModes button").forEach(function (b) { b.classList.toggle("active", b.dataset.mode === mode); });
+    document.querySelectorAll("#compareZoom button").forEach(function (b) { b.classList.toggle("active", b.dataset.zoom === "fitw"); });
+    $("compareOpacityRow").style.display = mode === "overlay" ? "flex" : "none";
+    renderCompareBody();
+    setTimeout(function () { fitCompareZoom(mode); }, 0);
+  }
+
+  function openCompareModal(caseObj) {
+    var before = caseObj.annotBeforePreview || caseObj.photoBefore;
+    var after = caseObj.annotAfterPreview || caseObj.photoAfter;
+    if (!before || !after) { showToast("Case นี้ต้องมีทั้งรูป Before และ After", "error"); return; }
+    compareSession = { caseId: caseObj.id, mode: "side", zoomMode: "fitw", rotate: 0, scale: 1, tx: 0, ty: 0, sliderPos: 50, opacity: 100, before: before, after: after };
+    $("compareTitle").textContent = caseObj.code + " — Before / After";
+    $("compareOpacitySlider").value = 100;
+    document.querySelectorAll("#compareOpacityPresets button").forEach(function (b) { b.classList.toggle("active", b.dataset.op === "100"); });
+    $("compareModal").classList.add("show");
+    setCompareMode("side");
+  }
+  function closeCompareModal() {
+    if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} }
+    $("compareModal").classList.remove("show");
+    compareSession = null;
+  }
+
+  $("compareModes").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || !compareSession) return;
+    setCompareMode(b.dataset.mode);
+  });
+  $("compareZoom").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || !compareSession) return;
+    compareSession.zoomMode = b.dataset.zoom;
+    document.querySelectorAll("#compareZoom button").forEach(function (x) { x.classList.toggle("active", x === b); });
+    var refImg, refWrap;
+    if (compareSession.mode === "side") { refImg = $("cmpImgBefore"); refWrap = $("cmpWrapBefore"); }
+    else if (compareSession.mode === "slider") { refImg = $("cmpSliderAfter"); refWrap = $("cmpSliderWrap"); }
+    else { refImg = $("cmpOvlBefore"); refWrap = $("cmpOverlayWrap"); }
+    compareSession.scale = computeZoomScale(compareSession.zoomMode, refImg, refWrap);
+    compareSession.tx = 0; compareSession.ty = 0;
+    applyCompareTransform();
+  });
+  $("compareOpacitySlider").addEventListener("input", function () {
+    if (!compareSession) return;
+    compareSession.opacity = parseInt(this.value, 10);
+    document.querySelectorAll("#compareOpacityPresets button").forEach(function (b) { b.classList.toggle("active", parseInt(b.dataset.op, 10) === compareSession.opacity); });
+    applyCompareTransform();
+  });
+  $("compareOpacityPresets").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || !compareSession) return;
+    compareSession.opacity = parseInt(b.dataset.op, 10);
+    $("compareOpacitySlider").value = compareSession.opacity;
+    document.querySelectorAll("#compareOpacityPresets button").forEach(function (x) { x.classList.toggle("active", x === b); });
+    applyCompareTransform();
+  });
+  $("compareRotate").innerHTML = window.icon("refresh", 14);
+  $("compareRotate").addEventListener("click", function () { if (!compareSession) return; compareSession.rotate = (compareSession.rotate + 90) % 360; applyCompareTransform(); });
+  $("compareFullscreen").innerHTML = window.icon("fullscreenTool", 14);
+  $("compareFullscreen").addEventListener("click", function () {
+    var el = $("compareModal");
+    if (!document.fullscreenElement) { if (el.requestFullscreen) el.requestFullscreen().catch(function () {}); }
+    else { if (document.exitFullscreen) document.exitFullscreen(); }
+  });
+  $("compareClose").addEventListener("click", closeCompareModal);
+  document.addEventListener("keydown", function (e) { if (compareSession && e.key === "Escape") closeCompareModal(); });
 
   // ---------- PDF ----------
   var jspdfLoaded = null;

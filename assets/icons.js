@@ -62,7 +62,9 @@ window.ICONS = {
   textTool: '<polyline points="5 5 5 3 19 3 19 5"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/>',
   hashTool: '<line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="9" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="15" y2="20"/>',
   undoTool: '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/>',
-  redoTool: '<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h1"/>'
+  redoTool: '<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h1"/>',
+  compareTool: '<rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/>',
+  fullscreenTool: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'
 };
 
 window.icon = function (name, size) {

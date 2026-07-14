@@ -2441,6 +2441,10 @@
 
     if (!configured) { showConfigBanner(); renderAll(); }
     else { loadIssues(); }
+
+    if (new URLSearchParams(window.location.search).get("new") === "1") {
+      openModal(null);
+    }
   });
 })();
 </script>

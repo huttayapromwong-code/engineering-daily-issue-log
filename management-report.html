@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generate Management Report — Manufacturing Engineering Platform</title>
+<link rel="stylesheet" href="assets/design-system.css">
+<script src="assets/icons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+  .gen-shell { display: grid; grid-template-columns: 320px 1fr; gap: var(--sp-5); align-items: start; }
+  @media (max-width: 1000px) { .gen-shell { grid-template-columns: 1fr; } }
+
+  .type-tabs { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--sp-4); }
+  .type-tab { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: var(--fs-13); font-weight: 600; color: var(--ink-secondary); }
+  .type-tab.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .type-tab.disabled { opacity: .5; cursor: not-allowed; }
+  .type-tab .soon { font-size: var(--fs-11); font-weight: 700; color: var(--ink-muted); }
+
+  .field { margin-bottom: var(--sp-4); }
+  .field label { display: block; margin-bottom: 6px; }
+  .field input[type=text], .field input[type=date] { width: 100%; }
+
+  .a4-preview-wrap { background: var(--surface-alt); border-radius: var(--r-lg); padding: var(--sp-6); overflow-x: auto; }
+  .a4-page {
+    width: 794px; min-height: 1123px; background: #fff; color: #1a1a1a; margin: 0 auto var(--sp-6);
+    box-shadow: var(--shadow-lg); padding: 48px 56px 70px; position: relative; font-family: var(--font-sans);
+    box-sizing: border-box;
+  }
+  .a4-page.first-page { padding-top: 40px; }
+  .doc-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #1E4FA0; padding-bottom: 16px; margin-bottom: 20px; }
+  .doc-header__brand { display: flex; align-items: center; gap: 12px; }
+  .doc-header__mark { width: 44px; height: 44px; border-radius: 8px; background: #1E4FA0; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex: none; }
+  .doc-header__brand b { font-size: 17px; font-weight: 800; display: block; }
+  .doc-header__brand span { font-size: 11px; color: #667; letter-spacing: .04em; text-transform: uppercase; }
+  .doc-header__title { text-align: right; }
+  .doc-header__title .dept { font-size: 12px; color: #667; margin-bottom: 2px; }
+  .doc-header__title .title { font-size: 18px; font-weight: 800; color: #1E4FA0; }
+
+  .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12px; }
+  .meta-table td { padding: 6px 10px; border: 1px solid #dde3ea; }
+  .meta-table td.k { background: #f4f6f9; font-weight: 700; width: 130px; color: #445; }
+  .sig-line { display: inline-block; width: 140px; border-bottom: 1px solid #99a; margin-left: 6px; }
+
+  .doc-h2 { font-size: 14px; font-weight: 800; color: #1E4FA0; margin: 22px 0 10px; padding-bottom: 4px; border-bottom: 1px solid #dde3ea; }
+  .doc-p { font-size: 12.5px; line-height: 1.75; color: #222; }
+  .doc-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 6px; }
+  .doc-table th, .doc-table td { border: 1px solid #dde3ea; padding: 6px 9px; text-align: left; }
+  .doc-table th { background: #f4f6f9; font-weight: 700; color: #445; font-size: 10.5px; text-transform: uppercase; }
+  .doc-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .stat-mini-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0; }
+  .stat-mini { border: 1px solid #dde3ea; border-radius: 8px; padding: 10px 12px; text-align: center; }
+  .stat-mini .v { font-size: 20px; font-weight: 800; color: #1E4FA0; }
+  .stat-mini .l { font-size: 10px; color: #667; margin-top: 2px; }
+
+  .cat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+  .cat-mini { border: 1px solid #dde3ea; border-radius: 8px; padding: 8px 10px; }
+  .cat-mini .v { font-size: 16px; font-weight: 800; }
+  .cat-mini .l { font-size: 10px; color: #667; }
+
+  .doc-list { margin: 6px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.9; }
+  .impact-High { color: #c93a2e; font-weight: 700; }
+  .impact-Medium { color: #c9821a; font-weight: 700; }
+  .impact-Low { color: #55636f; font-weight: 700; }
+
+  .doc-footer { position: absolute; bottom: 24px; left: 56px; right: 56px; display: flex; justify-content: space-between; font-size: 10px; color: #889; border-top: 1px solid #dde3ea; padding-top: 8px; }
+  .confidential-tag { font-size: 10px; font-weight: 700; color: #c93a2e; text-transform: uppercase; letter-spacing: .04em; }
+
+  .toast-stack { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; max-width: 340px; }
+  .toast { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--r-md); padding: 12px 14px; box-shadow: var(--shadow-md); font-size: 13px; }
+  .toast.success { border-left-color: var(--s-success); }
+  .toast.error { border-left-color: var(--s-critical); }
+
+  .empty-doc { text-align: center; padding: 100px 20px; color: var(--ink-muted); }
+
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.5); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  .btn.secondary .spin { border-color: var(--line-strong); border-top-color: var(--accent); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+</style>
+</head>
+<body>
+<div class="ds-shell">
+  <nav class="ds-sidebar" id="sidebar">
+    <div class="ds-sidebar__brand">
+      <div class="mark">M</div>
+      <div><div class="name">Manufacturing Eng.</div><div class="sub">Engineering Platform</div></div>
+    </div>
+    <div class="ds-nav">
+      <a href="daily-dashboard.html" data-i="layoutDashboard">Dashboard</a>
+      <a href="index.html?new=1" data-i="plus">New RCA</a>
+      <a href="index.html" data-i="folder">Case Management</a>
+      <a href="daily-activity.html" data-i="checkCircle">Daily Tasks</a>
+      <a href="executive-dashboard.html" data-i="trendingUp">Analytics</a>
+      <a href="report.html" data-i="fileText">Reports</a>
+      <a href="management-report.html" class="active" data-i="printer">Management Report</a>
+      <a href="knowledge-base.html" data-i="bookOpen">Knowledge Base</a>
+      <a href="my-performance.html" data-i="users">My Performance</a>
+      <a href="notification.html" data-i="bell">Notification</a>
+      <a href="settings.html" data-i="settings">Settings</a>
+    </div>
+  </nav>
+
+  <div class="ds-main">
+    <header class="ds-topbar">
+      <div>
+        <div class="ds-topbar__title">Generate Management Report</div>
+        <div class="ds-topbar__meta">สร้างเอกสารรายงานทางการจากข้อมูลจริงในฐานข้อมูล</div>
+      </div>
+      <div class="ds-topbar__actions">
+        <button class="ico-btn" id="btnThemeToggle"></button>
+      </div>
+    </header>
+
+    <div class="ds-content">
+      <div class="banner" id="configBanner" style="display:none; background:var(--s-warning-soft); color:var(--s-warning); border:1px solid var(--s-warning); padding:12px 16px; border-radius:var(--r-md); margin-bottom:16px; font-size:13.5px;">ยังไม่ได้ตั้งค่าฐานข้อมูลใน config.js</div>
+
+      <div class="gen-shell">
+        <div>
+          <div class="card card__pad" style="margin-bottom:var(--sp-4);">
+            <div class="card__title" style="margin-bottom:10px;">เลือกประเภทรายงาน</div>
+            <div class="type-tabs" id="typeTabs">
+              <div class="type-tab active" data-type="daily">Daily Report</div>
+              <div class="type-tab disabled" data-type="weekly">Weekly Report <span class="soon">เร็ว ๆ นี้</span></div>
+              <div class="type-tab disabled" data-type="monthly">Monthly Report <span class="soon">เร็ว ๆ นี้</span></div>
+              <div class="type-tab disabled" data-type="executive">Executive Report <span class="soon">เร็ว ๆ นี้</span></div>
+            </div>
+
+            <div class="field">
+              <label>เลือกวันที่</label>
+              <input type="date" id="fReportDate">
+            </div>
+
+            <button class="btn primary" id="btnGenerate" style="width:100%; justify-content:center;"></button>
+          </div>
+
+          <div class="card card__pad" style="margin-bottom:var(--sp-4);">
+            <div class="card__title" style="margin-bottom:10px;">ข้อมูลองค์กร (สำหรับเอกสาร)</div>
+            <div class="field"><label>ชื่อบริษัท</label><input type="text" id="fCompanyName" placeholder="เช่น ABC Optical Technology"></div>
+            <div class="field"><label>แผนก</label><input type="text" id="fDeptName" placeholder="Manufacturing Engineering Department"></div>
+            <div class="field"><label>ผู้จัดทำ (Prepared by)</label><input type="text" id="fPreparedBy" placeholder="ชื่อผู้จัดทำรายงาน"></div>
+            <div class="field" style="margin-bottom:0;"><label>ระดับความลับ</label>
+              <select id="fConfidential" style="width:100%;"><option value="">— ไม่ระบุ —</option><option>Internal Use Only</option><option>Confidential</option><option>Restricted</option></select>
+            </div>
+          </div>
+
+          <button class="btn secondary" id="btnDownloadPdf" style="width:100%; justify-content:center;" disabled></button>
+        </div>
+
+        <div class="a4-preview-wrap">
+          <div id="docPreview"><div class="empty-doc">เลือกวันที่แล้วกด "Generate Report" เพื่อสร้างเอกสาร</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+(function () {
+  "use strict";
+  var SUPABASE_URL = window.SUPABASE_URL || "";
+  var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
+  var configured = SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.indexOf("YOUR_") !== 0;
+  var sb = (configured && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function isoDate(d) { return d.toISOString().slice(0, 10); }
+  function todayIso() { return isoDate(new Date()); }
+  function addDays(iso, n) { var d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return isoDate(d); }
+  function fmtThai(iso) {
+    var d = new Date(iso + "T00:00:00");
+    var mo = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+    return d.getDate() + " " + mo[d.getMonth()] + " " + d.getFullYear();
+  }
+  function sum(arr, key) { return arr.reduce(function (s, r) { return s + (Number(r[key]) || 0); }, 0); }
+
+  document.querySelectorAll(".ds-nav a").forEach(function (a) { a.innerHTML = window.icon(a.dataset.i, 18) + a.textContent; });
+  $("btnThemeToggle").innerHTML = window.icon("moon", 18);
+  $("btnGenerate").innerHTML = window.icon("refresh", 16) + "Generate Report";
+  $("btnDownloadPdf").innerHTML = window.icon("download", 16) + "Download PDF";
+
+  function applyThemeIcon() {
+    var isDark = document.documentElement.getAttribute("data-theme") === "dark" || (!document.documentElement.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    $("btnThemeToggle").innerHTML = window.icon(isDark ? "sun" : "moon", 18);
+  }
+  $("btnThemeToggle").addEventListener("click", function () {
+    var root = document.documentElement, cur = root.getAttribute("data-theme");
+    var next = cur === "dark" ? "light" : cur === "light" ? "" : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+    if (next) { root.setAttribute("data-theme", next); localStorage.setItem("eng-log-theme", next); } else { root.removeAttribute("data-theme"); localStorage.removeItem("eng-log-theme"); }
+    applyThemeIcon();
+  });
+  var savedTheme = localStorage.getItem("eng-log-theme");
+  if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+  applyThemeIcon();
+
+  function showToast(msg, type) {
+    var stack = $("toastStack");
+    var t = document.createElement("div"); t.className = "toast" + (type ? " " + type : "");
+    t.textContent = msg; stack.appendChild(t);
+    setTimeout(function () { t.style.transition = "opacity .3s"; t.style.opacity = "0"; setTimeout(function () { t.remove(); }, 300); }, 4000);
+  }
+
+  if (!configured) { $("configBanner").style.display = "block"; }
+
+  // ---------- org identity (localStorage, interim until Corporate Identity Settings module) ----------
+  ["fCompanyName", "fDeptName", "fPreparedBy", "fConfidential"].forEach(function (id) {
+    var saved = localStorage.getItem("eng-log-org-" + id);
+    if (saved) $(id).value = saved;
+    $(id).addEventListener("change", function () { localStorage.setItem("eng-log-org-" + id, $(id).value); });
+  });
+  if (!$("fDeptName").value) $("fDeptName").value = "Manufacturing Engineering Department";
+  var myName = localStorage.getItem("eng-log-myname");
+  if (!$("fPreparedBy").value && myName) $("fPreparedBy").value = myName;
+
+  $("fReportDate").value = todayIso();
+
+  document.querySelectorAll(".type-tab").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      if (tab.classList.contains("disabled")) { showToast("ประเภทรายงานนี้จะเปิดใช้งานใน Phase ถัดไป", "error"); return; }
+      document.querySelectorAll(".type-tab").forEach(function (t) { t.classList.remove("active"); });
+      tab.classList.add("active");
+    });
+  });
+
+  var lineById = {};
+  var currentReportData = null;
+
+  async function fetchDataFor(dateIso) {
+    var res = await Promise.all([
+      sb.from("production_lines").select("id,name"),
+      sb.from("work_items").select("*").eq("received_date", dateIso),
+      sb.from("work_items").select("*").eq("resolved_date", dateIso),
+      sb.from("work_items").select("*").neq("status", "Closed"),
+      sb.from("production_plans").select("*").eq("plan_date", dateIso)
+    ]);
+    (res[0].data || []).forEach(function (l) { lineById[l.id] = l.name; });
+    return {
+      receivedToday: res[1].data || [],
+      resolvedToday: res[2].data || [],
+      openAll: res[3].data || [],
+      plansToday: res[4].data || []
+    };
+  }
+
+  function reportNumber(dateIso, seqSuffix) {
+    return "ENG-" + dateIso.replace(/-/g, "") + "-" + seqSuffix;
+  }
+
+  function computeReport(dateIso, data) {
+    var received = data.receivedToday, resolved = data.resolvedToday, openAll = data.openAll, plans = data.plansToday;
+    var plan = sum(plans, "planned_qty"), actual = sum(received, "qty_ok"), ng = sum(received, "qty_ng");
+    var achievement = plan ? Math.round((actual / plan) * 1000) / 10 : null;
+    var yieldPct = (actual + ng) ? Math.round((actual / (actual + ng)) * 1000) / 10 : null;
+    var downtime = sum(received, "downtime_minutes");
+    var downtimeSaved = sum(received, "downtime_saved_minutes");
+    var ngReduced = sum(received, "ng_reduced_qty");
+    var costSaving = sum(received, "cost_saving_thb");
+
+    var totalCases = received.length, closed = resolved.length, open = openAll.length;
+    var resTimes = resolved.filter(function (r) { return r.received_date && r.resolved_date; })
+      .map(function (r) { return (new Date(r.resolved_date) - new Date(r.received_date)) / 86400000; });
+    var avgResDays = resTimes.length ? Math.round((resTimes.reduce(function (a, b) { return a + b; }, 0) / resTimes.length) * 10) / 10 : null;
+
+    function catLabel(r) {
+      if (r.source_type === "Issue") return "RCA";
+      if (r.category === "Trial") return "Trial";
+      if (r.category === "Improvement") return "Improvement";
+      return "Production Support";
+    }
+    var catCounts = { "Production Support": 0, "Trial": 0, "RCA": 0, "Improvement": 0 };
+    received.forEach(function (r) { catCounts[catLabel(r)]++; });
+
+    var titleCounts = {};
+    received.forEach(function (r) {
+      var t = (r.title || "").trim(); if (!t) return;
+      if (!titleCounts[t]) titleCounts[t] = { title: t, n: 0, line: lineById[r.line_id] || "—", sev: r.severity || "Minor" };
+      titleCounts[t].n++;
+      var sevRank = { Critical: 3, Major: 2, Minor: 1 };
+      if ((sevRank[r.severity] || 0) > (sevRank[titleCounts[t].sev] || 0)) titleCounts[t].sev = r.severity;
+    });
+    var topIssues = Object.keys(titleCounts).map(function (k) { return titleCounts[k]; })
+      .sort(function (a, b) { return b.n - a.n; }).slice(0, 5)
+      .map(function (t) { return Object.assign({}, t, { impact: t.sev === "Critical" ? "High" : t.sev === "Major" ? "Medium" : "Low" }); });
+
+    var correctiveDone = resolved.filter(function (r) { return r.corrective_action && r.corrective_action.trim(); })
+      .map(function (r) { return (r.title || "งาน") + ": " + r.corrective_action; });
+
+    var pendingAction = openAll.slice().sort(function (a, b) {
+      var da = a.due_date || "9999", db = b.due_date || "9999"; return da < db ? -1 : da > db ? 1 : 0;
+    }).slice(0, 8).map(function (r) { return (r.title || "งาน") + (r.due_date ? " — กำหนด " + fmtThai(r.due_date) : " — ยังไม่กำหนดวันที่แล้วเสร็จ"); });
+
+    var tomorrow = addDays(dateIso, 1);
+    var tomorrowPlan = openAll.filter(function (r) { return r.due_date === tomorrow; })
+      .concat(openAll.filter(function (r) { return r.priority === "High" && r.due_date !== tomorrow; }))
+      .slice(0, 6).map(function (r) { return r.title || "งาน"; });
+    if (!tomorrowPlan.length) tomorrowPlan = ["ติดตามความคืบหน้างานที่เปิดอยู่ทั้งหมด (" + open + " งาน)"];
+
+    var lineCounts = {};
+    received.forEach(function (r) { var n = lineById[r.line_id] || "ไม่ระบุ Line"; lineCounts[n] = (lineCounts[n] || 0) + 1; });
+    var topLine = Object.keys(lineCounts).sort(function (a, b) { return lineCounts[b] - lineCounts[a]; })[0];
+
+    var execParts = [];
+    execParts.push("วันนี้ฝ่าย " + ($("fDeptName").value || "Manufacturing Engineering") + " สนับสนุนการผลิตทั้งหมด " + totalCases + " งาน");
+    execParts.push("สามารถปิดงานได้ " + closed + " งาน" + (totalCases ? " (" + Math.round((closed / totalCases) * 1000) / 10 + "%)" : ""));
+    if (topLine) execParts.push("ปัญหาหลักเกิดที่ " + topLine);
+    execParts.push(open > 0 ? "ไม่กระทบต่อแผนการผลิตในภาพรวม" : "ไม่มีงานค้างที่กระทบแผนการผลิต");
+    if (downtimeSaved > 0) execParts.push("สามารถลด Downtime ได้ " + downtimeSaved.toLocaleString() + " นาที");
+    if (ngReduced > 0) execParts.push("ลด NG ได้ " + ngReduced.toLocaleString() + " PCS");
+    var execSummary = execParts.join(" ") + ".";
+
+    return {
+      dateIso: dateIso, reportNo: reportNumber(dateIso, "001"),
+      execSummary: execSummary,
+      production: { plan: plan, actual: actual, achievement: achievement, yieldPct: yieldPct, ng: ng, downtime: downtime, costSaving: costSaving },
+      engineering: { total: totalCases, closed: closed, open: open, avgResDays: avgResDays, categories: catCounts },
+      topIssues: topIssues,
+      correctiveDone: correctiveDone,
+      pendingAction: pendingAction,
+      tomorrowPlan: tomorrowPlan
+    };
+  }
+
+  function renderPreview(rep) {
+    var company = $("fCompanyName").value || "[ระบุชื่อบริษัท]";
+    var dept = $("fDeptName").value || "Manufacturing Engineering Department";
+    var prepared = $("fPreparedBy").value || "—";
+    var conf = $("fConfidential").value;
+    var mark = company.trim().charAt(0).toUpperCase() || "M";
+
+    var html = '<div class="a4-page first-page" id="pdfPage1">';
+    html += '<div class="doc-header"><div class="doc-header__brand"><div class="doc-header__mark">' + esc(mark) + '</div><div><b>' + esc(company) + '</b><span>Manufacturing Technology</span></div></div>' +
+      '<div class="doc-header__title"><div class="dept">' + esc(dept) + '</div><div class="title">Daily Engineering Report</div></div></div>';
+
+    html += '<table class="meta-table"><tr><td class="k">Report No.</td><td>' + esc(rep.reportNo) + '</td><td class="k">Report Date</td><td>' + fmtThai(rep.dateIso) + '</td></tr>' +
+      '<tr><td class="k">Prepared by</td><td>' + esc(prepared) + '</td><td class="k">Reviewed by</td><td><span class="sig-line"></span></td></tr>' +
+      '<tr><td class="k">Approved by</td><td><span class="sig-line"></span></td><td class="k">Confidential</td><td>' + esc(conf || "—") + '</td></tr></table>';
+
+    html += '<div class="doc-h2">1. Executive Summary</div><div class="doc-p">' + esc(rep.execSummary) + '</div>';
+
+    html += '<div class="doc-h2">2. Production Summary</div><table class="doc-table"><thead><tr><th>Plan (PCS)</th><th>Actual (PCS)</th><th>Achievement (%)</th><th>Yield (%)</th><th>NG (PCS)</th><th>Downtime (min)</th></tr></thead><tbody><tr>' +
+      '<td class="num">' + rep.production.plan.toLocaleString() + '</td><td class="num">' + rep.production.actual.toLocaleString() + '</td>' +
+      '<td class="num">' + (rep.production.achievement != null ? rep.production.achievement + "%" : "—") + '</td>' +
+      '<td class="num">' + (rep.production.yieldPct != null ? rep.production.yieldPct + "%" : "—") + '</td>' +
+      '<td class="num">' + rep.production.ng.toLocaleString() + '</td><td class="num">' + rep.production.downtime.toLocaleString() + '</td>' +
+      '</tr></tbody></table>';
+
+    html += '<div class="doc-h2">3. Engineering Summary</div><div class="stat-mini-row">' +
+      '<div class="stat-mini"><div class="v">' + rep.engineering.total + '</div><div class="l">TOTAL CASES</div></div>' +
+      '<div class="stat-mini"><div class="v">' + rep.engineering.closed + '</div><div class="l">CLOSED CASES</div></div>' +
+      '<div class="stat-mini"><div class="v">' + rep.engineering.open + '</div><div class="l">OPEN CASES</div></div>' +
+      '<div class="stat-mini"><div class="v">' + (rep.engineering.avgResDays != null ? rep.engineering.avgResDays + "d" : "—") + '</div><div class="l">AVG RESOLUTION</div></div>' +
+      '</div><div class="cat-row">' +
+      Object.keys(rep.engineering.categories).map(function (k) { return '<div class="cat-mini"><div class="v">' + rep.engineering.categories[k] + '</div><div class="l">' + k + '</div></div>'; }).join("") +
+      '</div>';
+
+    html += '<div class="doc-h2">4. Top Issues</div>';
+    if (rep.topIssues.length) {
+      html += '<table class="doc-table"><thead><tr><th>No.</th><th>Problem</th><th>Line</th><th>Cases</th><th>Impact</th></tr></thead><tbody>' +
+        rep.topIssues.map(function (t, i) { return "<tr><td>" + (i + 1) + "</td><td>" + esc(t.title) + "</td><td>" + esc(t.line) + '</td><td class="num">' + t.n + '</td><td class="impact-' + t.impact + '">' + t.impact + "</td></tr>"; }).join("") +
+        '</tbody></table>';
+    } else { html += '<div class="doc-p" style="color:#889;">ไม่มีปัญหาที่บันทึกในวันนี้</div>'; }
+
+    html += '</div>';
+
+    // Page 2
+    html += '<div class="a4-page" id="pdfPage2">';
+    html += '<div class="doc-h2" style="margin-top:0;">5. Corrective Action (ดำเนินการแล้ว)</div>';
+    html += rep.correctiveDone.length ? '<ul class="doc-list">' + rep.correctiveDone.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul>' : '<div class="doc-p" style="color:#889;">ไม่มีรายการที่ปิดงานในวันนี้</div>';
+
+    html += '<div class="doc-h2">6. Pending Action</div>';
+    html += rep.pendingAction.length ? '<ul class="doc-list">' + rep.pendingAction.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul>' : '<div class="doc-p" style="color:#889;">ไม่มีงานค้าง</div>';
+
+    html += '<div class="doc-h2">7. Tomorrow Plan</div>';
+    html += '<ul class="doc-list">' + rep.tomorrowPlan.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ul>';
+    html += '</div>';
+
+    $("docPreview").innerHTML = html;
+    document.querySelectorAll(".a4-page").forEach(function (pg, i) {
+      var footer = document.createElement("div"); footer.className = "doc-footer";
+      footer.innerHTML = "<span>" + esc(company) + " · " + esc(dept) + "</span>" +
+        (conf ? '<span class="confidential-tag">' + esc(conf) + "</span>" : "<span></span>") +
+        "<span>Page " + (i + 1) + " of " + document.querySelectorAll(".a4-page").length + "</span>";
+      pg.appendChild(footer);
+    });
+  }
+
+  $("btnGenerate").addEventListener("click", async function () {
+    if (!sb) { showToast("ยังไม่ได้ตั้งค่าฐานข้อมูล", "error"); return; }
+    var btn = this; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังสร้างรายงาน...';
+    try {
+      var dateIso = $("fReportDate").value || todayIso();
+      var data = await fetchDataFor(dateIso);
+      currentReportData = computeReport(dateIso, data);
+      renderPreview(currentReportData);
+      $("btnDownloadPdf").disabled = false;
+      showToast("สร้างรายงานสำเร็จ", "success");
+    } catch (err) {
+      showToast("สร้างรายงานไม่สำเร็จ: " + err.message, "error");
+    } finally {
+      btn.disabled = false; btn.innerHTML = window.icon("refresh", 16) + "Generate Report";
+    }
+  });
+
+  // ---------- Real PDF export (jsPDF, lazy-loaded) ----------
+  var jspdfLoaded = null;
+  function loadJsPDF() {
+    if (jspdfLoaded) return jspdfLoaded;
+    jspdfLoaded = new Promise(function (resolve, reject) {
+      var s1 = document.createElement("script");
+      s1.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+      s1.onload = function () {
+        var s2 = document.createElement("script");
+        s2.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js";
+        s2.onload = resolve; s2.onerror = reject;
+        document.head.appendChild(s2);
+      };
+      s1.onerror = reject;
+      document.head.appendChild(s1);
+    });
+    return jspdfLoaded;
+  }
+
+  $("btnDownloadPdf").addEventListener("click", async function () {
+    if (!currentReportData) return;
+    var btn = this; btn.disabled = true; var origHtml = btn.innerHTML; btn.innerHTML = '<span class="spin"></span> กำลังสร้าง PDF...';
+    try {
+      await loadJsPDF();
+      var jsPDF = window.jspdf.jsPDF;
+      var doc = new jsPDF({ unit: "mm", format: "a4" });
+      var rep = currentReportData;
+      var company = $("fCompanyName").value || "[ระบุชื่อบริษัท]";
+      var dept = $("fDeptName").value || "Manufacturing Engineering Department";
+      var prepared = $("fPreparedBy").value || "—";
+      var conf = $("fConfidential").value;
+      var pageW = 210, marginX = 16, y = 18;
+
+      function header() {
+        doc.setDrawColor(30, 79, 160); doc.setLineWidth(1);
+        doc.line(marginX, 24, pageW - marginX, 24);
+        doc.setFillColor(30, 79, 160); doc.roundedRect(marginX, 12, 10, 10, 2, 2, "F");
+        doc.setTextColor(255, 255, 255); doc.setFontSize(11); doc.setFont(undefined, "bold");
+        doc.text((company.trim().charAt(0) || "M").toUpperCase(), marginX + 5, 18.5, { align: "center" });
+        doc.setTextColor(20, 20, 20); doc.setFontSize(13); doc.text(company, marginX + 14, 17);
+        doc.setFontSize(8); doc.setFont(undefined, "normal"); doc.setTextColor(100, 110, 120);
+        doc.text("Manufacturing Technology", marginX + 14, 21.5);
+        doc.setFontSize(13); doc.setFont(undefined, "bold"); doc.setTextColor(30, 79, 160);
+        doc.text("Daily Engineering Report", pageW - marginX, 17, { align: "right" });
+        doc.setFontSize(8); doc.setFont(undefined, "normal"); doc.setTextColor(100, 110, 120);
+        doc.text(dept, pageW - marginX, 21.5, { align: "right" });
+        return 30;
+      }
+      function footer(pageNum, pageCount) {
+        doc.setDrawColor(220, 224, 230); doc.setLineWidth(.2);
+        doc.line(marginX, 285, pageW - marginX, 285);
+        doc.setFontSize(8); doc.setTextColor(120, 130, 140); doc.setFont(undefined, "normal");
+        doc.text(company + " · " + dept, marginX, 290);
+        if (conf) { doc.setTextColor(201, 58, 46); doc.setFont(undefined, "bold"); doc.text(conf, pageW / 2, 290, { align: "center" }); }
+        doc.setTextColor(120, 130, 140); doc.setFont(undefined, "normal");
+        doc.text("Page " + pageNum + " of " + pageCount, pageW - marginX, 290, { align: "right" });
+      }
+
+      y = header();
+      doc.autoTable({
+        startY: y, theme: "grid", margin: { left: marginX, right: marginX },
+        styles: { fontSize: 8.5, cellPadding: 2 },
+        head: [], body: [
+          ["Report No.", rep.reportNo, "Report Date", fmtThai(rep.dateIso)],
+          ["Prepared by", prepared, "Reviewed by", ""],
+          ["Approved by", "", "Confidential", conf || "-"]
+        ],
+        columnStyles: { 0: { fontStyle: "bold", fillColor: [244, 246, 249], cellWidth: 32 }, 2: { fontStyle: "bold", fillColor: [244, 246, 249], cellWidth: 32 } }
+      });
+      y = doc.lastAutoTable.finalY + 8;
+
+      function sectionTitle(t) {
+        doc.setFontSize(11); doc.setFont(undefined, "bold"); doc.setTextColor(30, 79, 160);
+        doc.text(t, marginX, y);
+        doc.setDrawColor(220, 224, 230); doc.line(marginX, y + 1.5, pageW - marginX, y + 1.5);
+        y += 7;
+      }
+
+      sectionTitle("1. Executive Summary");
+      doc.setFontSize(9.5); doc.setFont(undefined, "normal"); doc.setTextColor(30, 30, 30);
+      var execLines = doc.splitTextToSize(rep.execSummary, pageW - marginX * 2);
+      doc.text(execLines, marginX, y); y += execLines.length * 4.6 + 6;
+
+      sectionTitle("2. Production Summary");
+      doc.autoTable({
+        startY: y, margin: { left: marginX, right: marginX }, styles: { fontSize: 8.5, halign: "center" }, headStyles: { fillColor: [244, 246, 249], textColor: [60, 70, 80] },
+        head: [["Plan (PCS)", "Actual (PCS)", "Achievement (%)", "Yield (%)", "NG (PCS)", "Downtime (min)"]],
+        body: [[rep.production.plan.toLocaleString(), rep.production.actual.toLocaleString(), rep.production.achievement != null ? rep.production.achievement + "%" : "-", rep.production.yieldPct != null ? rep.production.yieldPct + "%" : "-", rep.production.ng.toLocaleString(), rep.production.downtime.toLocaleString()]]
+      });
+      y = doc.lastAutoTable.finalY + 8;
+
+      sectionTitle("3. Engineering Summary");
+      doc.autoTable({
+        startY: y, margin: { left: marginX, right: marginX }, styles: { fontSize: 8.5, halign: "center" }, headStyles: { fillColor: [244, 246, 249], textColor: [60, 70, 80] },
+        head: [["Total Cases", "Closed", "Open", "Avg Resolution"]],
+        body: [[rep.engineering.total, rep.engineering.closed, rep.engineering.open, rep.engineering.avgResDays != null ? rep.engineering.avgResDays + " days" : "-"]]
+      });
+      y = doc.lastAutoTable.finalY + 4;
+      doc.autoTable({
+        startY: y, margin: { left: marginX, right: marginX }, styles: { fontSize: 8.5, halign: "center" }, headStyles: { fillColor: [244, 246, 249], textColor: [60, 70, 80] },
+        head: [Object.keys(rep.engineering.categories)],
+        body: [Object.keys(rep.engineering.categories).map(function (k) { return rep.engineering.categories[k]; })]
+      });
+      y = doc.lastAutoTable.finalY + 8;
+
+      if (y > 250) { footer(1, 2); doc.addPage(); y = header(); }
+      sectionTitle("4. Top Issues");
+      if (rep.topIssues.length) {
+        doc.autoTable({
+          startY: y, margin: { left: marginX, right: marginX }, styles: { fontSize: 8.5 }, headStyles: { fillColor: [244, 246, 249], textColor: [60, 70, 80] },
+          head: [["No.", "Problem", "Line", "Cases", "Impact"]],
+          body: rep.topIssues.map(function (t, i) { return [i + 1, t.title, t.line, t.n, t.impact]; })
+        });
+        y = doc.lastAutoTable.finalY + 8;
+      } else { doc.setFontSize(9); doc.setTextColor(140, 150, 160); doc.text("ไม่มีปัญหาที่บันทึกในวันนี้", marginX, y); y += 8; }
+
+      footer(1, 2);
+      doc.addPage(); y = header();
+
+      sectionTitle("5. Corrective Action (ดำเนินการแล้ว)");
+      doc.setFontSize(9); doc.setTextColor(30, 30, 30);
+      if (rep.correctiveDone.length) {
+        rep.correctiveDone.forEach(function (t) { var lines = doc.splitTextToSize("• " + t, pageW - marginX * 2 - 4); doc.text(lines, marginX + 2, y); y += lines.length * 4.4 + 1; });
+      } else { doc.setTextColor(140, 150, 160); doc.text("ไม่มีรายการที่ปิดงานในวันนี้", marginX, y); }
+      y += 6;
+
+      sectionTitle("6. Pending Action");
+      doc.setFontSize(9); doc.setTextColor(30, 30, 30);
+      if (rep.pendingAction.length) {
+        rep.pendingAction.forEach(function (t) { var lines = doc.splitTextToSize("• " + t, pageW - marginX * 2 - 4); doc.text(lines, marginX + 2, y); y += lines.length * 4.4 + 1; });
+      } else { doc.setTextColor(140, 150, 160); doc.text("ไม่มีงานค้าง", marginX, y); }
+      y += 6;
+
+      sectionTitle("7. Tomorrow Plan");
+      doc.setFontSize(9); doc.setTextColor(30, 30, 30);
+      rep.tomorrowPlan.forEach(function (t) { var lines = doc.splitTextToSize("• " + t, pageW - marginX * 2 - 4); doc.text(lines, marginX + 2, y); y += lines.length * 4.4 + 1; });
+
+      footer(2, 2);
+
+      doc.save(rep.reportNo + ".pdf");
+      showToast("ดาวน์โหลด PDF สำเร็จ", "success");
+    } catch (err) {
+      showToast("สร้าง PDF ไม่สำเร็จ: " + err.message, "error");
+    } finally {
+      btn.disabled = false; btn.innerHTML = origHtml;
+    }
+  });
+})();
+</script>
+</body>
+</html>

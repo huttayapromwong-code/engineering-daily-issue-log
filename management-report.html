@@ -145,6 +145,40 @@
   .doc-footer { position: absolute; bottom: 14px; left: 30px; right: 30px; display: flex; justify-content: space-between; font-size: 7.6px; color: #889; border-top: 1px solid #dde3ea; padding-top: 5px; }
   .confidential-tag { font-weight: 800; color: #c93a2e; text-transform: uppercase; letter-spacing: .04em; }
 
+  .ph { position: relative; }
+  .ph .annot-btn { display: none; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 4px; background: rgba(22,41,77,.85); color: #fff; border: none; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+  .ph .annot-btn svg { width: 10px; height: 10px; }
+  .editor-mode .ph .annot-btn { display: flex; }
+  .ph .annot-count { position: absolute; bottom: 3px; left: 3px; background: rgba(30,142,90,.9); color: #fff; font-size: 6.5px; font-weight: 800; padding: 1px 5px; border-radius: 999px; z-index: 2; }
+
+  .annot-modal { position: fixed; inset: 0; background: rgba(10,15,20,.94); display: none; z-index: 600; flex-direction: column; }
+  .annot-modal.show { display: flex; }
+  .annot-toolbar { display: flex; align-items: center; gap: 14px; padding: 8px 16px; background: #182230; flex-wrap: wrap; border-bottom: 1px solid #26313f; }
+  .annot-tools { display: flex; gap: 4px; flex-wrap: wrap; }
+  .annot-tool-btn { width: 30px; height: 30px; border-radius: 6px; border: 1px solid transparent; background: #26313f; color: #cdd6e2; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .annot-tool-btn svg { width: 15px; height: 15px; }
+  .annot-tool-btn.active { background: #1E4FA0; color: #fff; border-color: #1E4FA0; }
+  .annot-tool-btn:hover:not(.active) { background: #333f4d; }
+  .annot-style { display: flex; align-items: center; gap: 8px; }
+  .annot-style label { font-size: 9.5px; color: #8a97a6; display: flex; align-items: center; gap: 4px; }
+  .annot-style input[type=color] { width: 24px; height: 24px; border: none; border-radius: 5px; padding: 0; cursor: pointer; background: none; }
+  .annot-style input[type=range] { width: 60px; }
+  .annot-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .annot-actions button:not(.btn) { width: 30px; height: 30px; border-radius: 6px; border: none; background: #26313f; color: #cdd6e2; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .annot-actions button:not(.btn) svg { width: 14px; height: 14px; }
+  .annot-actions button:not(.btn):hover:not(:disabled) { background: #333f4d; }
+  .annot-actions button:disabled { opacity: .35; cursor: not-allowed; }
+  .annot-zoom { display: flex; gap: 2px; background: #0e151d; border-radius: 6px; padding: 2px; }
+  .annot-zoom button { font-size: 10.5px; font-weight: 700; padding: 5px 9px; border-radius: 4px; border: none; background: transparent; color: #8a97a6; cursor: pointer; }
+  .annot-zoom button.active { background: #1E4FA0; color: #fff; }
+  .annot-presets { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px; background: #10161d; border-bottom: 1px solid #1c2530; }
+  .annot-preset-chip { font-size: 10.5px; padding: 4px 10px; border-radius: 999px; border: 1px solid #33404f; background: #1c2733; color: #b7c2cf; cursor: pointer; }
+  .annot-preset-chip:hover { background: #26313f; color: #fff; }
+  .annot-canvas-wrap { position: relative; flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 24px; }
+  #annotCanvas { background: #000; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+  .annot-text-input { position: absolute; z-index: 610; border: 2px solid #1E4FA0; border-radius: 4px; padding: 3px 6px; font-size: 13px; font-family: var(--font-sans); min-width: 60px; }
+  .annot-title { color: #cdd6e2; font-size: 12px; font-weight: 700; margin-right: 4px; }
+
   .editor-mode [contenteditable="true"] { outline: 1px dashed #1E4FA0; outline-offset: 2px; border-radius: 3px; cursor: text; }
   .editor-mode [contenteditable="true"]:hover { background: #f7faff; }
   .editor-mode [contenteditable="true"]:focus { outline: 1.5px solid #1E4FA0; background: #f0f5fc; }
@@ -268,6 +302,36 @@
 <div class="toast-stack" id="toastStack"></div>
 <div class="lightbox" id="lightbox"><img id="lightboxImg" src=""></div>
 
+<div class="annot-modal" id="annotModal">
+  <div class="annot-toolbar">
+    <span class="annot-title" id="annotTitle"></span>
+    <div class="annot-tools" id="annotTools"></div>
+    <div class="annot-style">
+      <label>สี <input type="color" id="annotColor" value="#c93a2e"></label>
+      <label>เส้น <input type="range" id="annotStroke" min="1" max="10" value="3"></label>
+      <label>ตัวอักษร <input type="range" id="annotFontSize" min="10" max="32" value="14"></label>
+      <label>สีข้อความ <input type="color" id="annotTextColor" value="#ffffff"></label>
+      <label>พื้นหลัง <input type="color" id="annotBgColor" value="#c93a2e"></label>
+      <label>โปร่งใส <input type="range" id="annotOpacity" min="10" max="100" value="100"></label>
+    </div>
+    <div class="annot-actions">
+      <button type="button" id="annotUndo" title="Undo"></button>
+      <button type="button" id="annotRedo" title="Redo"></button>
+      <button type="button" id="annotDeleteSel" title="ลบชิ้นที่เลือก"></button>
+      <div class="annot-zoom" id="annotZoom">
+        <button type="button" data-zoom="fit" class="active">Fit</button>
+        <button type="button" data-zoom="1">100%</button>
+        <button type="button" data-zoom="2">200%</button>
+      </div>
+      <button type="button" class="btn primary" id="annotClose">เสร็จสิ้น</button>
+    </div>
+  </div>
+  <div class="annot-presets" id="annotPresets"></div>
+  <div class="annot-canvas-wrap" id="annotCanvasWrap">
+    <canvas id="annotCanvas"></canvas>
+  </div>
+</div>
+
 <script>
 (function () {
   "use strict";
@@ -356,6 +420,14 @@
 
   $("lightbox").addEventListener("click", function () { $("lightbox").classList.remove("show"); });
   $("docPreview").addEventListener("click", function (e) {
+    var annotBtn = e.target.closest(".annot-btn");
+    if (annotBtn) {
+      var acard = e.target.closest(".case-card-doc"); if (!acard || !currentReportData) return;
+      var acid = acard.dataset.caseId;
+      var ac = currentReportData.cases.find(function (cc) { return String(cc.id) === acid; });
+      if (ac) openAnnotModal(ac, annotBtn.dataset.annotSlot);
+      return;
+    }
     var img = e.target.closest(".ph img, .attach-thumb-doc img");
     if (img) { $("lightboxImg").src = img.src; $("lightbox").classList.add("show"); return; }
     var upBtn = e.target.closest(".cc-up"), downBtn = e.target.closest(".cc-down"), rmBtn = e.target.closest(".cc-remove");
@@ -653,12 +725,22 @@
     return "<" + tag + ' class="' + cls + '"' + t + ">" + esc(text) + "</" + tag + ">";
   }
 
+  function annotBtnHtml(slot) {
+    return '<button type="button" class="annot-btn" data-annot-slot="' + slot + '" title="Annotate">' + window.icon("edit", 10) + '</button>';
+  }
+  function photoBoxHtml(url, previewUrl, count, slot, editModeOn) {
+    if (!url) return '<div class="ph"></div>';
+    var inner = '<img src="' + (previewUrl || url) + '">';
+    if (editModeOn) inner += annotBtnHtml(slot);
+    if (count) inner += '<span class="annot-count">' + count + '</span>';
+    return '<div class="ph">' + inner + '</div>';
+  }
   function caseCardHtml(c, num, editModeOn) {
     var photos = "";
     if (c.photoBefore || c.photoAfter) {
       photos = '<div class="case-card-doc__photos">' +
-        '<figure>' + (c.photoBefore ? '<div class="ph"><img src="' + c.photoBefore + '"></div>' : '<div class="ph"></div>') + '<figcaption>Before</figcaption></figure>' +
-        '<figure>' + (c.photoAfter ? '<div class="ph"><img src="' + c.photoAfter + '"></div>' : '<div class="ph"></div>') + '<figcaption>After</figcaption></figure></div>';
+        '<figure>' + photoBoxHtml(c.photoBefore, c.annotBeforePreview, c.annotBefore ? c.annotBefore.length : 0, "before", editModeOn) + '<figcaption>Before</figcaption></figure>' +
+        '<figure>' + photoBoxHtml(c.photoAfter, c.annotAfterPreview, c.annotAfter ? c.annotAfter.length : 0, "after", editModeOn) + '<figcaption>After</figcaption></figure></div>';
     }
     var resultHtml = c.results.length ? '<div class="cc-result-box">' + c.results.map(function (r) { return '<div class="rr">• ' + r.k + ' : <b>' + esc(r.v) + '</b></div>'; }).join("") + '</div>' : "";
     var editBar = editModeOn ? '<div class="cc-editor-bar">' +
@@ -802,6 +884,458 @@
   });
   [$("incExec"), $("incProdKpi"), $("incEngKpi"), $("incChartLine"), $("incChartFamily"), $("incChartPareto"), $("incChartRootCause"), $("incCases"), $("incImprovement")].forEach(function (cb) { cb.addEventListener("change", function () { if (currentReportData) renderPreview(currentReportData); }); });
 
+  // ---------- Annotation Mode ----------
+  var HANDLES = [{ name: "nw", dx: 0, dy: 0 }, { name: "ne", dx: 1, dy: 0 }, { name: "sw", dx: 0, dy: 1 }, { name: "se", dx: 1, dy: 1 }];
+  var PRESET_LABELS = ["Crack", "Scratch", "NG Area", "Damage", "Dust", "Bubble", "Incorrect Assembly", "Polishing Defect", "Ferrule Damage", "Fiber Broken", "Cable Jacket Damage", "Root Cause", "Inspection Point", "Critical Area"];
+  var TOOLS = [
+    { id: "select", icon: "cursorTool", label: "เลือก/ย้าย" }, { id: "circle", icon: "circleTool", label: "วงกลม" }, { id: "rect", icon: "squareTool", label: "สี่เหลี่ยม" },
+    { id: "arrow", icon: "arrowTool", label: "ลูกศร" }, { id: "line", icon: "lineTool", label: "เส้นตรง" }, { id: "highlight", icon: "highlighterTool", label: "ไฮไลต์" },
+    { id: "pen", icon: "edit", label: "ปากกา" }, { id: "text", icon: "textTool", label: "ข้อความ" }, { id: "number", icon: "hashTool", label: "หมายเลข" },
+    { id: "check", icon: "check", label: "ถูก" }, { id: "cross", icon: "x", label: "กากบาท" }
+  ];
+
+  var annotSession = null, annotCanvasEl = null, annotCtx = null, annotBaseImg = null;
+
+  function newAnnotId() { return "ann-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7); }
+
+  function getBBox(a) {
+    if (a.type === "line" || a.type === "arrow") {
+      return { x: Math.min(a.x1, a.x2), y: Math.min(a.y1, a.y2), w: Math.abs(a.x2 - a.x1) || 0.001, h: Math.abs(a.y2 - a.y1) || 0.001 };
+    }
+    if (a.type === "pen") {
+      var xs = a.points.map(function (p) { return p[0]; }), ys = a.points.map(function (p) { return p[1]; });
+      var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs), minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+      return { x: minX, y: minY, w: (maxX - minX) || 0.001, h: (maxY - minY) || 0.001 };
+    }
+    return { x: a.x, y: a.y, w: a.w, h: a.h };
+  }
+  function setBBox(a, box) {
+    var old = getBBox(a);
+    var sx = old.w ? box.w / old.w : 1, sy = old.h ? box.h / old.h : 1;
+    if (a.type === "line" || a.type === "arrow") {
+      a.x1 = box.x + (a.x1 - old.x) * sx; a.y1 = box.y + (a.y1 - old.y) * sy;
+      a.x2 = box.x + (a.x2 - old.x) * sx; a.y2 = box.y + (a.y2 - old.y) * sy;
+    } else if (a.type === "pen") {
+      a.points = a.points.map(function (p) { return [box.x + (p[0] - old.x) * sx, box.y + (p[1] - old.y) * sy]; });
+    } else {
+      a.x = box.x; a.y = box.y; a.w = box.w; a.h = box.h;
+      if (a.type === "text") a.fontSizeR = Math.max(0.003, (a.fontSizeR || 0.01) * ((sx + sy) / 2));
+    }
+  }
+  function roundRectPath(ctx, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2));
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  function drawAnnotation(ctx, a, W, H, selected) {
+    ctx.save();
+    ctx.globalAlpha = a.opacity != null ? a.opacity : 1;
+    var swPx = (a.strokeWidthR != null ? a.strokeWidthR * W : 3);
+    var fsPx = (a.fontSizeR != null ? a.fontSizeR * W : 14);
+    ctx.strokeStyle = a.color || "#c93a2e"; ctx.fillStyle = a.color || "#c93a2e"; ctx.lineWidth = swPx;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    var px = a.x * W, py = a.y * H, pw = a.w * W, ph = a.h * H;
+    if (a.type === "circle") {
+      ctx.beginPath(); ctx.ellipse(px + pw / 2, py + ph / 2, Math.abs(pw) / 2 || 1, Math.abs(ph) / 2 || 1, 0, 0, Math.PI * 2); ctx.stroke();
+    } else if (a.type === "rect") {
+      ctx.strokeRect(px, py, pw, ph);
+    } else if (a.type === "highlight") {
+      ctx.fillRect(px, py, pw, ph);
+    } else if (a.type === "line" || a.type === "arrow") {
+      var x1 = a.x1 * W, y1 = a.y1 * H, x2 = a.x2 * W, y2 = a.y2 * H;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      if (a.type === "arrow") {
+        var ang = Math.atan2(y2 - y1, x2 - x1), hl = 9 + swPx;
+        ctx.beginPath(); ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - hl * Math.cos(ang - Math.PI / 7), y2 - hl * Math.sin(ang - Math.PI / 7));
+        ctx.lineTo(x2 - hl * Math.cos(ang + Math.PI / 7), y2 - hl * Math.sin(ang + Math.PI / 7));
+        ctx.closePath(); ctx.fill();
+      }
+    } else if (a.type === "pen") {
+      if (a.points && a.points.length > 1) {
+        ctx.beginPath(); ctx.moveTo(a.points[0][0] * W, a.points[0][1] * H);
+        for (var i = 1; i < a.points.length; i++) ctx.lineTo(a.points[i][0] * W, a.points[i][1] * H);
+        ctx.stroke();
+      }
+    } else if (a.type === "text") {
+      ctx.font = "700 " + fsPx + "px Inter, sans-serif";
+      var text = a.text || "";
+      var tw = ctx.measureText(text).width;
+      a.w = (tw + 16) / W; a.h = (fsPx + 12) / H;
+      ctx.fillStyle = a.bgColor || "#c93a2e";
+      roundRectPath(ctx, px, py, tw + 16, fsPx + 12, 4); ctx.fill();
+      ctx.fillStyle = a.textColor || "#ffffff"; ctx.textBaseline = "middle";
+      ctx.fillText(text, px + 8, py + (fsPx + 12) / 2);
+    } else if (a.type === "number") {
+      var d = Math.max(pw, ph) || (fsPx * 1.8);
+      a.w = d / W; a.h = d / H;
+      var cx = px + d / 2, cy = py + d / 2;
+      ctx.beginPath(); ctx.arc(cx, cy, d / 2, 0, Math.PI * 2); ctx.fillStyle = a.color || "#1E4FA0"; ctx.fill();
+      ctx.fillStyle = a.textColor || "#fff"; ctx.font = "800 " + Math.max(8, Math.round(d * 0.5)) + "px Inter, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String(a.n || 1), cx, cy + 1);
+      ctx.textAlign = "left";
+    } else if (a.type === "check" || a.type === "cross") {
+      var s = Math.max(pw, ph) || (swPx * 8);
+      a.w = s / W; a.h = s / H;
+      ctx.strokeStyle = a.color || (a.type === "check" ? "#1e8e5a" : "#c93a2e");
+      ctx.lineWidth = swPx + 1;
+      if (a.type === "check") {
+        ctx.beginPath(); ctx.moveTo(px, py + s * 0.55); ctx.lineTo(px + s * 0.38, py + s * 0.92); ctx.lineTo(px + s, py + s * 0.05); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.moveTo(px + s * 0.08, py + s * 0.08); ctx.lineTo(px + s * 0.92, py + s * 0.92);
+        ctx.moveTo(px + s * 0.92, py + s * 0.08); ctx.lineTo(px + s * 0.08, py + s * 0.92); ctx.stroke();
+      }
+    }
+    ctx.restore();
+    if (selected) {
+      var box = getBBox(a);
+      ctx.save();
+      ctx.strokeStyle = "#1E4FA0"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+      ctx.strokeRect(box.x * W, box.y * H, box.w * W, box.h * H);
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#1E4FA0";
+      HANDLES.forEach(function (h) {
+        var hx = box.x * W + h.dx * box.w * W, hy = box.y * H + h.dy * box.h * H;
+        ctx.fillRect(hx - 4, hy - 4, 8, 8);
+      });
+      ctx.restore();
+    }
+  }
+
+  function redrawAnnotCanvas() {
+    if (!annotCtx || !annotSession) return;
+    annotCtx.clearRect(0, 0, annotCanvasEl.width, annotCanvasEl.height);
+    if (annotBaseImg && annotBaseImg.complete) annotCtx.drawImage(annotBaseImg, 0, 0, annotCanvasEl.width, annotCanvasEl.height);
+    annotSession.list.forEach(function (a) { drawAnnotation(annotCtx, a, annotCanvasEl.width, annotCanvasEl.height, a.id === annotSession.selectedId); });
+  }
+
+  function hitTest(nx, ny) {
+    for (var i = annotSession.list.length - 1; i >= 0; i--) {
+      var a = annotSession.list[i], box = getBBox(a), pad = 0.008;
+      if (nx >= box.x - pad && nx <= box.x + box.w + pad && ny >= box.y - pad && ny <= box.y + box.h + pad) return a;
+    }
+    return null;
+  }
+  function hitHandle(nx, ny, ann) {
+    if (!ann) return null;
+    var box = getBBox(ann), W = annotCanvasEl.width, H = annotCanvasEl.height, tolPx = 9;
+    for (var i = 0; i < HANDLES.length; i++) {
+      var h = HANDLES[i], hx = box.x * W + h.dx * box.w * W, hy = box.y * H + h.dy * box.h * H;
+      if (Math.abs(nx * W - hx) <= tolPx && Math.abs(ny * H - hy) <= tolPx) return h.name;
+    }
+    return null;
+  }
+
+  function pushSnapshot() {
+    annotSession.undoStack.push(JSON.parse(JSON.stringify(annotSession.list)));
+    if (annotSession.undoStack.length > 40) annotSession.undoStack.shift();
+    annotSession.redoStack = [];
+    updateAnnotButtons();
+  }
+  function annotUndo() {
+    if (!annotSession || !annotSession.undoStack.length) return;
+    annotSession.redoStack.push(JSON.parse(JSON.stringify(annotSession.list)));
+    annotSession.list = annotSession.undoStack.pop();
+    annotSession.selectedId = null;
+    redrawAnnotCanvas(); updateAnnotButtons();
+  }
+  function annotRedo() {
+    if (!annotSession || !annotSession.redoStack.length) return;
+    annotSession.undoStack.push(JSON.parse(JSON.stringify(annotSession.list)));
+    annotSession.list = annotSession.redoStack.pop();
+    annotSession.selectedId = null;
+    redrawAnnotCanvas(); updateAnnotButtons();
+  }
+  function annotDeleteSelected() {
+    if (!annotSession || !annotSession.selectedId) return;
+    pushSnapshot();
+    annotSession.list = annotSession.list.filter(function (a) { return a.id !== annotSession.selectedId; });
+    annotSession.selectedId = null;
+    redrawAnnotCanvas(); updateAnnotButtons();
+  }
+  function updateAnnotButtons() {
+    $("annotUndo").disabled = !annotSession || !annotSession.undoStack.length;
+    $("annotRedo").disabled = !annotSession || !annotSession.redoStack.length;
+    $("annotDeleteSel").disabled = !annotSession || !annotSession.selectedId;
+  }
+
+  function currentAnnotStyle() {
+    var W = annotCanvasEl.width;
+    return {
+      color: $("annotColor").value,
+      strokeWidthR: parseInt($("annotStroke").value, 10) / W,
+      fontSizeR: parseInt($("annotFontSize").value, 10) / W,
+      textColor: $("annotTextColor").value,
+      bgColor: $("annotBgColor").value,
+      opacity: parseInt($("annotOpacity").value, 10) / 100
+    };
+  }
+
+  function setActiveTool(t) {
+    annotSession.tool = t;
+    document.querySelectorAll("#annotTools .annot-tool-btn").forEach(function (b) { b.classList.toggle("active", b.dataset.tool === t); });
+    annotCanvasEl.style.cursor = t === "select" ? "default" : "crosshair";
+    if (t === "highlight" && parseInt($("annotOpacity").value, 10) === 100) $("annotOpacity").value = "35";
+  }
+
+  function pointerToNorm(e) {
+    var rect = annotCanvasEl.getBoundingClientRect();
+    var px = (e.clientX - rect.left) / rect.width * annotCanvasEl.width;
+    var py = (e.clientY - rect.top) / rect.height * annotCanvasEl.height;
+    px = Math.max(0, Math.min(annotCanvasEl.width, px)); py = Math.max(0, Math.min(annotCanvasEl.height, py));
+    return { nx: px / annotCanvasEl.width, ny: py / annotCanvasEl.height, px: px, py: py };
+  }
+  function canvasPxToWrapPx(px, py) {
+    var wrap = $("annotCanvasWrap"), rectC = annotCanvasEl.getBoundingClientRect(), rectW = wrap.getBoundingClientRect();
+    var dispX = px / annotCanvasEl.width * rectC.width, dispY = py / annotCanvasEl.height * rectC.height;
+    return { x: (rectC.left - rectW.left) + dispX + wrap.scrollLeft, y: (rectC.top - rectW.top) + dispY + wrap.scrollTop };
+  }
+
+  function openTextEditor(ann, screenX, screenY) {
+    var wrap = $("annotCanvasWrap");
+    var input = document.createElement("input");
+    input.type = "text"; input.className = "annot-text-input"; input.value = ann.text || "";
+    input.style.left = screenX + "px"; input.style.top = screenY + "px";
+    wrap.appendChild(input);
+    input.focus(); input.select();
+    var done = false;
+    function commit() {
+      if (done) return; done = true;
+      ann.text = input.value.trim() || "Label";
+      input.remove();
+      redrawAnnotCanvas();
+    }
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); commit(); }
+      else if (e.key === "Escape") { e.preventDefault(); commit(); }
+      e.stopPropagation();
+    });
+    input.addEventListener("blur", commit);
+  }
+
+  function onAnnotDown(e) {
+    if (!annotSession) return;
+    e.preventDefault();
+    var pt = pointerToNorm(e), tool = annotSession.tool;
+    if (tool === "select") {
+      var sel = annotSession.selectedId ? annotSession.list.find(function (a) { return a.id === annotSession.selectedId; }) : null;
+      var handle = hitHandle(pt.nx, pt.ny, sel);
+      if (handle) { annotSession.drag = { mode: "resize", handle: handle, ann: sel, startBox: getBBox(sel), preSnapshot: JSON.parse(JSON.stringify(annotSession.list)), snapshotted: false }; return; }
+      var hit = hitTest(pt.nx, pt.ny);
+      if (hit) {
+        annotSession.selectedId = hit.id;
+        annotSession.drag = { mode: "move", ann: hit, startBox: getBBox(hit), startPt: pt, preSnapshot: JSON.parse(JSON.stringify(annotSession.list)), snapshotted: false };
+        redrawAnnotCanvas(); updateAnnotButtons();
+      } else { annotSession.selectedId = null; redrawAnnotCanvas(); updateAnnotButtons(); }
+      return;
+    }
+    if (["circle", "rect", "arrow", "line", "highlight"].indexOf(tool) !== -1) {
+      pushSnapshot();
+      var st = currentAnnotStyle();
+      var ann = { id: newAnnotId(), type: tool, color: st.color, strokeWidthR: st.strokeWidthR, opacity: tool === "highlight" ? st.opacity : st.opacity };
+      if (tool === "arrow" || tool === "line") { ann.x1 = pt.nx; ann.y1 = pt.ny; ann.x2 = pt.nx; ann.y2 = pt.ny; }
+      else { ann.x = pt.nx; ann.y = pt.ny; ann.w = 0.001; ann.h = 0.001; }
+      annotSession.list.push(ann); annotSession.selectedId = ann.id;
+      annotSession.drag = { mode: "draw-shape", ann: ann, startPt: pt };
+      redrawAnnotCanvas();
+      return;
+    }
+    if (tool === "pen") {
+      pushSnapshot();
+      var st2 = currentAnnotStyle();
+      var pen = { id: newAnnotId(), type: "pen", color: st2.color, strokeWidthR: st2.strokeWidthR, opacity: st2.opacity, points: [[pt.nx, pt.ny]] };
+      annotSession.list.push(pen); annotSession.selectedId = pen.id;
+      annotSession.drag = { mode: "draw-pen", ann: pen };
+      redrawAnnotCanvas();
+      return;
+    }
+    if (tool === "text") {
+      pushSnapshot();
+      var st3 = currentAnnotStyle();
+      var t = { id: newAnnotId(), type: "text", text: "Label", x: pt.nx, y: pt.ny, w: 0.1, h: 0.04, color: st3.color, textColor: st3.textColor, bgColor: st3.bgColor, fontSizeR: st3.fontSizeR, opacity: st3.opacity };
+      annotSession.list.push(t); annotSession.selectedId = t.id;
+      redrawAnnotCanvas(); updateAnnotButtons();
+      var wp = canvasPxToWrapPx(pt.px, pt.py);
+      openTextEditor(t, wp.x, wp.y);
+      setActiveTool("select");
+      return;
+    }
+    if (tool === "number") {
+      pushSnapshot();
+      var st4 = currentAnnotStyle();
+      var cnt = annotSession.list.filter(function (a) { return a.type === "number"; }).length + 1;
+      var dPx = st4.fontSizeR * annotCanvasEl.width * 1.8;
+      var nAnn = { id: newAnnotId(), type: "number", n: cnt, x: pt.nx - (dPx / 2) / annotCanvasEl.width, y: pt.ny - (dPx / 2) / annotCanvasEl.height, w: dPx / annotCanvasEl.width, h: dPx / annotCanvasEl.height, color: st4.color, textColor: st4.textColor, fontSizeR: st4.fontSizeR, opacity: st4.opacity };
+      annotSession.list.push(nAnn); annotSession.selectedId = nAnn.id;
+      redrawAnnotCanvas(); updateAnnotButtons(); setActiveTool("select");
+      return;
+    }
+    if (tool === "check" || tool === "cross") {
+      pushSnapshot();
+      var st5 = currentAnnotStyle();
+      var s = st5.strokeWidthR * annotCanvasEl.width * 8;
+      var cc = { id: newAnnotId(), type: tool, x: pt.nx - (s / 2) / annotCanvasEl.width, y: pt.ny - (s / 2) / annotCanvasEl.height, w: s / annotCanvasEl.width, h: s / annotCanvasEl.height, color: st5.color, strokeWidthR: st5.strokeWidthR, opacity: st5.opacity };
+      annotSession.list.push(cc); annotSession.selectedId = cc.id;
+      redrawAnnotCanvas(); updateAnnotButtons(); setActiveTool("select");
+      return;
+    }
+  }
+
+  function onAnnotMove(e) {
+    if (!annotSession || !annotSession.drag) return;
+    e.preventDefault();
+    var pt = pointerToNorm(e), d = annotSession.drag;
+    if (d.mode === "move") {
+      if (!d.snapshotted) { annotSession.undoStack.push(d.preSnapshot); annotSession.redoStack = []; d.snapshotted = true; }
+      var dx = pt.nx - d.startPt.nx, dy = pt.ny - d.startPt.ny;
+      setBBox(d.ann, { x: d.startBox.x + dx, y: d.startBox.y + dy, w: d.startBox.w, h: d.startBox.h });
+    } else if (d.mode === "resize") {
+      if (!d.snapshotted) { annotSession.undoStack.push(d.preSnapshot); annotSession.redoStack = []; d.snapshotted = true; }
+      var b = d.startBox, nx = pt.nx, ny = pt.ny, box;
+      if (d.handle === "se") box = { x: b.x, y: b.y, w: Math.max(0.005, nx - b.x), h: Math.max(0.005, ny - b.y) };
+      else if (d.handle === "nw") { var nnx = Math.min(nx, b.x + b.w - 0.005), nny = Math.min(ny, b.y + b.h - 0.005); box = { x: nnx, y: nny, w: b.x + b.w - nnx, h: b.y + b.h - nny }; }
+      else if (d.handle === "ne") { var nny2 = Math.min(ny, b.y + b.h - 0.005); box = { x: b.x, y: nny2, w: Math.max(0.005, nx - b.x), h: b.y + b.h - nny2 }; }
+      else { var nnx2 = Math.min(nx, b.x + b.w - 0.005); box = { x: nnx2, y: b.y, w: b.x + b.w - nnx2, h: Math.max(0.005, ny - b.y) }; }
+      setBBox(d.ann, box);
+    } else if (d.mode === "draw-shape") {
+      var a = d.ann;
+      if (a.type === "arrow" || a.type === "line") { a.x2 = pt.nx; a.y2 = pt.ny; }
+      else { a.x = Math.min(d.startPt.nx, pt.nx); a.y = Math.min(d.startPt.ny, pt.ny); a.w = Math.abs(pt.nx - d.startPt.nx); a.h = Math.abs(pt.ny - d.startPt.ny); }
+    } else if (d.mode === "draw-pen") {
+      d.ann.points.push([pt.nx, pt.ny]);
+    }
+    redrawAnnotCanvas();
+  }
+
+  function onAnnotUp() {
+    if (!annotSession || !annotSession.drag) return;
+    var d = annotSession.drag;
+    if (d.mode === "draw-shape") {
+      var box = getBBox(d.ann);
+      if (box.w < 0.006 && box.h < 0.006) { annotSession.list = annotSession.list.filter(function (a) { return a.id !== d.ann.id; }); annotSession.selectedId = null; }
+      else setActiveTool("select");
+    } else if (d.mode === "draw-pen") {
+      if (d.ann.points.length < 2) { annotSession.list = annotSession.list.filter(function (a) { return a.id !== d.ann.id; }); annotSession.selectedId = null; }
+      else setActiveTool("select");
+    }
+    annotSession.drag = null;
+    redrawAnnotCanvas(); updateAnnotButtons();
+  }
+
+  function onAnnotDblClick(e) {
+    if (!annotSession) return;
+    var pt = pointerToNorm(e), hit = hitTest(pt.nx, pt.ny);
+    if (hit && hit.type === "text") {
+      pushSnapshot();
+      annotSession.selectedId = hit.id;
+      var wp = canvasPxToWrapPx(hit.x * annotCanvasEl.width, hit.y * annotCanvasEl.height);
+      openTextEditor(hit, wp.x, wp.y);
+    }
+  }
+
+  function applyZoom(modeStr) {
+    if (!annotSession) return;
+    annotSession.zoom = modeStr;
+    var W = annotCanvasEl.width, H = annotCanvasEl.height;
+    if (modeStr === "fit") {
+      var wrapW = Math.max(200, $("annotCanvasWrap").clientWidth - 48);
+      var scale = Math.min(1, wrapW / W);
+      annotCanvasEl.style.width = (W * scale) + "px"; annotCanvasEl.style.height = (H * scale) + "px";
+    } else {
+      var s = parseFloat(modeStr);
+      annotCanvasEl.style.width = (W * s) + "px"; annotCanvasEl.style.height = (H * s) + "px";
+    }
+    document.querySelectorAll("#annotZoom button").forEach(function (b) { b.classList.toggle("active", b.dataset.zoom === modeStr); });
+  }
+
+  function flattenPhoto(url, annots, maxDim) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image(); img.crossOrigin = "anonymous";
+      img.onload = function () {
+        var scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight, 1));
+        var w = Math.round(img.naturalWidth * scale) || 1, h = Math.round(img.naturalHeight * scale) || 1;
+        var canvas = document.createElement("canvas"); canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        annots.forEach(function (a) { drawAnnotation(ctx, a, w, h, false); });
+        try { resolve(canvas.toDataURL("image/jpeg", 0.86)); } catch (err) { reject(err); }
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  function openAnnotModal(caseObj, slot) {
+    var url = slot === "before" ? caseObj.photoBefore : caseObj.photoAfter;
+    if (!url) return;
+    annotCanvasEl = $("annotCanvas"); annotCtx = annotCanvasEl.getContext("2d");
+    var existing = slot === "before" ? caseObj.annotBefore : caseObj.annotAfter;
+    annotSession = { caseId: caseObj.id, slot: slot, list: existing ? JSON.parse(JSON.stringify(existing)) : [], undoStack: [], redoStack: [], selectedId: null, tool: "select", zoom: "fit", drag: null };
+    $("annotTitle").textContent = caseObj.code + " — " + (slot === "before" ? "Before" : "After");
+    annotBaseImg = new Image(); annotBaseImg.crossOrigin = "anonymous";
+    annotBaseImg.onload = function () {
+      var maxDim = 1400;
+      var scale = Math.min(1, maxDim / Math.max(annotBaseImg.naturalWidth, annotBaseImg.naturalHeight, 1));
+      annotCanvasEl.width = Math.round(annotBaseImg.naturalWidth * scale) || 600;
+      annotCanvasEl.height = Math.round(annotBaseImg.naturalHeight * scale) || 400;
+      redrawAnnotCanvas(); applyZoom("fit"); updateAnnotButtons();
+    };
+    annotBaseImg.onerror = function () { showToast("โหลดรูปไม่สำเร็จ", "error"); };
+    annotBaseImg.src = url;
+    setActiveTool("select");
+    $("annotModal").classList.add("show");
+  }
+
+  function closeAnnotModal() {
+    $("annotModal").classList.remove("show");
+    if (!annotSession || !currentReportData) { annotSession = null; return; }
+    var c = currentReportData.cases.find(function (cc) { return String(cc.id) === String(annotSession.caseId); });
+    if (c) {
+      var field = annotSession.slot === "before" ? "annotBefore" : "annotAfter";
+      var previewField = annotSession.slot === "before" ? "annotBeforePreview" : "annotAfterPreview";
+      c[field] = annotSession.list.length ? annotSession.list : null;
+      if (annotSession.list.length) {
+        var url = annotSession.slot === "before" ? c.photoBefore : c.photoAfter;
+        flattenPhoto(url, annotSession.list, 500).then(function (dataUrl) { c[previewField] = dataUrl; renderPreview(currentReportData); }).catch(function () {});
+      } else { c[previewField] = null; renderPreview(currentReportData); }
+    }
+    annotSession = null;
+  }
+
+  $("annotTools").innerHTML = TOOLS.map(function (t) { return '<button type="button" class="annot-tool-btn' + (t.id === "select" ? " active" : "") + '" data-tool="' + t.id + '" title="' + t.label + '">' + window.icon(t.icon, 15) + '</button>'; }).join("");
+  $("annotTools").addEventListener("click", function (e) { var b = e.target.closest(".annot-tool-btn"); if (!b || !annotSession) return; setActiveTool(b.dataset.tool); });
+  $("annotPresets").innerHTML = PRESET_LABELS.map(function (l) { return '<button type="button" class="annot-preset-chip" data-label="' + esc(l) + '">' + esc(l) + '</button>'; }).join("");
+  $("annotPresets").addEventListener("click", function (e) {
+    var b = e.target.closest(".annot-preset-chip"); if (!b || !annotSession) return;
+    pushSnapshot();
+    var st = currentAnnotStyle();
+    var idx = annotSession.list.filter(function (a) { return a.type === "text"; }).length;
+    var ox = 0.06 + (idx % 5) * 0.03, oy = 0.06 + (idx % 6) * 0.05;
+    var t = { id: newAnnotId(), type: "text", text: b.dataset.label, x: ox, y: oy, w: 0.1, h: 0.04, color: st.color, textColor: st.textColor, bgColor: st.bgColor, fontSizeR: st.fontSizeR, opacity: st.opacity };
+    annotSession.list.push(t); annotSession.selectedId = t.id;
+    redrawAnnotCanvas(); updateAnnotButtons();
+  });
+  $("annotUndo").innerHTML = window.icon("undoTool", 14);
+  $("annotRedo").innerHTML = window.icon("redoTool", 14);
+  $("annotDeleteSel").innerHTML = window.icon("trash", 14);
+  $("annotUndo").addEventListener("click", annotUndo);
+  $("annotRedo").addEventListener("click", annotRedo);
+  $("annotDeleteSel").addEventListener("click", annotDeleteSelected);
+  $("annotZoom").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b || !annotSession) return; applyZoom(b.dataset.zoom); });
+  $("annotClose").addEventListener("click", closeAnnotModal);
+  $("annotCanvas").addEventListener("mousedown", onAnnotDown);
+  $("annotCanvas").addEventListener("dblclick", onAnnotDblClick);
+  window.addEventListener("mousemove", onAnnotMove);
+  window.addEventListener("mouseup", onAnnotUp);
+  document.addEventListener("keydown", function (e) {
+    if (!annotSession) return;
+    if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) return;
+    if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); annotDeleteSelected(); }
+    else if (e.key === "Escape") { closeAnnotModal(); }
+    else if ((e.ctrlKey || e.metaKey) && e.key === "z") { e.preventDefault(); if (e.shiftKey) annotRedo(); else annotUndo(); }
+  });
+
   // ---------- PDF ----------
   var jspdfLoaded = null;
   function loadJsPDF() {
@@ -895,7 +1429,7 @@
     doc.setFontSize(5.5); doc.setFont(undefined, "normal"); doc.setTextColor(140, 150, 160); doc.text("ACHV.", ax, y + h - 2, { align: "center" });
   }
 
-  function pdfCaseCard(doc, c, num, x, y, w, h) {
+  function pdfCaseCard(doc, c, num, x, y, w, h, flatBefore, flatAfter) {
     doc.setDrawColor(221, 227, 234); doc.setLineWidth(.2); doc.rect(x, y, w, h);
     doc.setFillColor(244, 246, 249); doc.rect(x, y, w, 5, "F");
     doc.setFillColor(22, 41, 77); doc.circle(x + 3, y + 2.5, 1.6, "F");
@@ -906,8 +1440,8 @@
     var innerY = y + 7.5, photoH = w * 0.44;
     if (c.photoBefore || c.photoAfter) {
       try {
-        if (c.photoBefore) doc.addImage(c.photoBefore, "JPEG", x + 1.5, innerY, w / 2 - 2, photoH, undefined, "FAST");
-        if (c.photoAfter) doc.addImage(c.photoAfter, "JPEG", x + w / 2 + 0.5, innerY, w / 2 - 2, photoH, undefined, "FAST");
+        if (c.photoBefore) doc.addImage(flatBefore || c.photoBefore, "JPEG", x + 1.5, innerY, w / 2 - 2, photoH, undefined, "FAST");
+        if (c.photoAfter) doc.addImage(flatAfter || c.photoAfter, "JPEG", x + w / 2 + 0.5, innerY, w / 2 - 2, photoH, undefined, "FAST");
       } catch (e) {}
       doc.setFontSize(4.6); doc.setTextColor(140, 150, 160);
       doc.text("Before", x + w / 4, innerY + photoH + 2.4, { align: "center" }); doc.text("After", x + w * 0.75, innerY + photoH + 2.4, { align: "center" });
@@ -1095,6 +1629,16 @@
 
       if ($("incCases").checked) {
         var selected = rep.cases.filter(function (c) { return !selectedCaseIds || selectedCaseIds.indexOf(c.id) !== -1; });
+        var flattenedCache = {};
+        for (var fi = 0; fi < selected.length; fi++) {
+          var fc = selected[fi];
+          if (fc.annotBefore && fc.annotBefore.length && fc.photoBefore) {
+            try { flattenedCache[fc.id + "_before"] = await flattenPhoto(fc.photoBefore, fc.annotBefore, 1000); } catch (e) {}
+          }
+          if (fc.annotAfter && fc.annotAfter.length && fc.photoAfter) {
+            try { flattenedCache[fc.id + "_after"] = await flattenPhoto(fc.photoAfter, fc.annotAfter, 1000); } catch (e) {}
+          }
+        }
         var cols = colsPerRow;
         var cardW = (pageW - marginX * 2 - (cols - 1) * 3) / cols;
         var cardH = cols >= 4 ? 90 : (cols === 3 ? 108 : 130);
@@ -1116,7 +1660,7 @@
             chunk.forEach(function (c, ci) {
               var col = ci % cols, row = Math.floor(ci / cols);
               var cx = marginX + col * (cardW + 3), cy = y + row * (cardH + 3);
-              pdfCaseCard(doc, c, idx + ci + 1, cx, cy, cardW, cardH);
+              pdfCaseCard(doc, c, idx + ci + 1, cx, cy, cardW, cardH, flattenedCache[c.id + "_before"], flattenedCache[c.id + "_after"]);
             });
             y += thisRows * (cardH + 3);
             idx += take;

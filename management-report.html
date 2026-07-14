@@ -145,6 +145,14 @@
   .doc-footer { position: absolute; bottom: 14px; left: 30px; right: 30px; display: flex; justify-content: space-between; font-size: 7.6px; color: #889; border-top: 1px solid #dde3ea; padding-top: 5px; }
   .confidential-tag { font-weight: 800; color: #c93a2e; text-transform: uppercase; letter-spacing: .04em; }
 
+  .editor-mode [contenteditable="true"] { outline: 1px dashed #1E4FA0; outline-offset: 2px; border-radius: 3px; cursor: text; }
+  .editor-mode [contenteditable="true"]:hover { background: #f7faff; }
+  .editor-mode [contenteditable="true"]:focus { outline: 1.5px solid #1E4FA0; background: #f0f5fc; }
+  .cc-editor-bar { display: flex; gap: 4px; margin-left: auto; }
+  .cc-editor-bar button { border: 1px solid #ccd6e2; background: #fff; border-radius: 4px; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #445; padding: 0; }
+  .cc-editor-bar button:hover { background: #f4f6f9; color: #16294D; }
+  .cc-editor-bar svg { width: 10px; height: 10px; }
+
   .lightbox { position: fixed; inset: 0; background: rgba(10,15,20,.85); display: none; align-items: center; justify-content: center; z-index: 500; padding: 30px; cursor: zoom-out; }
   .lightbox.show { display: flex; }
   .lightbox img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
@@ -203,8 +211,12 @@
           <div class="card card__pad side-card">
             <div class="side-card__title" id="reportSettingsTitle"></div>
             <label class="chk-row"><input type="checkbox" id="incExec" checked>Include Executive Summary</label>
-            <label class="chk-row"><input type="checkbox" id="incKpi" checked>Include KPI</label>
-            <label class="chk-row"><input type="checkbox" id="incCharts" checked>Include Charts</label>
+            <label class="chk-row"><input type="checkbox" id="incProdKpi" checked>Include Production KPI</label>
+            <label class="chk-row"><input type="checkbox" id="incEngKpi" checked>Include Engineering KPI</label>
+            <label class="chk-row" style="padding-left:16px;"><input type="checkbox" id="incChartLine" checked>Problem by Line</label>
+            <label class="chk-row" style="padding-left:16px;"><input type="checkbox" id="incChartFamily" checked>Problem by Product Family</label>
+            <label class="chk-row" style="padding-left:16px;"><input type="checkbox" id="incChartPareto" checked>Top Problems (Pareto)</label>
+            <label class="chk-row" style="padding-left:16px;"><input type="checkbox" id="incChartRootCause" checked>Root Cause Distribution</label>
             <label class="chk-row"><input type="checkbox" id="incCases" checked>Include Selected Cases</label>
             <label class="chk-row"><input type="checkbox" id="incImprovement" checked>Include Improvement Summary</label>
           </div>
@@ -220,6 +232,17 @@
 
           <button class="btn primary" id="btnGenerate" style="width:100%; justify-content:center; margin-bottom:var(--sp-4);"></button>
 
+          <div class="card card__pad side-card" id="editorCard" style="display:none;">
+            <div class="side-card__title" id="editorTitle"></div>
+            <label class="chk-row"><input type="checkbox" id="chkEditMode">เปิดโหมดแก้ไข (Edit Mode)</label>
+            <div class="field"><label>Document No.</label><input type="text" id="fReportNo"></div>
+            <button class="btn secondary" id="btnAddCase" style="width:100%; justify-content:center; margin-bottom:8px;"></button>
+            <div style="display:flex; gap:8px;">
+              <button class="btn secondary" id="btnSaveDraft" style="flex:1; justify-content:center;" disabled></button>
+              <button class="btn secondary" id="btnLoadDraft" style="flex:1; justify-content:center;" disabled></button>
+            </div>
+          </div>
+
           <div class="card card__pad side-card">
             <div class="side-card__title" id="orgTitle"></div>
             <div class="field"><label>Company Logo</label><div class="logo-upload"><div class="logo-preview" id="logoPreview"></div><input type="file" id="fLogoUpload" accept="image/*" style="font-size:11px;"></div></div>
@@ -230,7 +253,10 @@
             <div class="field" style="margin-bottom:0;"><label>Confidential Level</label><select id="fConfidential" style="width:100%;"><option value="">— ไม่ระบุ —</option><option>Internal Use Only</option><option>Confidential</option><option>Restricted</option></select></div>
           </div>
 
-          <button class="btn secondary" id="btnDownloadPdf" style="width:100%; justify-content:center;" disabled></button>
+          <div style="display:flex; gap:8px;">
+            <button class="btn secondary" id="btnDownloadPdf" style="flex:1; justify-content:center;" disabled></button>
+            <button class="btn secondary" id="btnExportWord" style="flex:1; justify-content:center;" disabled></button>
+          </div>
         </div>
 
         <div class="a4-preview-wrap"><div id="docPreview"><div class="empty-doc">เลือกวันที่แล้วกด "Generate Report" เพื่อสร้างเอกสาร</div></div></div>
@@ -266,9 +292,14 @@
   $("btnThemeToggle").innerHTML = window.icon("moon", 18);
   $("btnGenerate").innerHTML = window.icon("refresh", 16) + "Generate Report";
   $("btnDownloadPdf").innerHTML = window.icon("download", 16) + "Download PDF";
+  $("btnExportWord").innerHTML = window.icon("fileText", 16) + "Export Word";
   $("reportSettingsTitle").innerHTML = window.icon("settings", 15) + "Report Settings";
   $("selectCasesTitle").innerHTML = window.icon("folder", 15) + "Select Cases";
   $("orgTitle").innerHTML = window.icon("building", 15) + "ข้อมูลเอกสาร (Corporate Identity)";
+  $("editorTitle").innerHTML = window.icon("edit", 15) + "Report Editor";
+  $("btnAddCase").innerHTML = window.icon("plus", 14) + "เพิ่ม Case";
+  $("btnSaveDraft").innerHTML = window.icon("checkCircle", 14) + "บันทึกร่าง";
+  $("btnLoadDraft").innerHTML = window.icon("refresh", 14) + "โหลดร่าง";
 
   function applyThemeIcon() { var d = document.documentElement.getAttribute("data-theme") === "dark" || (!document.documentElement.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches); $("btnThemeToggle").innerHTML = window.icon(d ? "sun" : "moon", 18); }
   $("btnThemeToggle").addEventListener("click", function () {
@@ -326,7 +357,123 @@
   $("lightbox").addEventListener("click", function () { $("lightbox").classList.remove("show"); });
   $("docPreview").addEventListener("click", function (e) {
     var img = e.target.closest(".ph img, .attach-thumb-doc img");
-    if (img) { $("lightboxImg").src = img.src; $("lightbox").classList.add("show"); }
+    if (img) { $("lightboxImg").src = img.src; $("lightbox").classList.add("show"); return; }
+    var upBtn = e.target.closest(".cc-up"), downBtn = e.target.closest(".cc-down"), rmBtn = e.target.closest(".cc-remove");
+    if (!upBtn && !downBtn && !rmBtn) return;
+    if (!currentReportData) return;
+    var card = e.target.closest(".case-card-doc"); if (!card) return;
+    var cid = card.dataset.caseId;
+    var idx = currentReportData.cases.findIndex(function (c) { return String(c.id) === cid; });
+    if (idx === -1) return;
+    if (upBtn && idx > 0) {
+      var tmp = currentReportData.cases[idx - 1]; currentReportData.cases[idx - 1] = currentReportData.cases[idx]; currentReportData.cases[idx] = tmp;
+      renderPreview(currentReportData);
+    } else if (downBtn && idx < currentReportData.cases.length - 1) {
+      var tmp2 = currentReportData.cases[idx + 1]; currentReportData.cases[idx + 1] = currentReportData.cases[idx]; currentReportData.cases[idx] = tmp2;
+      renderPreview(currentReportData);
+    } else if (rmBtn) {
+      currentReportData.cases.splice(idx, 1);
+      if (selectedCaseIds) selectedCaseIds = selectedCaseIds.filter(function (id) { return id !== cid; });
+      renderCasePickList(currentReportData.cases);
+      renderPreview(currentReportData);
+    }
+  });
+  $("docPreview").addEventListener("input", function (e) {
+    var el = e.target;
+    if (!el.getAttribute || el.getAttribute("contenteditable") !== "true") return;
+    var field = el.dataset.editField;
+    if (!field || !currentReportData) return;
+    if (field === "execSummaryHtml") { currentReportData.execSummaryHtml = el.innerHTML; return; }
+    var card = el.closest(".case-card-doc"); if (!card) return;
+    var cid = card.dataset.caseId;
+    var c = currentReportData.cases.find(function (cc) { return String(cc.id) === cid; });
+    if (c) c[field] = el.innerText;
+  });
+
+  var editMode = false;
+  $("chkEditMode").addEventListener("change", function () { editMode = this.checked; if (currentReportData) renderPreview(currentReportData); });
+  $("fReportNo").addEventListener("change", function () {
+    if (!currentReportData) return;
+    currentReportData.reportNo = this.value || currentReportData.reportNo;
+    renderPreview(currentReportData);
+  });
+  $("btnAddCase").addEventListener("click", function () {
+    if (!currentReportData) return;
+    var n = currentReportData.cases.length + 1;
+    var newCase = {
+      id: "draft-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      code: "ENG-" + currentReportData.dateIso.replace(/-/g, "") + "-NEW" + n,
+      status: "Open", statusLabel: "OPEN", priority: "Medium",
+      photoBefore: null, photoAfter: null,
+      family: "—", model: "—", line: "—", machine: "—", lotNo: "—",
+      problem: "(Case ใหม่ — คลิกเพื่อแก้ไข)", rootCause: "—",
+      impact: "Low", corrective: "—", preventive: "—",
+      results: [], owner: "—", completedDate: null, remark: ""
+    };
+    currentReportData.cases.push(newCase);
+    if (selectedCaseIds) selectedCaseIds.push(newCase.id);
+    editMode = true; $("chkEditMode").checked = true;
+    renderCasePickList(currentReportData.cases);
+    renderPreview(currentReportData);
+    showToast("เพิ่ม Case ใหม่แล้ว — แก้ไขข้อความได้ทันที", "success");
+  });
+  $("btnSaveDraft").addEventListener("click", function () {
+    if (!currentReportData) return;
+    var chartFlags = {};
+    ["incExec", "incProdKpi", "incEngKpi", "incChartLine", "incChartFamily", "incChartPareto", "incChartRootCause", "incCases", "incImprovement"].forEach(function (id) { chartFlags[id] = $(id).checked; });
+    var draft = {
+      dateIso: currentReportData.dateIso, reportNo: currentReportData.reportNo,
+      execSummaryHtml: currentReportData.execSummaryHtml != null ? currentReportData.execSummaryHtml : currentReportData.execSummary.join(" "),
+      cases: currentReportData.cases, selectedCaseIds: selectedCaseIds, colsPerRow: colsPerRow, chartFlags: chartFlags,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem("eng-log-report-draft-" + currentReportData.dateIso, JSON.stringify(draft));
+    $("btnLoadDraft").disabled = false;
+    showToast("บันทึกฉบับร่างแล้ว (เก็บในเครื่องนี้เท่านั้น ไม่กระทบฐานข้อมูล)", "success");
+  });
+  $("btnLoadDraft").addEventListener("click", async function () {
+    var dateIso = $("fReportDate").value || todayIso();
+    var raw = localStorage.getItem("eng-log-report-draft-" + dateIso);
+    if (!raw) { showToast("ไม่พบฉบับร่างสำหรับวันที่นี้", "error"); return; }
+    var draft = JSON.parse(raw);
+    var btn = this;
+    if (!currentReportData || currentReportData.dateIso !== dateIso) {
+      if (!sb) { showToast("ยังไม่ได้ตั้งค่าฐานข้อมูล", "error"); return; }
+      btn.disabled = true;
+      try { var data = await fetchDataFor(dateIso); currentReportData = computeReport(dateIso, data); }
+      catch (err) { showToast("โหลดข้อมูลไม่สำเร็จ: " + err.message, "error"); btn.disabled = false; return; }
+      btn.disabled = false;
+    }
+    currentReportData.reportNo = draft.reportNo;
+    currentReportData.execSummaryHtml = draft.execSummaryHtml;
+    currentReportData.cases = draft.cases;
+    selectedCaseIds = draft.selectedCaseIds;
+    colsPerRow = draft.colsPerRow || colsPerRow;
+    document.querySelectorAll(".cols-btn").forEach(function (b) { b.classList.toggle("active", parseInt(b.dataset.c, 10) === colsPerRow); });
+    Object.keys(draft.chartFlags || {}).forEach(function (id) { if ($(id)) $(id).checked = draft.chartFlags[id]; });
+    $("fReportNo").value = currentReportData.reportNo;
+    renderCasePickList(currentReportData.cases);
+    $("btnDownloadPdf").disabled = false; $("btnExportWord").disabled = false; $("btnSaveDraft").disabled = false; $("editorCard").style.display = "block";
+    renderPreview(currentReportData);
+    showToast("โหลดฉบับร่างสำเร็จ", "success");
+  });
+  $("fReportDate").addEventListener("change", function () {
+    $("btnLoadDraft").disabled = !localStorage.getItem("eng-log-report-draft-" + this.value);
+  });
+  $("btnExportWord").addEventListener("click", function () {
+    if (!currentReportData) return;
+    var pageEl = document.querySelector("#docPreview .a4-page");
+    if (!pageEl) return;
+    var clone = pageEl.cloneNode(true);
+    clone.querySelectorAll("[contenteditable]").forEach(function (el) { el.removeAttribute("contenteditable"); });
+    clone.querySelectorAll(".cc-editor-bar").forEach(function (el) { el.remove(); });
+    var styleTag = document.querySelector("style").outerHTML;
+    var docHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>" + styleTag + "</head><body>" + clone.outerHTML + "</body></html>";
+    var blob = new Blob(["﻿", docHtml], { type: "application/msword" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a"); a.href = url; a.download = (currentReportData.reportNo || "report") + ".doc"; a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    showToast("ดาวน์โหลด Word สำเร็จ", "success");
   });
 
   var lineById = {}, productById = {}, rootCauseById = {};
@@ -501,7 +648,12 @@
     return svg;
   }
 
-  function caseCardHtml(c, num) {
+  function ed(tag, cls, field, text, editModeOn) {
+    var t = editModeOn ? ' contenteditable="true" data-edit-field="' + field + '"' : "";
+    return "<" + tag + ' class="' + cls + '"' + t + ">" + esc(text) + "</" + tag + ">";
+  }
+
+  function caseCardHtml(c, num, editModeOn) {
     var photos = "";
     if (c.photoBefore || c.photoAfter) {
       photos = '<div class="case-card-doc__photos">' +
@@ -509,8 +661,13 @@
         '<figure>' + (c.photoAfter ? '<div class="ph"><img src="' + c.photoAfter + '"></div>' : '<div class="ph"></div>') + '<figcaption>After</figcaption></figure></div>';
     }
     var resultHtml = c.results.length ? '<div class="cc-result-box">' + c.results.map(function (r) { return '<div class="rr">• ' + r.k + ' : <b>' + esc(r.v) + '</b></div>'; }).join("") + '</div>' : "";
-    return '<div class="case-card-doc">' +
-      '<div class="case-card-doc__head"><span class="badge-c">' + num + '</span><span class="code">' + esc(c.code) + '</span><span class="cc-badge status-' + c.status.replace(" ", "") + '">' + esc(c.statusLabel) + '</span></div>' +
+    var editBar = editModeOn ? '<div class="cc-editor-bar">' +
+      '<button type="button" class="cc-up" title="เลื่อนขึ้น"><span style="display:inline-flex;transform:rotate(180deg)">' + window.icon("chevronDown", 10) + '</span></button>' +
+      '<button type="button" class="cc-down" title="เลื่อนลง">' + window.icon("chevronDown", 10) + '</button>' +
+      '<button type="button" class="cc-remove" title="ลบ Case นี้">' + window.icon("x", 10) + '</button>' +
+      '</div>' : "";
+    return '<div class="case-card-doc" data-case-id="' + esc(c.id) + '">' +
+      '<div class="case-card-doc__head"><span class="badge-c">' + num + '</span><span class="code">' + esc(c.code) + '</span><span class="cc-badge status-' + c.status.replace(" ", "") + '">' + esc(c.statusLabel) + '</span>' + editBar + '</div>' +
       photos +
       '<div class="case-card-doc__body">' +
       '<div class="kv-row"><span class="k">Product Family</span><span class="v">' + esc(c.family) + '</span></div>' +
@@ -518,15 +675,15 @@
       '<div class="kv-row"><span class="k">Line</span><span class="v">' + esc(c.line) + '</span></div>' +
       '<div class="kv-row"><span class="k">Lot No.</span><span class="v">' + esc(c.lotNo) + '</span></div>' +
       '<div class="cc-divider"></div>' +
-      '<div class="cc-problem">' + esc(c.problem) + '</div>' +
-      '<div class="kv-row"><span class="k">Root Cause</span><span class="v">' + esc(c.rootCause) + '</span></div>' +
+      ed("div", "cc-problem", "problem", c.problem, editModeOn) +
+      '<div class="kv-row"><span class="k">Root Cause</span>' + ed("span", "v", "rootCause", c.rootCause, editModeOn) + '</div>' +
       '<div class="cc-divider"></div>' +
-      '<div class="kv-row"><span class="k">Corrective</span><span class="v">' + esc(c.corrective) + '</span></div>' +
-      '<div class="kv-row"><span class="k">Preventive</span><span class="v">' + esc(c.preventive) + '</span></div>' +
+      '<div class="kv-row"><span class="k">Corrective</span>' + ed("span", "v", "corrective", c.corrective, editModeOn) + '</div>' +
+      '<div class="kv-row"><span class="k">Preventive</span>' + ed("span", "v", "preventive", c.preventive, editModeOn) + '</div>' +
       resultHtml +
       '<div class="cc-divider"></div>' +
       '<div class="kv-row"><span class="k">Impact</span><span class="v">' + esc(c.impact) + '</span></div>' +
-      (c.remark ? '<div class="kv-row"><span class="k">Remark</span><span class="v">' + esc(c.remark) + '</span></div>' : "") +
+      ((c.remark || editModeOn) ? '<div class="kv-row"><span class="k">Remark</span>' + ed("span", "v", "remark", c.remark, editModeOn) + '</div>' : "") +
       '<div class="cc-divider"></div>' +
       '<div class="kv-row"><span class="k">Owner</span><span class="v">' + esc(c.owner) + '</span></div>' +
       '<div class="kv-row"><span class="k">Completed</span><span class="v">' + (c.completedDate ? fmtThaiShort(c.completedDate) : "—") + '</span></div>' +
@@ -549,7 +706,11 @@
     html += '<div class="meta-strip"><div><div class="k">Report No.</div><div class="v">' + esc(rep.reportNo) + '</div></div><div><div class="k">Revision</div><div class="v">' + esc(revision) + '</div></div><div><div class="k">Prepared By</div><div class="v">' + esc(prepared) + '</div></div><div><div class="k">Date</div><div class="v">' + fmtThaiShort(rep.dateIso) + '</div></div></div>';
 
     if ($("incExec").checked) {
-      html += '<div class="sec">' + headEl("Executive Summary", "fileText") + '<div class="sec-2col"><div class="exec-p">' + rep.execSummary.join(" ") + '</div><div class="kpi-mini-row">' +
+      var execContent = rep.execSummaryHtml != null ? rep.execSummaryHtml : rep.execSummary.join(" ");
+      var execEl = editMode
+        ? '<div class="exec-p" contenteditable="true" data-edit-field="execSummaryHtml">' + execContent + '</div>'
+        : '<div class="exec-p">' + execContent + '</div>';
+      html += '<div class="sec">' + headEl("Executive Summary", "fileText") + '<div class="sec-2col">' + execEl + '<div class="kpi-mini-row">' +
         '<div class="kpi-mini"><div class="ic tone-blue">' + window.icon("target", 12) + '</div><div class="l">Plan (PCS)</div><div class="v">' + rep.production.plan.toLocaleString() + '</div></div>' +
         '<div class="kpi-mini"><div class="ic tone-blue">' + window.icon("chartBar", 12) + '</div><div class="l">Actual (PCS)</div><div class="v">' + rep.production.actual.toLocaleString() + '</div></div>' +
         '<div class="kpi-mini"><div class="ic tone-green">' + window.icon("checkCircle", 12) + '</div><div class="l">Yield (%)</div><div class="v">' + (rep.production.yieldPct != null ? rep.production.yieldPct : "—") + '</div></div>' +
@@ -558,28 +719,29 @@
         '</div></div></div>';
     }
 
-    if ($("incKpi").checked) {
-      html += '<div class="sec-2col" style="margin-bottom:9px;">';
-      html += '<div class="sec" style="margin-bottom:0;">' + headEl("Production Performance", "chartBar") + prodChartSvg(rep) +
+    var showProd = $("incProdKpi").checked, showEng = $("incEngKpi").checked;
+    if (showProd || showEng) {
+      var prodHtml = '<div class="sec" style="margin-bottom:0;">' + headEl("Production Performance", "chartBar") + prodChartSvg(rep) +
         '<div class="prod-strip"><div><div class="v">' + (rep.production.yieldPct != null ? rep.production.yieldPct + "%" : "—") + '</div><div class="l">Yield</div></div><div><div class="v" style="color:#c93a2e;">' + (rep.production.ngPct != null ? rep.production.ngPct + "%" : "—") + '</div><div class="l">NG</div></div><div><div class="v">' + rep.production.downtime + '</div><div class="l">Downtime (min)</div></div><div><div class="v">' + rep.production.ng.toLocaleString() + '</div><div class="l">NG Qty</div></div></div></div>';
-      html += '<div class="sec" style="margin-bottom:0;">' + headEl("Engineering Value Contribution", "wrench") + '<div class="ev-grid">' +
+      var engHtml = '<div class="sec" style="margin-bottom:0;">' + headEl("Engineering Value Contribution", "wrench") + '<div class="ev-grid">' +
         '<div class="ev-card"><div class="ic tone-blue">' + window.icon("users", 13) + '</div><div class="l">Activities</div><div class="v">' + rep.engineering.casesHandled + '</div></div>' +
         '<div class="ev-card"><div class="ic tone-blue">' + window.icon("wrench", 13) + '</div><div class="l">Resolved</div><div class="v">' + rep.engineering.casesResolved + '</div></div>' +
         '<div class="ev-card"><div class="ic tone-green">' + window.icon("target", 13) + '</div><div class="l">Success Rate</div><div class="v">' + (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—") + '</div></div>' +
         '<div class="ev-card"><div class="ic tone-red">' + window.icon("trendingDown", 13) + '</div><div class="l">NG Reduced</div><div class="v" style="color:#c93a2e;">' + rep.engineering.ngReduction + '</div></div>' +
         '<div class="ev-card"><div class="ic tone-amber">' + window.icon("clock", 13) + '</div><div class="l">Downtime Cut</div><div class="v" style="color:#c9821a;">' + rep.engineering.downtimeReduction + '</div></div>' +
         '</div></div>';
-      html += '</div>';
+      if (showProd && showEng) { html += '<div class="sec-2col" style="margin-bottom:9px;">' + prodHtml + engHtml + '</div>'; }
+      else if (showProd) { html += '<div style="margin-bottom:9px;">' + prodHtml + '</div>'; }
+      else { html += '<div style="margin-bottom:9px;">' + engHtml + '</div>'; }
     }
 
-    if ($("incCharts").checked) {
-      var famDonut = donutSvg(rep.byFamily, 2), rcDonut = donutSvg(rep.byRootCause, 4);
-      html += '<div class="sec">' + headEl("Problem Overview", "trendingUp") + '<div class="prob-grid">' +
-        '<div class="chart-box"><div class="ct">Problem by Line</div>' + hbarChart(rep.byLine, 0) + '</div>' +
-        '<div class="chart-box"><div class="ct">Problem by Product Family</div><div class="donut-wrap-doc">' + famDonut.svg + '<div class="donut-legend-doc">' + famDonut.legend + '</div></div></div>' +
-        '<div class="chart-box"><div class="ct">Top Problems (Pareto)</div>' + paretoSvg(rep.pareto) + '</div>' +
-        '<div class="chart-box"><div class="ct">Root Cause Distribution</div><div class="donut-wrap-doc">' + rcDonut.svg + '<div class="donut-legend-doc">' + rcDonut.legend + '</div></div></div>' +
-        '</div></div>';
+    var chartCount = 0, chartBoxes = "";
+    if ($("incChartLine").checked) { chartCount++; chartBoxes += '<div class="chart-box"><div class="ct">Problem by Line</div>' + hbarChart(rep.byLine, 0) + '</div>'; }
+    if ($("incChartFamily").checked) { chartCount++; var famDonut = donutSvg(rep.byFamily, 2); chartBoxes += '<div class="chart-box"><div class="ct">Problem by Product Family</div><div class="donut-wrap-doc">' + famDonut.svg + '<div class="donut-legend-doc">' + famDonut.legend + '</div></div></div>'; }
+    if ($("incChartPareto").checked) { chartCount++; chartBoxes += '<div class="chart-box"><div class="ct">Top Problems (Pareto)</div>' + paretoSvg(rep.pareto) + '</div>'; }
+    if ($("incChartRootCause").checked) { chartCount++; var rcDonut = donutSvg(rep.byRootCause, 4); chartBoxes += '<div class="chart-box"><div class="ct">Root Cause Distribution</div><div class="donut-wrap-doc">' + rcDonut.svg + '<div class="donut-legend-doc">' + rcDonut.legend + '</div></div></div>'; }
+    if (chartBoxes) {
+      html += '<div class="sec">' + headEl("Problem Overview", "trendingUp") + '<div class="prob-grid" style="grid-template-columns:repeat(' + chartCount + ',1fr);">' + chartBoxes + '</div></div>';
     }
 
     // One continuous page: everything flows in a single .a4-page (grows taller than a
@@ -592,7 +754,7 @@
       if (!selected.length) {
         html += '<div style="text-align:center;color:#aab;padding:30px 0;">No cases selected for this report</div>';
       } else {
-        html += '<div class="case-grid cols-' + colsPerRow + '">' + selected.map(function (c, idx) { return caseCardHtml(c, idx + 1); }).join("") + '</div>';
+        html += '<div class="case-grid cols-' + colsPerRow + '">' + selected.map(function (c, idx) { return caseCardHtml(c, idx + 1, editMode); }).join("") + '</div>';
       }
       html += '</div>';
     }
@@ -608,6 +770,7 @@
     }
 
     $("docPreview").innerHTML = html + "</div>";
+    $("docPreview").classList.toggle("editor-mode", editMode);
     var pageEls = document.querySelectorAll(".a4-page");
     pageEls.forEach(function (pg, i) {
       var footer = document.createElement("div"); footer.className = "doc-footer";
@@ -624,14 +787,20 @@
       var data = await fetchDataFor(dateIso);
       currentReportData = computeReport(dateIso, data);
       selectedCaseIds = null;
+      editMode = false; $("chkEditMode").checked = false;
       renderCasePickList(currentReportData.cases);
       renderPreview(currentReportData);
       $("btnDownloadPdf").disabled = false;
+      $("btnExportWord").disabled = false;
+      $("btnSaveDraft").disabled = false;
+      $("editorCard").style.display = "block";
+      $("fReportNo").value = currentReportData.reportNo;
+      $("btnLoadDraft").disabled = !localStorage.getItem("eng-log-report-draft-" + dateIso);
       showToast("สร้างรายงานสำเร็จ", "success");
     } catch (err) { showToast("สร้างรายงานไม่สำเร็จ: " + err.message, "error"); }
     finally { btn.disabled = false; btn.innerHTML = window.icon("refresh", 16) + "Generate Report"; }
   });
-  [$("incExec"), $("incKpi"), $("incCharts"), $("incCases"), $("incImprovement")].forEach(function (cb) { cb.addEventListener("change", function () { if (currentReportData) renderPreview(currentReportData); }); });
+  [$("incExec"), $("incProdKpi"), $("incEngKpi"), $("incChartLine"), $("incChartFamily"), $("incChartPareto"), $("incChartRootCause"), $("incCases"), $("incImprovement")].forEach(function (cb) { cb.addEventListener("change", function () { if (currentReportData) renderPreview(currentReportData); }); });
 
   // ---------- PDF ----------
   var jspdfLoaded = null;
@@ -828,7 +997,7 @@
         sec++; var boxY = y; y += 4; secTitle(sec, "Executive Summary");
         var colW = (pageW - marginX * 2) * 0.58;
         doc.setFontSize(7.5); doc.setFont(undefined, "normal"); doc.setTextColor(34, 34, 51);
-        var plain = rep.execSummary.join(" ").replace(/<\/?b>/g, "");
+        var plain = (rep.execSummaryHtml != null ? rep.execSummaryHtml : rep.execSummary.join(" ")).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
         var wrapped = doc.splitTextToSize(plain, colW - 2);
         doc.text(wrapped, marginX, y + 3);
         var kx = marginX + colW + 4, kw = (pageW - marginX * 2 - colW - 4) / 5;
@@ -842,53 +1011,82 @@
         y = y + Math.max(wrapped.length * 3.4, 18) + 5;
       }
 
-      if ($("incKpi").checked) {
+      var showProdPdf = $("incProdKpi").checked, showEngPdf = $("incEngKpi").checked;
+      if (showProdPdf || showEngPdf) {
         ensureSpace(40);
-        sec++;
-        var colW2 = (pageW - marginX * 2 - 4) / 2;
-        var yStart = y;
-        secTitle(sec, "Production Performance");
-        var prodY = y;
-        pdfProdChart(doc, rep, marginX, prodY, colW2, 30);
-        var stripY = prodY + 32;
-        [["Yield", (rep.production.yieldPct != null ? rep.production.yieldPct + "%" : "—")], ["NG", (rep.production.ngPct != null ? rep.production.ngPct + "%" : "—")], ["Downtime", rep.production.downtime + " min"], ["NG Qty", rep.production.ng]].forEach(function (s, i) {
-          var sx = marginX + i * (colW2 / 4);
-          doc.setFontSize(8); doc.setFont(undefined, "bold"); doc.setTextColor(30, 30, 30); doc.text(String(s[1]), sx + colW2 / 8, stripY, { align: "center" });
-          doc.setFontSize(5); doc.setFont(undefined, "normal"); doc.setTextColor(140, 150, 160); doc.text(s[0].toUpperCase(), sx + colW2 / 8, stripY + 3, { align: "center" });
-        });
+        if (showProdPdf && showEngPdf) {
+          sec++;
+          var colW2 = (pageW - marginX * 2 - 4) / 2;
+          var yStart = y;
+          secTitle(sec, "Production Performance");
+          var prodY = y;
+          pdfProdChart(doc, rep, marginX, prodY, colW2, 30);
+          var stripY = prodY + 32;
+          [["Yield", (rep.production.yieldPct != null ? rep.production.yieldPct + "%" : "—")], ["NG", (rep.production.ngPct != null ? rep.production.ngPct + "%" : "—")], ["Downtime", rep.production.downtime + " min"], ["NG Qty", rep.production.ng]].forEach(function (s, i) {
+            var sx = marginX + i * (colW2 / 4);
+            doc.setFontSize(8); doc.setFont(undefined, "bold"); doc.setTextColor(30, 30, 30); doc.text(String(s[1]), sx + colW2 / 8, stripY, { align: "center" });
+            doc.setFontSize(5); doc.setFont(undefined, "normal"); doc.setTextColor(140, 150, 160); doc.text(s[0].toUpperCase(), sx + colW2 / 8, stripY + 3, { align: "center" });
+          });
 
-        y = yStart; secN2X: {
+          y = yStart;
           var ex = marginX + colW2 + 4;
           doc.setFillColor(22, 41, 77); doc.roundedRect(ex, y - 3, 4, 4, .8, .8, "F");
           doc.setFontSize(6.5); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold"); doc.text(String(sec + 1), ex + 2, y, { align: "center" });
           doc.setFontSize(8.5); doc.setTextColor(22, 41, 77); doc.text("ENGINEERING VALUE CONTRIBUTION", ex + 6, y);
+          sec++;
+          var evItems = [["users", "Activities", rep.engineering.casesHandled, [30, 79, 160]], ["wrench", "Resolved", rep.engineering.casesResolved, [30, 79, 160]], ["target", "Success Rate", (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—"), [30, 142, 90]], ["trendingDown", "NG Reduced", rep.engineering.ngReduction, [201, 58, 46]], ["clock", "Downtime Cut", rep.engineering.downtimeReduction, [201, 130, 26]]];
+          var evColW = (colW2 - 8) / 3;
+          evItems.forEach(function (it, i) {
+            var col = i % 3, row = Math.floor(i / 3);
+            var bx = ex + col * (evColW + 4), by = y + 3 + row * 15;
+            doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, by, evColW, 13, 1.2, 1.2);
+            doc.setFontSize(4.6); doc.setTextColor(136, 150, 160); doc.text(it[1].toUpperCase(), bx + evColW / 2, by + 9, { align: "center" });
+            doc.setFontSize(7); doc.setFont(undefined, "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + evColW / 2, by + 5.5, { align: "center" });
+          });
+          y = Math.max(stripY, y + 3 + 2 * 15) + 6;
+        } else if (showProdPdf) {
+          sec++; secTitle(sec, "Production Performance");
+          var halfW = (pageW - marginX * 2) * 0.55;
+          var prodY2 = y;
+          pdfProdChart(doc, rep, marginX, prodY2, halfW, 30);
+          var stripY2 = prodY2 + 32;
+          [["Yield", (rep.production.yieldPct != null ? rep.production.yieldPct + "%" : "—")], ["NG", (rep.production.ngPct != null ? rep.production.ngPct + "%" : "—")], ["Downtime", rep.production.downtime + " min"], ["NG Qty", rep.production.ng]].forEach(function (s, i) {
+            var sx = marginX + i * (halfW / 4);
+            doc.setFontSize(8); doc.setFont(undefined, "bold"); doc.setTextColor(30, 30, 30); doc.text(String(s[1]), sx + halfW / 8, stripY2, { align: "center" });
+            doc.setFontSize(5); doc.setFont(undefined, "normal"); doc.setTextColor(140, 150, 160); doc.text(s[0].toUpperCase(), sx + halfW / 8, stripY2 + 3, { align: "center" });
+          });
+          y = stripY2 + 6;
+        } else {
+          sec++; secTitle(sec, "Engineering Value Contribution");
+          var fullW2 = pageW - marginX * 2;
+          var evItemsFull = [["users", "Activities", rep.engineering.casesHandled, [30, 79, 160]], ["wrench", "Resolved", rep.engineering.casesResolved, [30, 79, 160]], ["target", "Success Rate", (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—"), [30, 142, 90]], ["trendingDown", "NG Reduced", rep.engineering.ngReduction, [201, 58, 46]], ["clock", "Downtime Cut", rep.engineering.downtimeReduction, [201, 130, 26]]];
+          var evColWFull = (fullW2 - 16) / 5;
+          evItemsFull.forEach(function (it, i) {
+            var bx = marginX + i * (evColWFull + 4);
+            doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, y, evColWFull, 15, 1.2, 1.2);
+            doc.setFontSize(4.6); doc.setTextColor(136, 150, 160); doc.text(it[1].toUpperCase(), bx + evColWFull / 2, y + 10, { align: "center" });
+            doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + evColWFull / 2, y + 5.5, { align: "center" });
+          });
+          y += 20;
         }
-        sec++;
-        var evItems = [["users", "Activities", rep.engineering.casesHandled, [30, 79, 160]], ["wrench", "Resolved", rep.engineering.casesResolved, [30, 79, 160]], ["target", "Success Rate", (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—"), [30, 142, 90]], ["trendingDown", "NG Reduced", rep.engineering.ngReduction, [201, 58, 46]], ["clock", "Downtime Cut", rep.engineering.downtimeReduction, [201, 130, 26]]];
-        var evColW = (colW2 - 8) / 3;
-        evItems.forEach(function (it, i) {
-          var col = i % 3, row = Math.floor(i / 3);
-          var bx = ex + col * (evColW + 4), by = y + 3 + row * 15;
-          doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, by, evColW, 13, 1.2, 1.2);
-          doc.setFontSize(4.6); doc.setTextColor(136, 150, 160); doc.text(it[1].toUpperCase(), bx + evColW / 2, by + 9, { align: "center" });
-          doc.setFontSize(7); doc.setFont(undefined, "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + evColW / 2, by + 5.5, { align: "center" });
-        });
-        y = Math.max(stripY, y + 3 + 2 * 15) + 6;
       }
 
-      if ($("incCharts").checked) {
+      var chartDefs = [];
+      if ($("incChartLine").checked) chartDefs.push({ title: "Problem by Line", draw: function (bx, by, bw2) { pdfHBar(doc, rep.byLine, bx + 2, by + 8, bw2 - 4, 0); } });
+      if ($("incChartFamily").checked) chartDefs.push({ title: "Problem by Product Family", draw: function (bx, by, bw2) { pdfDonut(doc, rep.byFamily, bx + bw2 * 0.32, by + 20, 8, 3.5, 2); pdfDonutLegend(doc, rep.byFamily, bx + bw2 * 0.55, by + 15, 2); } });
+      if ($("incChartPareto").checked) chartDefs.push({ title: "Top Problems (Pareto)", draw: function (bx, by, bw2) { pdfPareto(doc, rep.pareto, bx + 2, by + 6, bw2 - 4, 30); } });
+      if ($("incChartRootCause").checked) chartDefs.push({ title: "Root Cause Distribution", draw: function (bx, by, bw2) { pdfDonut(doc, rep.byRootCause, bx + bw2 * 0.32, by + 20, 8, 3.5, 4); pdfDonutLegend(doc, rep.byRootCause, bx + bw2 * 0.55, by + 15, 4); } });
+      if (chartDefs.length) {
         ensureSpace(48);
         sec++; secTitle(sec, "Problem Overview");
-        var cw = (pageW - marginX * 2 - 12) / 4;
-        var c1 = marginX, c2 = marginX + cw + 4, c3 = marginX + (cw + 4) * 2, c4 = marginX + (cw + 4) * 3;
-        [["Problem by Line", c1], ["Problem by Product Family", c2], ["Top Problems (Pareto)", c3], ["Root Cause Distribution", c4]].forEach(function (h) {
-          doc.setDrawColor(221, 227, 234); doc.roundedRect(h[1], y, cw, 40, 1.5, 1.5);
-          doc.setFontSize(5.4); doc.setTextColor(60, 68, 78); doc.setFont(undefined, "bold"); doc.text(h[0], h[1] + cw / 2, y + 4, { align: "center" });
+        var ndc = chartDefs.length;
+        var cw = (pageW - marginX * 2 - (ndc - 1) * 4) / ndc;
+        chartDefs.forEach(function (cd, i) {
+          var bx = marginX + i * (cw + 4);
+          doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, y, cw, 40, 1.5, 1.5);
+          doc.setFontSize(5.4); doc.setTextColor(60, 68, 78); doc.setFont(undefined, "bold"); doc.text(cd.title, bx + cw / 2, y + 4, { align: "center" });
+          cd.draw(bx, y, cw);
         });
-        pdfHBar(doc, rep.byLine, c1 + 2, y + 8, cw - 4, 0);
-        pdfDonut(doc, rep.byFamily, c2 + cw * 0.32, y + 20, 8, 3.5, 2); pdfDonutLegend(doc, rep.byFamily, c2 + cw * 0.55, y + 15, 2);
-        pdfPareto(doc, rep.pareto, c3 + 2, y + 6, cw - 4, 30);
-        pdfDonut(doc, rep.byRootCause, c4 + cw * 0.32, y + 20, 8, 3.5, 4); pdfDonutLegend(doc, rep.byRootCause, c4 + cw * 0.55, y + 15, 4);
         y += 44;
       }
 

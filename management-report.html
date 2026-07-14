@@ -611,19 +611,6 @@
           '</div></div>';
       }
 
-      var resolved = rep.cases;
-      pE += '<div class="sec"><div class="two-col">';
-      pE += '<div><div class="sec-h" style="margin-bottom:6px;">' + window.icon("checkCircle", 13) + '<span class="t">Corrective Actions</span></div>' +
-        (resolved.filter(function (c) { return c.corrective !== "—"; }).length ? resolved.filter(function (c) { return c.corrective !== "—"; }).slice(0, 8).map(function (c) { return '<div class="chk-item done">' + window.icon("check", 10) + '<span>' + esc(c.corrective) + ' <span style="color:#aab;">(' + esc(c.owner) + ')</span></span></div>'; }).join("") : '<div style="color:#aab;font-size:8px;">No completed actions today</div>') + '</div>';
-      var findings = [];
-      if (rep.byRootCause.length) findings.push("Most frequent root cause today: " + rep.byRootCause[0].name + " (" + rep.byRootCause[0].n + " cases) — recommend continued monitoring.");
-      if (rep.byLine.length) findings.push("Production Line " + rep.byLine[0].name + " shows the highest concentration of issues today.");
-      var repeatT = rep.cases.length ? rankBy(rep.cases, function (c) { return c.problem; }).filter(function (e) { return e.n > 1; }) : [];
-      if (repeatT.length) findings.push("Recurring problem detected: \"" + repeatT[0].name + "\" (" + repeatT[0].n + "x) — review preventive measures.");
-      if (!findings.length) findings.push("No significant risk points identified today.");
-      pE += '<div><div class="sec-h" style="margin-bottom:6px;">' + window.icon("lightbulb", 13) + '<span class="t">Key Engineering Insights</span></div>' + findings.map(function (f) { return '<div class="chk-item find">' + window.icon("info", 10) + '<span>' + esc(f) + '</span></div>'; }).join("") + '</div>';
-      pE += '</div></div>';
-
       if ($("incAttachments").checked) {
         pE += '<div class="sec">' + headEl("Attachments", "paperclip");
         pE += rep.attachments.length ? '<div class="attach-grid-doc">' + rep.attachments.slice(0, 12).map(function (a) { return '<div><div class="attach-thumb-doc"><img src="' + a.url + '"></div><div class="attach-cap">' + esc(a.label) + '<br>' + esc((a.sub || "").slice(0, 24)) + '</div></div>'; }).join("") + '</div>' : '<div style="text-align:center;color:#aab;padding:20px 0;">No attachments for this date</div>';
@@ -965,25 +952,6 @@
             doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + imColW / 2, y + 5.5, { align: "center" });
           });
           y += 20;
-
-          ensureSpace(30);
-          sec++; secTitle(sec, "Corrective Actions & Key Engineering Insights");
-          var cW = (pageW - marginX * 2 - 4) / 2;
-          doc.setFontSize(6.5); doc.setFont(undefined, "normal"); doc.setTextColor(34, 34, 51);
-          var correctiveList = rep.cases.filter(function (c) { return c.corrective !== "—"; }).slice(0, 8);
-          var yA = y;
-          doc.setFont(undefined, "bold"); doc.text("Corrective Actions", marginX, yA); doc.setFont(undefined, "normal"); yA += 4;
-          (correctiveList.length ? correctiveList : [{ corrective: "No completed actions today", owner: "" }]).forEach(function (c) { var l = doc.splitTextToSize("• " + c.corrective, cW - 2); doc.text(l, marginX, yA); yA += l.length * 3 + 1; });
-
-          var yC = y; var x3c = marginX + cW + 4;
-          doc.setFont(undefined, "bold"); doc.text("Key Engineering Insights", x3c, yC); doc.setFont(undefined, "normal"); yC += 4;
-          var findings2 = [];
-          if (rep.byRootCause.length) findings2.push("Most frequent root cause: " + rep.byRootCause[0].name + " (" + rep.byRootCause[0].n + " cases).");
-          if (rep.byLine.length) findings2.push("Line " + rep.byLine[0].name + " has highest issue concentration today.");
-          if (!findings2.length) findings2.push("No significant risk points identified today.");
-          findings2.forEach(function (f) { var l = doc.splitTextToSize("• " + f, cW - 2); doc.text(l, x3c, yC); yC += l.length * 3 + 1; });
-
-          y = Math.max(yA, yC) + 4;
         }
         if ($("incAttachments").checked) {
           ensureSpace(14);

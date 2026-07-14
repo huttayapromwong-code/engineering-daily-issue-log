@@ -99,35 +99,36 @@
   .donut-legend-doc .li { display: flex; align-items: center; gap: 3px; }
   .donut-legend-doc .sw { width: 6px; height: 6px; border-radius: 2px; flex: none; }
 
-  .case-grid { display: grid; gap: 8px; }
+  .case-grid { display: grid; gap: 12px; }
   .case-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
   .case-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
   .case-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
   .case-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
-  .case-card-doc { border: 1px solid #dde3ea; border-radius: 7px; overflow: hidden; break-inside: avoid; font-size: 7.4px; }
-  .case-card-doc__head { display: flex; align-items: center; gap: 5px; padding: 5px 7px; background: #f4f6f9; }
-  .case-card-doc__head .badge-c { width: 13px; height: 13px; border-radius: 50%; background: #16294D; color: #fff; font-size: 7px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
-  .case-card-doc__head .code { font-family: var(--font-mono); font-weight: 800; font-size: 8px; color: #182230; flex: 1; }
-  .cc-badge { font-size: 6.3px; font-weight: 800; padding: 1.5px 5px; border-radius: 4px; text-transform: uppercase; }
+  .case-card-doc { border: 1.5px solid #ccd6e2; border-radius: 9px; overflow: hidden; break-inside: avoid; font-size: 8.4px; box-shadow: 0 1px 3px rgba(16,24,32,.05); }
+  .case-card-doc__head { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: #f4f6f9; }
+  .case-card-doc__head .badge-c { width: 15px; height: 15px; border-radius: 50%; background: #16294D; color: #fff; font-size: 7.8px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
+  .case-card-doc__head .code { font-family: var(--font-mono); font-weight: 800; font-size: 9px; color: #182230; flex: 1; }
+  .cc-badge { font-size: 7px; font-weight: 800; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; }
   .cc-badge.status-Closed { background: #d7f0e2; color: #1e8e5a; }
   .cc-badge.status-Open { background: #fbe4e1; color: #c93a2e; }
   .cc-badge.status-InProgress { background: #fdeecb; color: #c9821a; }
-  .case-card-doc__photos { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 5px 7px 0; }
+  .case-card-doc__photos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px 10px 0; }
   .case-card-doc__photos figure { margin: 0; }
-  .case-card-doc__photos .ph { aspect-ratio: 4/3; border-radius: 4px; overflow: hidden; background: #f4f6f9; cursor: zoom-in; }
+  .case-card-doc__photos .ph { aspect-ratio: 4/3; border-radius: 5px; overflow: hidden; background: #f4f6f9; cursor: zoom-in; }
   .case-card-doc__photos img { width: 100%; height: 100%; object-fit: cover; }
-  .case-card-doc__photos figcaption { text-align: center; font-size: 6px; color: #889; margin-top: 1px; }
-  .case-card-doc__body { padding: 6px 7px; }
-  .kv-row { display: flex; gap: 3px; padding: 1.5px 0; }
-  .kv-row .k { color: #889; width: 62px; flex: none; }
+  .case-card-doc__photos figcaption { text-align: center; font-size: 6.8px; color: #889; margin-top: 2px; }
+  .case-card-doc__body { padding: 9px 10px; }
+  .kv-row { display: flex; gap: 5px; padding: 2px 0; }
+  .kv-row .k { color: #889; width: 74px; flex: none; }
   .kv-row .v { color: #223; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .cc-divider { border-top: 1px dashed #dde3ea; margin: 4px 0; }
-  .cc-problem { font-weight: 800; font-size: 8px; color: #16294D; margin-bottom: 2px; }
-  .cc-result-box { background: #fff8e1; border: 1px solid #f0e0a8; border-radius: 5px; padding: 4px 6px; margin-top: 3px; }
-  .cc-result-box .rr { font-size: 6.8px; color: #6b5c1f; padding: 1px 0; }
+  .cc-divider { border-top: 1px dashed #dde3ea; margin: 6px 0; }
+  .cc-problem { font-weight: 800; font-size: 9.2px; color: #16294D; margin-bottom: 3px; }
+  .cc-result-box { background: #fff8e1; border: 1px solid #f0e0a8; border-radius: 6px; padding: 6px 8px; margin-top: 4px; }
+  .cc-result-box .rr { font-size: 7.6px; color: #6b5c1f; padding: 1.5px 0; }
   .cc-result-box .rr b { color: #16294D; }
 
   .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .two-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .chk-item { display: flex; gap: 5px; align-items: flex-start; font-size: 8px; line-height: 1.5; margin-bottom: 3px; }
   .chk-item svg { width: 10px; height: 10px; flex: none; margin-top: 1px; }
   .chk-item.done svg { color: #1e8e5a; } .chk-item.prevent svg { color: #1E4FA0; } .chk-item.find svg { color: #c9821a; }
@@ -567,7 +568,7 @@
         '<div class="ev-card"><div class="ic tone-green">' + window.icon("target", 13) + '</div><div class="l">Success Rate</div><div class="v">' + (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—") + '</div></div>' +
         '<div class="ev-card"><div class="ic tone-red">' + window.icon("trendingDown", 13) + '</div><div class="l">NG Reduced</div><div class="v" style="color:#c93a2e;">' + rep.engineering.ngReduction + '</div></div>' +
         '<div class="ev-card"><div class="ic tone-amber">' + window.icon("clock", 13) + '</div><div class="l">Downtime Cut</div><div class="v" style="color:#c9821a;">' + rep.engineering.downtimeReduction + '</div></div>' +
-        '<div class="ev-card"><div class="ic tone-green">' + window.icon("coin", 13) + '</div><div class="l">Cost Saving</div><div class="v">' + (rep.engineering.costSaving ? "฿" + rep.engineering.costSaving.toLocaleString() : "—") + '</div></div>' +
+        '<div class="ev-card"><div class="ic tone-green">' + window.icon("coin", 13) + '</div><div class="l">Cost Saving</div><div class="v">฿' + rep.engineering.costSaving.toLocaleString() + '</div></div>' +
         '</div></div>';
       html += '</div>';
     }
@@ -582,30 +583,23 @@
         '</div></div>';
     }
 
-    var page1 = html + "</div>";
-    var pages = [page1];
-
+    // One continuous page: everything flows in a single .a4-page (grows taller than a
+    // physical A4 sheet in the on-screen preview) — matches "ปรับให้อยู่ในหน้าเดียวกัน".
+    // Only the PDF export (which must respect real A4 bounds) paginates, and only when
+    // content genuinely overflows the printable area.
     if ($("incCases").checked) {
       var selected = rep.cases.filter(function (c) { return !selectedCaseIds || selectedCaseIds.indexOf(c.id) !== -1; });
-      var rowsPerPage = colsPerRow >= 4 ? 2 : (colsPerRow === 3 ? 2 : 3);
-      var perPage = colsPerRow * rowsPerPage;
-      var headerSnippet = '<div class="doc-header"><div class="doc-header__brand"><div class="doc-header__mark">' + mark + '</div><div class="txt"><b>' + esc(company) + '</b><span>' + esc(dept) + '</span></div></div><div class="doc-header__title"><div class="title nv">DAILY ENGINEERING REPORT</div></div></div>';
+      html += '<div class="sec">' + headEl("Daily Engineering Activities (Problem Detail)", "folder");
       if (!selected.length) {
-        pages.push('<div class="a4-page">' + headerSnippet + '<div class="sec">' + headEl("Daily Engineering Activities", "folder") + '<div style="text-align:center;color:#aab;padding:30px 0;">No cases selected for this report</div></div></div>');
+        html += '<div style="text-align:center;color:#aab;padding:30px 0;">No cases selected for this report</div>';
       } else {
-        for (var i = 0; i < selected.length; i += perPage) {
-          var chunk = selected.slice(i, i + perPage);
-          var pg = '<div class="a4-page">' + headerSnippet + '<div class="sec">';
-          if (i === 0) pg += headEl("Daily Engineering Activities (Problem Detail)", "folder");
-          pg += '<div class="case-grid cols-' + colsPerRow + '">' + chunk.map(function (c, idx) { return caseCardHtml(c, i + idx + 1); }).join("") + '</div></div></div>';
-          pages.push(pg);
-        }
+        html += '<div class="case-grid cols-' + colsPerRow + '">' + selected.map(function (c, idx) { return caseCardHtml(c, idx + 1); }).join("") + '</div>';
       }
+      html += '</div>';
     }
 
     if ($("incImprovement").checked || $("incAttachments").checked) {
-      var headerSnippet2 = '<div class="doc-header"><div class="doc-header__brand"><div class="doc-header__mark">' + mark + '</div><div class="txt"><b>' + esc(company) + '</b><span>' + esc(dept) + '</span></div></div><div class="doc-header__title"><div class="title nv">DAILY ENGINEERING REPORT</div></div></div>';
-      var pE = '<div class="a4-page">' + headerSnippet2;
+      var pE = "";
       if ($("incImprovement").checked) {
         var im = rep.improvement;
         pE += '<div class="sec">' + headEl("Engineering Improvement Summary", "trendingUp") + '<div class="ev-grid" style="grid-template-columns:repeat(5,1fr);">' +
@@ -613,16 +607,14 @@
           '<div class="ev-card"><div class="ic tone-amber">' + window.icon("clock", 13) + '</div><div class="l">Downtime Reduction</div><div class="v">' + im.downtimeReduction + '</div></div>' +
           '<div class="ev-card"><div class="ic tone-green">' + window.icon("checkCircle", 13) + '</div><div class="l">Yield Improvement</div><div class="v">' + (im.yieldBefore != null && im.yieldAfter != null ? (im.yieldAfter - im.yieldBefore >= 0 ? "+" : "") + Math.round((im.yieldAfter - im.yieldBefore) * 10) / 10 + "%" : "—") + '</div></div>' +
           '<div class="ev-card"><div class="ic tone-blue">' + window.icon("trendingDown", 13) + '</div><div class="l">Scrap Reduction</div><div class="v">' + im.scrapReduction + '</div></div>' +
-          '<div class="ev-card"><div class="ic tone-green">' + window.icon("coin", 13) + '</div><div class="l">Cost Saving</div><div class="v">' + (im.costSaving ? "฿" + im.costSaving.toLocaleString() : "—") + '</div></div>' +
+          '<div class="ev-card"><div class="ic tone-green">' + window.icon("coin", 13) + '</div><div class="l">Cost Saving</div><div class="v">฿' + im.costSaving.toLocaleString() + '</div></div>' +
           '</div></div>';
       }
 
       var resolved = rep.cases;
-      pE += '<div class="sec"><div class="three-col">';
+      pE += '<div class="sec"><div class="two-col">';
       pE += '<div><div class="sec-h" style="margin-bottom:6px;">' + window.icon("checkCircle", 13) + '<span class="t">Corrective Actions</span></div>' +
-        (resolved.filter(function (c) { return c.corrective !== "—"; }).length ? resolved.filter(function (c) { return c.corrective !== "—"; }).slice(0, 6).map(function (c) { return '<div class="chk-item done">' + window.icon("check", 10) + '<span>' + esc(c.corrective) + ' <span style="color:#aab;">(' + esc(c.owner) + ')</span></span></div>'; }).join("") : '<div style="color:#aab;font-size:8px;">No completed actions today</div>') + '</div>';
-      pE += '<div><div class="sec-h" style="margin-bottom:6px;">' + window.icon("circleDot", 13) + '<span class="t">Preventive Actions</span></div>' +
-        (resolved.filter(function (c) { return c.preventive !== "—"; }).length ? resolved.filter(function (c) { return c.preventive !== "—"; }).slice(0, 6).map(function (c) { return '<div class="prevent-card"><span>' + esc(c.preventive) + '</span><span class="status-tag implemented">Implemented</span></div>'; }).join("") : '<div style="color:#aab;font-size:8px;">No preventive actions logged today</div>') + '</div>';
+        (resolved.filter(function (c) { return c.corrective !== "—"; }).length ? resolved.filter(function (c) { return c.corrective !== "—"; }).slice(0, 8).map(function (c) { return '<div class="chk-item done">' + window.icon("check", 10) + '<span>' + esc(c.corrective) + ' <span style="color:#aab;">(' + esc(c.owner) + ')</span></span></div>'; }).join("") : '<div style="color:#aab;font-size:8px;">No completed actions today</div>') + '</div>';
       var findings = [];
       if (rep.byRootCause.length) findings.push("Most frequent root cause today: " + rep.byRootCause[0].name + " (" + rep.byRootCause[0].n + " cases) — recommend continued monitoring.");
       if (rep.byLine.length) findings.push("Production Line " + rep.byLine[0].name + " shows the highest concentration of issues today.");
@@ -637,11 +629,10 @@
         pE += rep.attachments.length ? '<div class="attach-grid-doc">' + rep.attachments.slice(0, 12).map(function (a) { return '<div><div class="attach-thumb-doc"><img src="' + a.url + '"></div><div class="attach-cap">' + esc(a.label) + '<br>' + esc((a.sub || "").slice(0, 24)) + '</div></div>'; }).join("") + '</div>' : '<div style="text-align:center;color:#aab;padding:20px 0;">No attachments for this date</div>';
         pE += '</div>';
       }
-      pE += "</div>";
-      pages.push(pE);
+      html += pE;
     }
 
-    $("docPreview").innerHTML = pages.join("");
+    $("docPreview").innerHTML = html + "</div>";
     var pageEls = document.querySelectorAll(".a4-page");
     pageEls.forEach(function (pg, i) {
       var footer = document.createElement("div"); footer.className = "doc-footer";
@@ -779,7 +770,7 @@
       innerY += photoH + 5;
     }
 
-    function kv(k, v, ky) { doc.setFontSize(5.6); doc.setTextColor(140, 150, 160); doc.text(k, x + 2, ky); doc.setTextColor(30, 30, 30); var vv = doc.splitTextToSize(String(v || "—"), w - 24)[0]; doc.text(vv, x + 24, ky); }
+    function kv(k, v, ky) { doc.setFontSize(5.8); doc.setTextColor(140, 150, 160); doc.text(k, x + 2, ky); doc.setTextColor(30, 30, 30); var vv = doc.splitTextToSize(String(v || "—"), w - 27)[0]; doc.text(vv, x + 26, ky); }
     kv("Family", c.family, innerY); innerY += 3.4;
     kv("Model", c.model, innerY); innerY += 3.4;
     kv("Line", c.line, innerY); innerY += 3.4;
@@ -820,6 +811,8 @@
       var prepared = $("fPreparedBy").value || "—";
       var revision = $("fRevision").value || "1.0", conf = $("fConfidential").value;
       var pageW = 210, marginX = 12, y = 14, curPage = 0;
+      var pageBottom = 274;
+      function ensureSpace(needed) { if (y + needed > pageBottom) { newPage(false); y += 2; } }
 
       function header(withTitle) {
         if (logoDataUrl) { try { doc.addImage(logoDataUrl, "PNG", marginX, 8, 11, 11); } catch (e) {} }
@@ -875,6 +868,7 @@
       }
 
       if ($("incKpi").checked) {
+        ensureSpace(40);
         sec++;
         var colW2 = (pageW - marginX * 2 - 4) / 2;
         var yStart = y;
@@ -895,7 +889,7 @@
           doc.setFontSize(8.5); doc.setTextColor(22, 41, 77); doc.text("ENGINEERING VALUE CONTRIBUTION", ex + 6, y);
         }
         sec++;
-        var evItems = [["users", "Activities", rep.engineering.casesHandled, [30, 79, 160]], ["wrench", "Resolved", rep.engineering.casesResolved, [30, 79, 160]], ["target", "Success Rate", (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—"), [30, 142, 90]], ["trendingDown", "NG Reduced", rep.engineering.ngReduction, [201, 58, 46]], ["clock", "Downtime Cut", rep.engineering.downtimeReduction, [201, 130, 26]], ["coin", "Cost Saving", (rep.engineering.costSaving ? "฿" + rep.engineering.costSaving.toLocaleString() : "—"), [30, 142, 90]]];
+        var evItems = [["users", "Activities", rep.engineering.casesHandled, [30, 79, 160]], ["wrench", "Resolved", rep.engineering.casesResolved, [30, 79, 160]], ["target", "Success Rate", (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—"), [30, 142, 90]], ["trendingDown", "NG Reduced", rep.engineering.ngReduction, [201, 58, 46]], ["clock", "Downtime Cut", rep.engineering.downtimeReduction, [201, 130, 26]], ["coin", "Cost Saving", "฿" + rep.engineering.costSaving.toLocaleString(), [30, 142, 90]]];
         var evColW = (colW2 - 8) / 3;
         evItems.forEach(function (it, i) {
           var col = i % 3, row = Math.floor(i / 3);
@@ -908,6 +902,7 @@
       }
 
       if ($("incCharts").checked) {
+        ensureSpace(48);
         sec++; secTitle(sec, "Problem Overview");
         var cw = (pageW - marginX * 2 - 12) / 4;
         var c1 = marginX, c2 = marginX + cw + 4, c3 = marginX + (cw + 4) * 2, c4 = marginX + (cw + 4) * 3;
@@ -922,37 +917,46 @@
         y += 44;
       }
 
-      // Case cards
+      // Case cards — space-aware: only starts a new PDF page when content genuinely
+      // overflows the remaining A4 area, rather than forcing one section per page.
+
       if ($("incCases").checked) {
         var selected = rep.cases.filter(function (c) { return !selectedCaseIds || selectedCaseIds.indexOf(c.id) !== -1; });
-        var cols = colsPerRow, rowsPerPage = cols >= 4 ? 2 : (cols === 3 ? 2 : 3);
+        var cols = colsPerRow;
         var cardW = (pageW - marginX * 2 - (cols - 1) * 3) / cols;
-        var cardH = cols >= 4 ? 82 : (cols === 3 ? 92 : 105);
+        var cardH = cols >= 4 ? 78 : (cols === 3 ? 90 : 104);
         var caseSec = ++sec;
+        ensureSpace(14);
         if (!selected.length) {
-          newPage(false); secTitle(caseSec, "Daily Engineering Activities");
+          secTitle(caseSec, "Daily Engineering Activities");
           doc.setFontSize(8); doc.setTextColor(160, 170, 180); doc.text("No cases selected for this report", marginX, y);
         } else {
-          var perPage = cols * rowsPerPage;
-          for (var i = 0; i < selected.length; i += perPage) {
-            newPage(false);
-            if (i === 0) secTitle(caseSec, "Daily Engineering Activities (Problem Detail)"); else y += 2;
-            var chunk = selected.slice(i, i + perPage);
-            chunk.forEach(function (c, idx) {
-              var col = idx % cols, row = Math.floor(idx / cols);
+          secTitle(caseSec, "Daily Engineering Activities (Problem Detail)");
+          var idx = 0;
+          while (idx < selected.length) {
+            var rowsFit = Math.floor(((pageBottom - y) + 3) / (cardH + 3));
+            if (rowsFit < 1) { newPage(false); y += 2; rowsFit = Math.floor(((pageBottom - y) + 3) / (cardH + 3)); if (rowsFit < 1) rowsFit = 1; }
+            var remainingRows = Math.ceil((selected.length - idx) / cols);
+            var thisRows = Math.min(rowsFit, remainingRows);
+            var take = Math.min(cols * thisRows, selected.length - idx);
+            var chunk = selected.slice(idx, idx + take);
+            chunk.forEach(function (c, ci) {
+              var col = ci % cols, row = Math.floor(ci / cols);
               var cx = marginX + col * (cardW + 3), cy = y + row * (cardH + 3);
-              pdfCaseCard(doc, c, i + idx + 1, cx, cy, cardW, cardH);
+              pdfCaseCard(doc, c, idx + ci + 1, cx, cy, cardW, cardH);
             });
+            y += thisRows * (cardH + 3);
+            idx += take;
           }
         }
       }
 
       if ($("incImprovement").checked || $("incAttachments").checked) {
-        newPage(false);
         if ($("incImprovement").checked) {
+          ensureSpace(26);
           sec++; secTitle(sec, "Engineering Improvement Summary");
           var im = rep.improvement;
-          var imItems = [["trendingDown", "NG Reduction", im.ngReduction, [201, 58, 46]], ["clock", "Downtime Reduction", im.downtimeReduction, [201, 130, 26]], ["checkCircle", "Yield Improvement", (im.yieldBefore != null && im.yieldAfter != null ? (im.yieldAfter - im.yieldBefore >= 0 ? "+" : "") + Math.round((im.yieldAfter - im.yieldBefore) * 10) / 10 + "%" : "—"), [30, 142, 90]], ["trendingDown", "Scrap Reduction", im.scrapReduction, [30, 79, 160]], ["coin", "Cost Saving", (im.costSaving ? "฿" + im.costSaving.toLocaleString() : "—"), [30, 142, 90]]];
+          var imItems = [["trendingDown", "NG Reduction", im.ngReduction, [201, 58, 46]], ["clock", "Downtime Reduction", im.downtimeReduction, [201, 130, 26]], ["checkCircle", "Yield Improvement", (im.yieldBefore != null && im.yieldAfter != null ? (im.yieldAfter - im.yieldBefore >= 0 ? "+" : "") + Math.round((im.yieldAfter - im.yieldBefore) * 10) / 10 + "%" : "—"), [30, 142, 90]], ["trendingDown", "Scrap Reduction", im.scrapReduction, [30, 79, 160]], ["coin", "Cost Saving", "฿" + im.costSaving.toLocaleString(), [30, 142, 90]]];
           var imColW = (pageW - marginX * 2 - 16) / 5;
           imItems.forEach(function (it, i) {
             var bx = marginX + i * (imColW + 4);
@@ -962,20 +966,16 @@
           });
           y += 20;
 
-          sec++; var yy0 = y; secTitle(sec, "Corrective / Preventive / Findings");
-          var cW = (pageW - marginX * 2 - 8) / 3;
+          ensureSpace(30);
+          sec++; secTitle(sec, "Corrective Actions & Key Engineering Insights");
+          var cW = (pageW - marginX * 2 - 4) / 2;
           doc.setFontSize(6.5); doc.setFont(undefined, "normal"); doc.setTextColor(34, 34, 51);
-          var correctiveList = rep.cases.filter(function (c) { return c.corrective !== "—"; }).slice(0, 6);
+          var correctiveList = rep.cases.filter(function (c) { return c.corrective !== "—"; }).slice(0, 8);
           var yA = y;
           doc.setFont(undefined, "bold"); doc.text("Corrective Actions", marginX, yA); doc.setFont(undefined, "normal"); yA += 4;
           (correctiveList.length ? correctiveList : [{ corrective: "No completed actions today", owner: "" }]).forEach(function (c) { var l = doc.splitTextToSize("• " + c.corrective, cW - 2); doc.text(l, marginX, yA); yA += l.length * 3 + 1; });
 
-          var yB = y; var x2c = marginX + cW + 4;
-          doc.setFont(undefined, "bold"); doc.text("Preventive Actions", x2c, yB); doc.setFont(undefined, "normal"); yB += 4;
-          var preventiveList = rep.cases.filter(function (c) { return c.preventive !== "—"; }).slice(0, 6);
-          (preventiveList.length ? preventiveList : [{ preventive: "No preventive actions logged today" }]).forEach(function (c) { var l = doc.splitTextToSize("• " + c.preventive, cW - 2); doc.text(l, x2c, yB); yB += l.length * 3 + 1; });
-
-          var yC = y; var x3c = marginX + (cW + 4) * 2;
+          var yC = y; var x3c = marginX + cW + 4;
           doc.setFont(undefined, "bold"); doc.text("Key Engineering Insights", x3c, yC); doc.setFont(undefined, "normal"); yC += 4;
           var findings2 = [];
           if (rep.byRootCause.length) findings2.push("Most frequent root cause: " + rep.byRootCause[0].name + " (" + rep.byRootCause[0].n + " cases).");
@@ -983,9 +983,10 @@
           if (!findings2.length) findings2.push("No significant risk points identified today.");
           findings2.forEach(function (f) { var l = doc.splitTextToSize("• " + f, cW - 2); doc.text(l, x3c, yC); yC += l.length * 3 + 1; });
 
-          y = Math.max(yA, yB, yC) + 4;
+          y = Math.max(yA, yC) + 4;
         }
         if ($("incAttachments").checked) {
+          ensureSpace(14);
           sec++; secTitle(sec, "Attachments");
           if (rep.attachments.length) {
             doc.setFontSize(7); doc.setTextColor(80, 90, 100);

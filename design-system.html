@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design System — Engineering Daily Issue Log</title>
+<link rel="stylesheet" href="assets/design-system.css">
+<script src="assets/icons.js"></script>
+<style>
+  body { padding: 0; }
+  .dsg-wrap { max-width: 1180px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) 100px; }
+  .dsg-head { margin-bottom: var(--sp-10); }
+  .dsg-head .eyebrow { font-size: var(--fs-12); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: var(--sp-2); }
+  .dsg-head h1 { font-size: var(--fs-32); }
+  .dsg-head p { color: var(--ink-secondary); font-size: var(--fs-14); max-width: 70ch; margin-top: var(--sp-2); }
+  .dsg-section { margin-bottom: var(--sp-12); scroll-margin-top: 20px; }
+  .dsg-section h2 { font-size: var(--fs-20); margin-bottom: var(--sp-1); }
+  .dsg-section .desc { font-size: var(--fs-13); color: var(--ink-muted); margin-bottom: var(--sp-5); max-width: 70ch; }
+  .swatch-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px,1fr)); gap: var(--sp-2); }
+  .swatch { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); }
+  .swatch__color { height: 56px; }
+  .swatch__label { padding: 6px 8px; font-size: var(--fs-11); font-family: var(--font-mono); background: var(--surface); }
+  .type-row { display: flex; align-items: baseline; gap: var(--sp-4); padding: var(--sp-3) 0; border-bottom: 1px solid var(--line); }
+  .type-row .tag { font-family: var(--font-mono); font-size: var(--fs-11); color: var(--ink-muted); width: 90px; flex: none; }
+  .flex-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; align-items: center; }
+  .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px,1fr)); gap: var(--sp-2); }
+  .icon-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+  .icon-cell svg { width: 22px; height: 22px; color: var(--ink-secondary); }
+  .icon-cell span { font-size: 10px; font-family: var(--font-mono); color: var(--ink-muted); }
+  .demo-nav { width: 210px; }
+  .glass-demo { position: relative; height: 180px; border-radius: var(--r-lg); overflow: hidden; background: linear-gradient(135deg, var(--a-500), var(--cat-2), var(--s-warning)); }
+  .glass-demo .glass { position: absolute; inset: var(--sp-5); border-radius: var(--r-lg); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="dsg-wrap">
+  <div class="dsg-head">
+    <div class="eyebrow">Corporate Design System · v2</div>
+    <h1>Design System</h1>
+    <p>รากฐานการออกแบบใหม่ของ Engineering Daily Issue Log — อ้างอิงแนวคิด Layout/Card/Data Visualization จาก Microsoft Fluent, SAP Fiori, IBM Carbon, Linear, Notion, Power BI โดยไม่คัดลอกองค์ประกอบที่มีลิขสิทธิ์ ใช้หน้านี้ตรวจสอบก่อนเริ่ม Rollout ไปหน้าอื่นทั้งหมด</p>
+  </div>
+
+  <section class="dsg-section" id="color">
+    <h2>สี (Color)</h2>
+    <div class="desc">Navy Blue เป็นสีหลัก, White/Light Gray เป็นพื้นผิว, Green/Orange/Red สำหรับสถานะ</div>
+    <h3 style="margin-bottom:8px;">Accent — Navy</h3>
+    <div class="swatch-row" style="margin-bottom:20px;" id="swAccent"></div>
+    <h3 style="margin-bottom:8px;">Neutral</h3>
+    <div class="swatch-row" style="margin-bottom:20px;" id="swNeutral"></div>
+    <h3 style="margin-bottom:8px;">Status</h3>
+    <div class="swatch-row" style="margin-bottom:20px;" id="swStatus"></div>
+    <h3 style="margin-bottom:8px;">Categorical (Chart)</h3>
+    <div class="swatch-row" id="swCat"></div>
+  </section>
+
+  <section class="dsg-section" id="type">
+    <h2>Typography</h2>
+    <div class="desc">Inter — ใช้ทั้ง Heading และ Body แยกลำดับชั้นด้วยขนาด/น้ำหนัก ไม่ใช้ตัวเอนแบบเอกสารทางการเดิม</div>
+    <div class="type-row"><span class="tag">32 / 800</span><span style="font-size:32px;font-weight:800;">Manufacturing Engineering Platform</span></div>
+    <div class="type-row"><span class="tag">24 / 700</span><span style="font-size:24px;font-weight:700;">Production Trend (7 Days)</span></div>
+    <div class="type-row"><span class="tag">18 / 700</span><span style="font-size:18px;font-weight:700;">Case Detail — ENG-2026-0714-001</span></div>
+    <div class="type-row"><span class="tag">15 / 600</span><span style="font-size:15px;font-weight:600;">Today's Mission</span></div>
+    <div class="type-row"><span class="tag">14 / 400</span><span style="font-size:14px;">ข้อความเนื้อหาปกติ ใช้อ่านรายละเอียดทั่วไปในระบบ</span></div>
+    <div class="type-row"><span class="tag">12 / 600</span><span style="font-size:12px;font-weight:600;color:var(--ink-muted);">LABEL / CAPTION UPPERCASE</span></div>
+    <div class="type-row"><span class="tag">mono 12</span><span class="mono" style="font-size:12px;">ENG-2026-0714-001 · 14/07/2026 08:30</span></div>
+  </section>
+
+  <section class="dsg-section" id="icons">
+    <h2>Icon System</h2>
+    <div class="desc">เส้นล้วน (line icon) 24×24, stroke 2px — สไตล์เดียวกับ Tabler / Lucide / Heroicons ไม่ใช้ Emoji ที่ใดในระบบอีกต่อไป</div>
+    <div class="icon-grid" id="iconGrid"></div>
+  </section>
+
+  <section class="dsg-section" id="buttons">
+    <h2>Buttons</h2>
+    <div class="flex-row">
+      <button class="btn primary" id="bPrimary"></button>
+      <button class="btn secondary">Secondary</button>
+      <button class="btn ghost" id="bGhost"></button>
+      <button class="btn danger" id="bDanger"></button>
+      <button class="btn primary sm">Small</button>
+      <button class="btn secondary" disabled>Disabled</button>
+    </div>
+  </section>
+
+  <section class="dsg-section" id="badges">
+    <h2>Badges &amp; Status</h2>
+    <div class="flex-row" style="margin-bottom:14px;">
+      <span class="badge success">Closed</span>
+      <span class="badge warning">In Progress</span>
+      <span class="badge critical">Overdue</span>
+      <span class="badge info">Trial</span>
+      <span class="badge neutral">Draft</span>
+    </div>
+    <div class="flex-row">
+      <span class="status-dot success">Closed</span>
+      <span class="status-dot warning">Waiting</span>
+      <span class="status-dot critical">Overdue</span>
+      <span class="status-dot neutral">Not started</span>
+    </div>
+  </section>
+
+  <section class="dsg-section" id="kpi">
+    <h2>KPI Tile</h2>
+    <div class="desc">ไอคอนสถานะ + ค่าหลัก + แนวโน้มเทียบช่วงก่อนหน้า</div>
+    <div class="kpi-grid" id="kpiDemo"></div>
+  </section>
+
+  <section class="dsg-section" id="cards">
+    <h2>Cards &amp; Table</h2>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); margin-bottom:20px;">
+      <div class="card card__pad">
+        <div class="card__head"><div><div class="card__title">Today's Mission</div><div class="card__sub">5 รายการ</div></div></div>
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+          <label style="display:flex; gap:8px; align-items:center; font-weight:400;"><input type="checkbox">ตรวจสอบ RL NG Line 2</label>
+          <label style="display:flex; gap:8px; align-items:center; font-weight:400;"><input type="checkbox" checked>Trial Parameter Polishing</label>
+          <label style="display:flex; gap:8px; align-items:center; font-weight:400;"><input type="checkbox">Machine PM Check</label>
+        </div>
+      </div>
+      <div class="card card__pad glass-demo" style="padding:0;">
+        <div class="glass">Glass Effect (topbar / overlay ใช้เท่าที่จำเป็น)</div>
+      </div>
+    </div>
+    <div class="ds-table-wrap">
+      <table class="ds-table">
+        <thead><tr><th>Case No.</th><th>Issue</th><th>Owner</th><th>Due Date</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">ENG-2026-0713-008</td><td>Trial Polishing Parameter</td><td>หัตยา w.</td><td>15 Jul 2026</td><td><span class="status-dot warning">In Progress</span></td></tr>
+          <tr><td class="mono">ENG-2026-0712-011</td><td>Supplier Response (Ferrule)</td><td>หัตยา w.</td><td>16 Jul 2026</td><td><span class="status-dot neutral">Waiting</span></td></tr>
+          <tr><td class="mono">ENG-2026-0711-006</td><td>Machine Maintenance (Polisher)</td><td>ช่างเทคนิค</td><td>14 Jul 2026</td><td><span class="status-dot critical">Overdue</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="dsg-section" id="flow">
+    <h2>Stepper &amp; Timeline</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-6);">
+      <div class="card card__pad">
+        <div class="card__title" style="margin-bottom:12px;">New RCA — Stepper</div>
+        <div class="stepper">
+          <div class="stepper__step active"><div class="stepper__num">1</div><div class="stepper__label">ข้อมูลพื้นฐาน</div></div>
+          <div class="stepper__line"></div>
+          <div class="stepper__step"><div class="stepper__num">2</div><div class="stepper__label">การวิเคราะห์</div></div>
+          <div class="stepper__line"></div>
+          <div class="stepper__step"><div class="stepper__num">3</div><div class="stepper__label">แนบเอกสาร</div></div>
+        </div>
+      </div>
+      <div class="card card__pad">
+        <div class="card__title" style="margin-bottom:12px;">Case Timeline</div>
+        <div class="tl">
+          <div class="tl__item"><div class="tl__rail"><div class="tl__dot"></div><div class="tl__stem"></div></div><div class="tl__body"><div class="tl__time">06:30</div><div class="tl__text">แจ้งปัญหา Return Loss สูง</div><div class="tl__by">โดย หัตยา พรมวงษ์</div></div></div>
+          <div class="tl__item"><div class="tl__rail"><div class="tl__dot"></div><div class="tl__stem"></div></div><div class="tl__body"><div class="tl__time">09:10</div><div class="tl__text">วิเคราะห์สาเหตุเบื้องต้น — Polishing Parameter ไม่เหมาะสม</div><div class="tl__by">โดย หัตยา พรมวงษ์</div></div></div>
+          <div class="tl__item"><div class="tl__rail"><div class="tl__dot"></div></div><div class="tl__body"><div class="tl__time">10:20</div><div class="tl__text">ยืนยันผล — Return Loss ปกติ</div><div class="tl__by">โดย หัตยา พรมวงษ์</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dsg-section" id="media">
+    <h2>Before / After &amp; Photo Gallery</h2>
+    <div class="ba-compare" style="max-width:520px; margin-bottom:16px;">
+      <div class="ba-compare__pane"><div class="ba-compare__label">Before</div><div class="ba-compare__result fail">Fail</div></div>
+      <div class="ba-compare__pane"><div class="ba-compare__label">After</div><div class="ba-compare__result pass">Pass</div></div>
+    </div>
+    <div class="photo-grid" style="max-width:520px;">
+      <div class="photo-thumb"></div><div class="photo-thumb"></div><div class="photo-thumb"></div><div class="photo-thumb"></div>
+    </div>
+  </section>
+
+  <section class="dsg-section" id="shell">
+    <h2>App Shell (Sidebar Preview)</h2>
+    <div class="desc">โครง Sidebar + Mode Selector ที่จะใช้จริงในหน้า Dashboard (Phase B)</div>
+    <div class="ds-sidebar demo-nav" style="height:auto; position:static;">
+      <div class="ds-sidebar__brand">
+        <div class="mark">E</div>
+        <div><div class="name">Engineering Log</div><div class="sub">Manufacturing Eng.</div></div>
+      </div>
+      <div class="ds-nav">
+        <a href="#" class="active" id="navDash"></a>
+        <a href="#" id="navRca"></a>
+        <a href="#" id="navCase"></a>
+        <a href="#" id="navReport"></a>
+        <a href="#" id="navSettings"></a>
+      </div>
+      <div style="padding: var(--sp-3);">
+        <div class="mode-select">
+          <div class="mode-select__label">Mode</div>
+          <label class="mode-select__opt active"><input type="radio" name="mode" checked>Engineer Mode</label>
+          <label class="mode-select__opt"><input type="radio" name="mode">Manager Mode</label>
+          <label class="mode-select__opt"><input type="radio" name="mode">Presentation Mode</label>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+
+  // Color swatches
+  var accentSteps = ["50","100","200","300","400","500","600","700","800"];
+  var accentEl = document.getElementById("swAccent");
+  accentSteps.forEach(function (s) {
+    var sw = el("div", "swatch");
+    sw.appendChild(el("div", "swatch__color")).style.background = "var(--a-" + s + ")";
+    sw.appendChild(el("div", "swatch__label", "a-" + s));
+    accentEl.appendChild(sw);
+  });
+  var neutralSteps = ["0","25","50","100","150","200","300","400","500","600","700","800","900"];
+  var neutralEl = document.getElementById("swNeutral");
+  neutralSteps.forEach(function (s) {
+    var sw = el("div", "swatch");
+    sw.appendChild(el("div", "swatch__color")).style.background = "var(--n-" + s + ")";
+    sw.appendChild(el("div", "swatch__label", "n-" + s));
+    neutralEl.appendChild(sw);
+  });
+  var statusList = [["success","s-success"],["warning","s-warning"],["critical","s-critical"],["info","s-info"]];
+  var statusEl = document.getElementById("swStatus");
+  statusList.forEach(function (s) {
+    var sw = el("div", "swatch");
+    sw.appendChild(el("div", "swatch__color")).style.background = "var(--" + s[1] + ")";
+    sw.appendChild(el("div", "swatch__label", s[0]));
+    statusEl.appendChild(sw);
+  });
+  var catEl = document.getElementById("swCat");
+  for (var i = 1; i <= 7; i++) {
+    var sw = el("div", "swatch");
+    sw.appendChild(el("div", "swatch__color")).style.background = "var(--cat-" + i + ")";
+    sw.appendChild(el("div", "swatch__label", "cat-" + i));
+    catEl.appendChild(sw);
+  }
+
+  // Icon grid
+  var iconNames = Object.keys(window.ICONS);
+  var iconGrid = document.getElementById("iconGrid");
+  iconNames.forEach(function (name) {
+    var cell = el("div", "icon-cell");
+    cell.innerHTML = window.icon(name, 22) + "<span>" + name + "</span>";
+    iconGrid.appendChild(cell);
+  });
+
+  // Buttons with icons
+  document.getElementById("bPrimary").innerHTML = window.icon("plus", 16) + "New Case";
+  document.getElementById("bGhost").innerHTML = window.icon("refresh", 16) + "Refresh";
+  document.getElementById("bDanger").innerHTML = window.icon("trash", 16) + "Delete";
+
+  // Nav icons
+  document.getElementById("navDash").innerHTML = window.icon("layoutDashboard", 18) + "Dashboard";
+  document.getElementById("navRca").innerHTML = window.icon("plus", 18) + "New RCA";
+  document.getElementById("navCase").innerHTML = window.icon("folder", 18) + "Case Management";
+  document.getElementById("navReport").innerHTML = window.icon("fileText", 18) + "Reports";
+  document.getElementById("navSettings").innerHTML = window.icon("settings", 18) + "Settings";
+
+  // KPI demo
+  var kpis = [
+    { label: "Production (PCS)", value: "4,850", sub: "Plan 5,000 · 97.0%", tone: "accent", icon: "factory", delta: null },
+    { label: "NG Quantity (PCS)", value: "280", sub: "5.8%", tone: "critical", icon: "alertTriangle", delta: "down", deltaText: "-12.3%" },
+    { label: "Open Cases", value: "5", sub: "จากเมื่อวาน", tone: "warning", icon: "clock", delta: "down", deltaText: "-2" },
+    { label: "Closed Cases", value: "10", sub: "จากเมื่อวาน", tone: "success", icon: "checkCircle", delta: "up", deltaText: "+3" },
+    { label: "Downtime (min)", value: "75", sub: "", tone: "warning", icon: "clock", delta: "down", deltaText: "-60 min" },
+    { label: "Cost Saving (THB)", value: "8,200", sub: "", tone: "success", icon: "trendingUp", delta: "up", deltaText: "+15.6%" }
+  ];
+  var kpiGrid = document.getElementById("kpiDemo");
+  kpis.forEach(function (k) {
+    var tile = el("div", "kpi-tile");
+    var deltaHtml = "";
+    if (k.delta) {
+      deltaHtml = '<div class="kpi-tile__delta ' + k.delta + '">' + window.icon(k.delta === "up" ? "trendingUp" : "trendingDown", 13) + k.deltaText + "</div>";
+    }
+    tile.innerHTML =
+      '<div class="kpi-tile__top"><div class="icon-badge tone-' + k.tone + '">' + window.icon(k.icon, 20) + '</div><div class="kpi-tile__label">' + k.label + "</div></div>" +
+      '<div class="kpi-tile__value tabular">' + k.value + "</div>" +
+      (k.sub ? '<div class="kpi-tile__sub">' + k.sub + "</div>" : "") +
+      deltaHtml;
+    kpiGrid.appendChild(tile);
+  });
+})();
+</script>
+</body>
+</html>

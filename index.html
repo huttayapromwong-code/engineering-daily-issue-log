@@ -340,7 +340,8 @@
   .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-secondary); margin-bottom: 5px; }
   .field input, .field select, .field textarea { width: 100%; }
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
+  .field-row.field-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 480px) { .field-row, .field-row.field-row-3 { grid-template-columns: 1fr; } }
   .modal__foot { padding: 16px 22px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: var(--surface); }
   .req::after { content: " *"; color: var(--critical); }
   .photo-upload-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -569,7 +570,7 @@
         <label>รายละเอียดปัญหา</label>
         <textarea id="fDescription" placeholder="อธิบายอาการ/ผลกระทบของปัญหาโดยละเอียด..." style="min-height:70px"></textarea>
       </div>
-      <div class="field-row">
+      <div class="field-row field-row-3">
         <div class="field">
           <label class="req">Production Line</label>
           <input type="text" id="fLine2" placeholder="เช่น SMT Line 3">
@@ -577,6 +578,14 @@
         <div class="field">
           <label>Machine (เครื่องจักร)</label>
           <input type="text" id="fMachine" placeholder="เช่น Reflow Oven #2">
+        </div>
+        <div class="field">
+          <label>กะ (Shift)</label>
+          <select id="fShift">
+            <option value="">— ไม่ระบุ —</option>
+            <option value="Day">กลางวัน (Day)</option>
+            <option value="Night">กลางคืน (Night)</option>
+          </select>
         </div>
       </div>
       <div class="field-row">
@@ -2050,6 +2059,7 @@
     $("fDescription").value = issue ? (issue.description || "") : "";
     $("fLine2").value = issue ? issue.line : "";
     $("fMachine").value = issue ? (issue.machine || "") : "";
+    $("fShift").value = issue ? (issue.shift || "") : "";
     $("fSeverity2").value = issue ? issue.severity : "Minor";
     $("fOwner").value = issue ? (issue.owner || "") : "";
     $("fStatus2").value = issue ? issue.status : "Open";
@@ -2110,7 +2120,7 @@
 
       var payload = {
         title: title, description: $("fDescription").value.trim() || null,
-        line: line, machine: $("fMachine").value.trim() || null,
+        line: line, machine: $("fMachine").value.trim() || null, shift: $("fShift").value || null,
         severity: $("fSeverity2").value, owner: $("fOwner").value.trim() || null,
         status: $("fStatus2").value, received_date: received, resolved_date: $("fResolved").value || null,
         due_date: $("fDueDate").value || null,

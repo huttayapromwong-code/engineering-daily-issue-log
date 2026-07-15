@@ -48,16 +48,10 @@
   .banner.err { background: var(--critical-soft); color: var(--critical); border: 1px solid var(--critical); }
   @media (prefers-color-scheme: dark) { .banner.warn { color: var(--warning); } }
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-bottom: 18px; }
-  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
-  .stat .label { font-size: 12px; color: var(--ink-muted); margin-bottom: 6px; }
-  .stat .value { font-size: 25px; font-weight: 600; line-height: 1; }
-  .stat .value.critical { color: var(--critical); }
-  .stat .value.warning-c { color: var(--warning); }
-  .stat .value.good-c { color: var(--good); }
-  .stat.clickable { cursor: pointer; transition: background .12s; }
-  .stat.clickable:hover { background: var(--surface-2); }
-  .stat.clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: var(--sp-3); margin-bottom: var(--sp-5); }
+  .stats .kpi-tile.clickable { cursor: pointer; }
+  .stats .kpi-tile.clickable:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+  .stats .kpi-tile.clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .period-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
   .period-btn { appearance: none; border: none; background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; cursor: pointer; border-right: 1px solid var(--line-strong); }
@@ -165,13 +159,15 @@
   .line-legend-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-secondary); }
   .line-legend-key { width: 16px; height: 2px; border-radius: 2px; flex: none; }
 
-  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .filters { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: center; margin-bottom: var(--sp-4); }
   select, input[type=text], input[type=search], input[type=date], input[type=number], textarea {
-    font: inherit; font-size: 13.5px; padding: 7px 10px; border-radius: 9px;
+    font: inherit; font-size: var(--fs-13); padding: 8px 11px; border-radius: var(--r-md);
     border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
   }
   select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .filters input[type=search] { flex: 1; min-width: 160px; }
+  .filters .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .filters .search-wrap .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-muted); pointer-events: none; display: flex; }
+  .filters input[type=search] { width: 100%; padding-left: 34px; }
 
   .list-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
   .sort-wrap { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-secondary); }
@@ -182,18 +178,14 @@
   .view-btn.active { background: var(--accent); color: #fff; }
 
   /* ---------- Table view ---------- */
-  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
-  #issueTable { width: 100%; border-collapse: collapse; min-width: 760px; }
-  #issueTable th, #issueTable td { text-align: left; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  #issueTable thead th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-muted); background: var(--surface-2); font-weight: 600; }
+  #issueTable { min-width: 760px; }
   #issueTable tbody tr { cursor: pointer; }
-  #issueTable tbody tr:hover { background: var(--surface-2); }
-  #issueTable tbody tr:last-child td { border-bottom: none; }
 
   /* ---------- Issue cards ---------- */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
-  .issue-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; transition: transform .18s ease, box-shadow .18s ease; }
-  .issue-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(27,33,31,0.08), 0 14px 32px -12px rgba(27,33,31,0.24); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--sp-3); }
+  .issue-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-xs); overflow: hidden; display: flex; flex-direction: column; transition: transform .16s ease, box-shadow .16s ease; }
+  .issue-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .issue-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .issue-card__top { padding: 16px 18px 12px; display: flex; gap: 12px; }
   .issue-card__main { flex: 1; min-width: 0; }
   .issue-card__badges { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
@@ -204,19 +196,6 @@
   .ring-wrap { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .ring-wrap .ring-label { font-size: 10px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .04em; }
 
-  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 100px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
-  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-  .pill.st-Open { background: var(--critical-soft); color: var(--critical); }
-  .pill.st-InProgress { background: var(--warning-soft); color: #8a6100; }
-  @media (prefers-color-scheme: dark) { .pill.st-InProgress { color: var(--warning); } }
-  .pill.st-Closed { background: var(--good-soft); color: var(--good); }
-  .sev { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid; }
-  .sev.Critical { color: var(--critical); border-color: var(--critical); }
-  .sev.Major { color: #8a6100; border-color: var(--warning); }
-  @media (prefers-color-scheme: dark) { .sev.Major { color: var(--warning); } }
-  .sev.Minor { color: var(--good); border-color: var(--good); }
-  .sev.Neutral { color: var(--ink-muted); border-color: var(--line-strong); }
-  .sev.Info { color: var(--accent); border-color: var(--accent); }
 
   .photo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-top: 1px solid var(--line); }
   .photo-slot { position: relative; aspect-ratio: 4/3; background: var(--surface-2); overflow: hidden; }
@@ -274,12 +253,13 @@
   .icon-btn:hover { background: var(--surface); color: var(--ink); }
 
   /* ---------- Quick Actions ---------- */
-  .quick-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-  .qa-btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 12.5px; padding: 9px 14px; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; box-shadow: var(--shadow); }
-  .qa-btn:hover { background: var(--surface-2); transform: translateY(-1px); }
+  .quick-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-5); }
+  .qa-btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: var(--fs-13); padding: 9px 15px; border-radius: var(--r-lg); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; box-shadow: var(--shadow-xs); transition: background .12s ease, transform .12s ease, box-shadow .12s ease; }
+  .qa-btn svg { flex: none; }
+  .qa-btn:hover { background: var(--surface-2); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
   .qa-btn:active { transform: translateY(0); }
-  .qa-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .qa-btn.primary:hover { filter: brightness(1.06); }
+  .qa-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--ink-inverse); }
+  .qa-btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 
   /* ---------- Notifications ---------- */
   .notif-wrap { position: relative; }
@@ -349,6 +329,30 @@
   .upload-box { border: 1px dashed var(--line-strong); border-radius: 12px; padding: 10px; text-align: center; }
   .upload-box img { max-width: 100%; border-radius: 9px; margin-bottom: 6px; max-height: 120px; object-fit: cover; }
 
+  /* ---------- Detail slide-over panel ---------- */
+  .detail-panel-backdrop { position: fixed; inset: 0; background: rgba(11,11,11,.35); z-index: 90; display: none; }
+  .detail-panel-backdrop.show { display: block; }
+  .detail-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 480px; max-width: 92vw; background: var(--surface);
+    box-shadow: var(--shadow-lg); z-index: 91; display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform .22s cubic-bezier(.2,.8,.2,1);
+  }
+  .detail-panel.show { transform: translateX(0); }
+  @media (prefers-reduced-motion: reduce) { .detail-panel { transition: none; } }
+  .detail-panel__head { padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); }
+  .detail-panel__head-main { min-width: 0; }
+  .detail-panel__eyebrow { font-size: var(--fs-11); text-transform: uppercase; letter-spacing: .05em; color: var(--ink-muted); margin-bottom: 4px; }
+  .detail-panel__title { font-size: var(--fs-16); font-weight: 700; margin-bottom: 8px; overflow-wrap: break-word; }
+  .detail-panel__badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .detail-panel__body { flex: 1; overflow-y: auto; }
+  .detail-panel__body .detail { border-top: none; background: transparent; padding: var(--sp-4) var(--sp-5); }
+  .sidebar-footer { padding: var(--sp-3); border-top: 1px solid var(--line); display: flex; align-items: center; gap: var(--sp-2); }
+  .sidebar-footer .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--ink-inverse); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: var(--fs-13); flex: none; }
+  .sidebar-footer .who { min-width: 0; }
+  .sidebar-footer .who b { display: block; font-size: var(--fs-12); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sidebar-footer .who .status-line { font-size: var(--fs-11); color: var(--ink-muted); display: flex; align-items: center; gap: 4px; }
+  .sidebar-footer .who .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--s-success); flex: none; }
+
   footer.page { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 12px; text-align: center; }
   .spin { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -370,6 +374,13 @@
       <a href="my-performance.html" data-i="users">My Performance</a>
       <a href="notification.html" data-i="bell">Notification</a>
       <a href="settings.html" data-i="settings">Settings</a>
+    </div>
+    <div class="sidebar-footer" id="sidebarFooter">
+      <div class="avatar" id="sidebarAvatar">?</div>
+      <div class="who">
+        <b id="sidebarUserName">Engineering Team</b>
+        <div class="status-line"><span class="status-dot"></span><span id="sidebarUserRole">Engineer</span></div>
+      </div>
     </div>
   </nav>
 
@@ -456,7 +467,10 @@
       <input type="date" id="fDateFrom" title="ตั้งแต่วันที่">
       <span style="color:var(--ink-muted);font-size:12px;">ถึง</span>
       <input type="date" id="fDateTo" title="ถึงวันที่">
-      <input type="search" id="fSearch" placeholder="ค้นหา: รหัส, ชื่อปัญหา, Root Cause, Product...">
+      <div class="search-wrap">
+        <span class="search-icon" id="filterSearchIcon"></span>
+        <input type="search" id="fSearch" placeholder="ค้นหา: รหัส, ชื่อปัญหา, Root Cause, Product...">
+      </div>
       <button class="clear-link" id="btnClearFilters" style="background:none;border:none;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;font-size:12.5px;">ล้างตัวกรอง</button>
     </div>
     <div class="list-toolbar">
@@ -479,8 +493,8 @@
 
   <section class="grid" id="grid"></section>
   <section class="table-view-wrap" id="tableViewWrap" style="display:none;">
-    <div class="tablewrap">
-      <table id="issueTable">
+    <div class="ds-table-wrap">
+      <table id="issueTable" class="ds-table">
         <thead>
           <tr>
             <th>รหัส</th><th>หัวข้อ</th><th>Line</th><th>ความรุนแรง</th><th>สถานะ</th>
@@ -500,6 +514,19 @@
 
 <div class="chart-tooltip" id="chartTooltip"></div>
 <div class="toast-stack" id="toastStack"></div>
+
+<div class="detail-panel-backdrop" id="detailPanelBackdrop"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-panel__head">
+    <div class="detail-panel__head-main">
+      <div class="detail-panel__eyebrow">รายละเอียด Issue</div>
+      <div class="detail-panel__title" id="detailPanelTitle">—</div>
+      <div class="detail-panel__badges" id="detailPanelBadges"></div>
+    </div>
+    <button class="ico-btn" id="btnCloseDetailPanel"></button>
+  </div>
+  <div class="detail-panel__body" id="detailPanelBody"></div>
+</div>
 
 <div class="backdrop" id="shareBackdrop">
   <div class="modal" style="max-width:440px;">
@@ -777,6 +804,18 @@
   $("btnNotif").innerHTML = window.icon("bell", 18) + $("btnNotif").innerHTML;
   $("btnCloseShare").innerHTML = window.icon("x", 15);
   $("previewDownload").innerHTML = window.icon("download", 15);
+  $("filterSearchIcon").innerHTML = window.icon("search", 15);
+  $("btnCloseDetailPanel").innerHTML = window.icon("x", 16);
+  if (window.__authClient) {
+    window.__authClient.auth.getSession().then(function (res) {
+      var session = res.data && res.data.session;
+      if (session && session.user && session.user.email) {
+        var name = session.user.email.split("@")[0];
+        $("sidebarUserName").textContent = name;
+        $("sidebarAvatar").textContent = name.charAt(0).toUpperCase();
+      }
+    });
+  }
   $("btnClosePreview").innerHTML = window.icon("x", 15);
   $("btnCloseModal").innerHTML = window.icon("x", 15);
   $("btnViewCard").innerHTML = window.icon("folder", 14) + " Card";
@@ -814,6 +853,8 @@
     return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
   }
   function statusClass(s) { return s === "Open" ? "Open" : s === "In Progress" ? "InProgress" : "Closed"; }
+  function statusBadgeTone(s) { return s === "Open" ? "critical" : s === "In Progress" ? "warning" : "success"; }
+  function severityBadgeTone(s) { return s === "Critical" ? "critical" : s === "Major" ? "warning" : "success"; }
   function fmtDateShort(s) {
     var d = new Date(s + "T00:00:00");
     var months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
@@ -1496,23 +1537,24 @@
       ? (closedWithDates.reduce(function (s, i) { return s + (new Date(i.resolved_date) - new Date(i.received_date)) / 86400000; }, 0) / closedWithDates.length)
       : null;
     var tiles = [
-      ["งานทั้งหมด", total, "", null],
-      ["ยังไม่แก้ไข (Open)", open, "critical", function () { setQuickFilter({ status: "Open" }); }],
-      ["กำลังดำเนินการ", prog, "warning-c", function () { setQuickFilter({ status: "In Progress" }); }],
-      ["ปิดงานแล้ว", closed, "good-c", function () { setQuickFilter({ status: "Closed" }); }],
-      ["Critical", critical, "critical", function () { setQuickFilter({ severity: "Critical" }); }],
-      ["Major", major, "warning-c", function () { setQuickFilter({ severity: "Major" }); }],
-      ["Minor", minor, "good-c", function () { setQuickFilter({ severity: "Minor" }); }],
-      ["เกินกำหนด (Overdue)", overdue, overdue > 0 ? "critical" : "", function () { setQuickFilter({ overdue: true }); }],
-      ["เวลาแก้ไขเฉลี่ย (วัน)", avg === null ? "—" : avg.toFixed(1), "", null]
+      ["งานทั้งหมด", total, "neutral", "fileText", null],
+      ["ยังไม่แก้ไข (Open)", open, "critical", "folder", function () { setQuickFilter({ status: "Open" }); }],
+      ["กำลังดำเนินการ", prog, "warning", "users", function () { setQuickFilter({ status: "In Progress" }); }],
+      ["ปิดงานแล้ว", closed, "success", "checkCircle", function () { setQuickFilter({ status: "Closed" }); }],
+      ["Critical", critical, "critical", "alertTriangle", function () { setQuickFilter({ severity: "Critical" }); }],
+      ["Major", major, "warning", "flame", function () { setQuickFilter({ severity: "Major" }); }],
+      ["Minor", minor, "success", "minus", function () { setQuickFilter({ severity: "Minor" }); }],
+      ["เกินกำหนด (Overdue)", overdue, overdue > 0 ? "critical" : "neutral", "clock", function () { setQuickFilter({ overdue: true }); }],
+      ["เวลาแก้ไขเฉลี่ย (วัน)", avg === null ? "—" : avg.toFixed(1), "accent", "target", null]
     ];
     var el = $("stats"); el.innerHTML = "";
     tiles.forEach(function (t) {
-      var d = document.createElement("div"); d.className = "stat";
-      if (t[3]) { d.classList.add("clickable"); d.addEventListener("click", t[3]); d.tabIndex = 0; }
-      var l = document.createElement("div"); l.className = "label"; l.textContent = t[0];
-      var v = document.createElement("div"); v.className = "value tabular" + (t[2] ? " " + t[2] : ""); v.textContent = t[1];
-      d.appendChild(l); d.appendChild(v); el.appendChild(d);
+      var d = document.createElement("div"); d.className = "kpi-tile";
+      if (t[4]) { d.classList.add("clickable"); d.addEventListener("click", t[4]); d.tabIndex = 0; }
+      d.innerHTML =
+        '<div class="kpi-tile__top"><div class="icon-badge tone-' + t[2] + '">' + window.icon(t[3], 20) + '</div><div class="kpi-tile__label">' + t[0] + '</div></div>' +
+        '<div class="kpi-tile__value tabular">' + t[1] + '</div>';
+      el.appendChild(d);
     });
   }
 
@@ -1652,9 +1694,9 @@
       td(issue.code || "");
       td(issue.title);
       td(issue.line || "—");
-      var sev = document.createElement("span"); sev.className = "sev " + issue.severity; sev.textContent = issue.severity;
+      var sev = document.createElement("span"); sev.className = "badge " + severityBadgeTone(issue.severity); sev.textContent = issue.severity;
       td(sev, true);
-      var pill = document.createElement("span"); pill.className = "pill st-" + statusClass(issue.status); pill.textContent = issue.status;
+      var pill = document.createElement("span"); pill.className = "badge " + statusBadgeTone(issue.status); pill.textContent = issue.status;
       td(pill, true);
       td((issue.progress || 0) + "%");
       td(issue.owner || "—");
@@ -1664,9 +1706,9 @@
       if (isOverdue(issue)) dueSpan.style.color = "var(--critical)";
       td(dueSpan, true);
       var actionsWrap = document.createElement("div"); actionsWrap.style.cssText = "display:flex;gap:2px;";
-      var shareBtn = document.createElement("button"); shareBtn.className = "icon-btn"; shareBtn.innerHTML = window.icon("externalLink", 14); shareBtn.title = "แชร์";
+      var shareBtn = document.createElement("button"); shareBtn.className = "ico-btn"; shareBtn.innerHTML = window.icon("externalLink", 14); shareBtn.title = "แชร์";
       shareBtn.addEventListener("click", function (e) { e.stopPropagation(); openShareDialog(issue); });
-      var editBtn = document.createElement("button"); editBtn.className = "icon-btn"; editBtn.innerHTML = window.icon("edit", 14); editBtn.title = "แก้ไข";
+      var editBtn = document.createElement("button"); editBtn.className = "ico-btn"; editBtn.innerHTML = window.icon("edit", 14); editBtn.title = "แก้ไข";
       editBtn.addEventListener("click", function (e) { e.stopPropagation(); openModal(issue); });
       actionsWrap.appendChild(shareBtn); actionsWrap.appendChild(editBtn);
       td(actionsWrap, true);
@@ -1697,11 +1739,11 @@
       var top = document.createElement("div"); top.className = "issue-card__top";
       var main = document.createElement("div"); main.className = "issue-card__main";
       var badges = document.createElement("div"); badges.className = "issue-card__badges";
-      var pill = document.createElement("span"); pill.className = "pill st-" + statusClass(issue.status); pill.textContent = issue.status;
-      var sev = document.createElement("span"); sev.className = "sev " + issue.severity; sev.textContent = issue.severity;
+      var pill = document.createElement("span"); pill.className = "badge " + statusBadgeTone(issue.status); pill.textContent = issue.status;
+      var sev = document.createElement("span"); sev.className = "badge " + severityBadgeTone(issue.severity); sev.textContent = issue.severity;
       badges.appendChild(pill); badges.appendChild(sev);
       if (issue.defect_category) {
-        var dc = document.createElement("span"); dc.className = "sev Neutral"; dc.textContent = issue.defect_category;
+        var dc = document.createElement("span"); dc.className = "badge info"; dc.textContent = issue.defect_category;
         badges.appendChild(dc);
       }
       var title = document.createElement("div"); title.className = "issue-card__title";
@@ -1724,23 +1766,20 @@
 
       var foot = document.createElement("div"); foot.className = "issue-card__foot";
       var toggleBtn = document.createElement("button"); toggleBtn.className = "btn small";
-      toggleBtn.textContent = expandedId === issue.id ? "▾ ซ่อนรายละเอียด" : "▸ ดูรายละเอียด / ลงบันทึกวันนี้";
+      toggleBtn.innerHTML = (expandedId === issue.id ? window.icon("chevronDown", 13) : window.icon("chevronRight", 13)) + (expandedId === issue.id ? "ซ่อนรายละเอียด" : "ดูรายละเอียด / ลงบันทึกวันนี้");
       toggleBtn.addEventListener("click", function () { toggleExpand(issue.id); });
-      var shareBtn = document.createElement("button"); shareBtn.className = "icon-btn"; shareBtn.innerHTML = window.icon("externalLink", 14); shareBtn.title = "แชร์รายงาน (read-only)";
+      var shareBtn = document.createElement("button"); shareBtn.className = "ico-btn"; shareBtn.innerHTML = window.icon("externalLink", 14); shareBtn.title = "แชร์รายงาน (read-only)";
       shareBtn.addEventListener("click", function () { openShareDialog(issue); });
-      var editBtn = document.createElement("button"); editBtn.className = "icon-btn"; editBtn.innerHTML = window.icon("edit", 14); editBtn.title = "แก้ไข";
+      var editBtn = document.createElement("button"); editBtn.className = "ico-btn"; editBtn.innerHTML = window.icon("edit", 14); editBtn.title = "แก้ไข";
       editBtn.addEventListener("click", function () { openModal(issue); });
-      var delBtn = document.createElement("button"); delBtn.className = "icon-btn"; delBtn.innerHTML = window.icon("trash", 14); delBtn.title = "ลบ";
+      var delBtn = document.createElement("button"); delBtn.className = "ico-btn"; delBtn.innerHTML = window.icon("trash", 14); delBtn.title = "ลบ";
       delBtn.addEventListener("click", function () { deleteIssue(issue); });
-      var rightBtns = document.createElement("div");
+      var rightBtns = document.createElement("div"); rightBtns.style.cssText = "display:flex;gap:2px;";
       rightBtns.appendChild(shareBtn); rightBtns.appendChild(editBtn); rightBtns.appendChild(delBtn);
       foot.appendChild(toggleBtn); foot.appendChild(rightBtns);
       card.appendChild(foot);
 
-      if (expandedId === issue.id) {
-        var detail = buildDetail(issue);
-        card.appendChild(detail);
-      }
+      if (expandedId === issue.id) card.classList.add("active");
 
       grid.appendChild(card);
     });
@@ -1757,6 +1796,15 @@
     d.appendChild(k); d.appendChild(v);
     return d;
   }
+  function fieldBlockBadge(label, value, tone) {
+    var d = document.createElement("div"); d.className = "detail-field";
+    var k = document.createElement("div"); k.className = "k"; k.textContent = label;
+    var v = document.createElement("div"); v.className = "v";
+    if (value) v.innerHTML = '<span class="badge ' + tone + '">' + esc(value) + "</span>";
+    else v.textContent = "—";
+    d.appendChild(k); d.appendChild(v);
+    return d;
+  }
 
   function buildDetail(issue) {
     var wrap = document.createElement("div"); wrap.className = "detail";
@@ -1766,8 +1814,9 @@
     s1.appendChild(sectionTitle("1. Basic Information"));
     var g1 = document.createElement("div"); g1.className = "detail-grid";
     [["Production Line", issue.line], ["Machine", issue.machine], ["Product", issue.product], ["Customer", issue.customer],
-     ["Department", issue.department], ["ผู้รับผิดชอบ (Engineer)", issue.owner], ["Defect Category", issue.defect_category],
-     ["Root Cause Category", issue.root_cause_category]].forEach(function (f) { g1.appendChild(fieldBlock(f[0], f[1])); });
+     ["Department", issue.department], ["ผู้รับผิดชอบ (Engineer)", issue.owner]].forEach(function (f) { g1.appendChild(fieldBlock(f[0], f[1])); });
+    g1.appendChild(fieldBlockBadge("Defect Category", issue.defect_category, "info"));
+    g1.appendChild(fieldBlockBadge("Root Cause Category", issue.root_cause_category, "neutral"));
     s1.appendChild(g1);
     if (issue.description) {
       var descBlock = fieldBlock("รายละเอียดปัญหา", issue.description);
@@ -1993,7 +2042,8 @@
         await sb.from("issues").update({ progress: parseInt(slider.value, 10) }).eq("id", issue.id);
         ta.value = ""; fileInput.value = ""; fileNameSpan.textContent = "";
         await loadIssues();
-        expandedId = issue.id;
+        var freshIssue = issues.find(function (i) { return i.id === issue.id; });
+        if (freshIssue) openDetailPanel(freshIssue);
         renderGrid();
         showToast("บันทึกความคืบหน้าแล้ว", "success");
       } catch (e) {
@@ -2008,8 +2058,33 @@
     return box;
   }
 
+  function openDetailPanel(issue) {
+    expandedId = issue.id;
+    $("detailPanelTitle").textContent = (issue.code || "") + " · " + (issue.title || "(ไม่มีหัวข้อ)");
+    $("detailPanelBadges").innerHTML =
+      '<span class="badge ' + statusBadgeTone(issue.status) + '">' + esc(issue.status) + '</span>' +
+      '<span class="badge ' + severityBadgeTone(issue.severity) + '">' + esc(issue.severity) + '</span>';
+    var body = $("detailPanelBody"); body.innerHTML = "";
+    body.appendChild(buildDetail(issue));
+    $("detailPanelBackdrop").classList.add("show");
+    $("detailPanel").classList.add("show");
+  }
+  function closeDetailPanel() {
+    var wasOpen = expandedId !== null;
+    expandedId = null;
+    $("detailPanelBackdrop").classList.remove("show");
+    $("detailPanel").classList.remove("show");
+    if (wasOpen && currentView === "card") renderGrid();
+  }
+  $("btnCloseDetailPanel").addEventListener("click", closeDetailPanel);
+  $("detailPanelBackdrop").addEventListener("click", closeDetailPanel);
+
   function toggleExpand(id) {
-    expandedId = expandedId === id ? null : id;
+    if (expandedId === id) { closeDetailPanel(); }
+    else {
+      var issue = issues.find(function (i) { return i.id === id; });
+      if (issue) openDetailPanel(issue);
+    }
     renderGrid();
   }
 
@@ -2234,7 +2309,7 @@
     if (opts.severity) $("fSeverity").value = opts.severity;
     if (opts.overdue) quickOverdueOnly = true;
     if (opts.mine) quickMineOnly = true;
-    expandedId = null;
+    closeDetailPanel();
     renderAll();
     var gridSection = document.querySelector("section.grid");
     if (gridSection) gridSection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2410,12 +2485,12 @@
       });
     });
 
-    function refreshOnFilter() { expandedId = null; quickOverdueOnly = false; quickMineOnly = false; renderAll(); }
+    function refreshOnFilter() { closeDetailPanel(); quickOverdueOnly = false; quickMineOnly = false; renderAll(); }
     ["fStatus", "fSeverity", "fLine", "fMachineFilter", "fProductFilter", "fCustomerFilter", "fDepartmentFilter", "fEngineerFilter", "fDateFrom", "fDateTo"].forEach(function (id) {
       $(id).addEventListener("change", refreshOnFilter);
     });
     $("fSearch").addEventListener("input", refreshOnFilter);
-    $("fSort").addEventListener("change", function () { expandedId = null; renderGrid(); });
+    $("fSort").addEventListener("change", function () { closeDetailPanel(); renderGrid(); });
 
     $("btnClearFilters").addEventListener("click", function () {
       ["fStatus", "fSeverity", "fLine", "fMachineFilter", "fProductFilter", "fCustomerFilter", "fDepartmentFilter", "fEngineerFilter"].forEach(function (id) { $(id).value = ""; });

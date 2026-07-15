@@ -324,6 +324,8 @@
   @media (max-width: 480px) { .field-row, .field-row.field-row-3 { grid-template-columns: 1fr; } }
   .modal__foot { padding: 16px 22px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: var(--surface); }
   .req::after { content: " *"; color: var(--critical); }
+  .checkline { display: flex; align-items: center; gap: 8px; font-size: var(--fs-13); }
+  .checkline input { width: auto; }
   .photo-upload-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 480px) { .photo-upload-pair { grid-template-columns: 1fr; } }
   .upload-box { border: 1px dashed var(--line-strong); border-radius: 12px; padding: 10px; text-align: center; }
@@ -624,6 +626,10 @@
           <label class="req">สถานะ</label>
           <select id="fStatus2"><option>Open</option><option>In Progress</option><option>Closed</option></select>
         </div>
+      </div>
+      <div class="checkline">
+        <input type="checkbox" id="fVerified">
+        <label for="fVerified" style="margin:0;">ยืนยันแล้ว (Verified) — RCA/มาตรการแก้ไขถูกต้อง ตรวจสอบโดย Engineer/Manager</label>
       </div>
       <div class="field-row">
         <div class="field">
@@ -1742,6 +1748,10 @@
       var pill = document.createElement("span"); pill.className = "badge " + statusBadgeTone(issue.status); pill.textContent = issue.status;
       var sev = document.createElement("span"); sev.className = "badge " + severityBadgeTone(issue.severity); sev.textContent = issue.severity;
       badges.appendChild(pill); badges.appendChild(sev);
+      if (issue.verified) {
+        var vb = document.createElement("span"); vb.className = "badge success"; vb.innerHTML = window.icon("check", 11) + "Verified";
+        badges.appendChild(vb);
+      }
       if (issue.defect_category) {
         var dc = document.createElement("span"); dc.className = "badge info"; dc.textContent = issue.defect_category;
         badges.appendChild(dc);
@@ -2063,8 +2073,28 @@
     $("detailPanelTitle").textContent = (issue.code || "") + " · " + (issue.title || "(ไม่มีหัวข้อ)");
     $("detailPanelBadges").innerHTML =
       '<span class="badge ' + statusBadgeTone(issue.status) + '">' + esc(issue.status) + '</span>' +
-      '<span class="badge ' + severityBadgeTone(issue.severity) + '">' + esc(issue.severity) + '</span>';
+      '<span class="badge ' + severityBadgeTone(issue.severity) + '">' + esc(issue.severity) + '</span>' +
+      (issue.verified ? '<span class="badge success">' + window.icon("check", 11) + "Verified</span>" : "");
     var body = $("detailPanelBody"); body.innerHTML = "";
+
+    var verifyRow = document.createElement("div");
+    verifyRow.style.cssText = "padding: var(--sp-3) var(--sp-5); border-bottom: 1px solid var(--line);";
+    var verifyBtn = document.createElement("button");
+    verifyBtn.className = "btn sm " + (issue.verified ? "secondary" : "primary");
+    verifyBtn.innerHTML = window.icon(issue.verified ? "x" : "check", 13) + (issue.verified ? "ยกเลิกการยืนยัน" : "ทำเครื่องหมายว่ายืนยันแล้ว (Verified)");
+    verifyBtn.addEventListener("click", async function () {
+      verifyBtn.disabled = true;
+      var res = await sb.from("issues").update({ verified: !issue.verified }).eq("id", issue.id);
+      if (res.error) { showError("อัปเดตไม่สำเร็จ: " + res.error.message); verifyBtn.disabled = false; return; }
+      showToast(issue.verified ? "ยกเลิกการยืนยันแล้ว" : "ยืนยันเรียบร้อยแล้ว", "success");
+      await loadIssues();
+      var freshIssue = issues.find(function (i) { return i.id === issue.id; });
+      if (freshIssue) openDetailPanel(freshIssue);
+      renderGrid();
+    });
+    verifyRow.appendChild(verifyBtn);
+    body.appendChild(verifyRow);
+
     body.appendChild(buildDetail(issue));
     $("detailPanelBackdrop").classList.add("show");
     $("detailPanel").classList.add("show");
@@ -2138,6 +2168,7 @@
     $("fSeverity2").value = issue ? issue.severity : "Minor";
     $("fOwner").value = issue ? (issue.owner || "") : "";
     $("fStatus2").value = issue ? issue.status : "Open";
+    $("fVerified").checked = issue ? !!issue.verified : false;
     $("fDefectCategory").value = issue ? (issue.defect_category || "") : "";
     $("fRootCauseCategory").value = issue ? (issue.root_cause_category || "") : "";
     $("fDowntime").value = issue && issue.downtime_minutes != null ? issue.downtime_minutes : "";
@@ -2197,7 +2228,7 @@
         title: title, description: $("fDescription").value.trim() || null,
         line: line, machine: $("fMachine").value.trim() || null, shift: $("fShift").value || null,
         severity: $("fSeverity2").value, owner: $("fOwner").value.trim() || null,
-        status: $("fStatus2").value, received_date: received, resolved_date: $("fResolved").value || null,
+        status: $("fStatus2").value, verified: $("fVerified").checked, received_date: received, resolved_date: $("fResolved").value || null,
         due_date: $("fDueDate").value || null,
         product: $("fProduct").value.trim() || null,
         customer: $("fCustomer").value.trim() || null,

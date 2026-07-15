@@ -117,7 +117,7 @@
         </div>
       </div>
 
-      <footer class="page">Knowledge Base — ดึงข้อมูลอัตโนมัติจากงานที่ปิดแล้ว (status = Closed) ใน work_items ไม่มีการกรอกข้อมูลซ้ำ · หน้านี้เป็น Read-only ทั้งหมด</footer>
+      <footer class="page">Knowledge Base — ดึงข้อมูลอัตโนมัติจาก Case Management ที่ปิดงานแล้ว (status = Closed) และยืนยันแล้ว (verified = true) เท่านั้น ไม่มีการกรอกข้อมูลซ้ำ · หน้านี้เป็น Read-only ทั้งหมด</footer>
     </div>
   </div>
 </div>
@@ -176,7 +176,8 @@
   if (!configured) $("configBanner").classList.add("show");
 
   var allCases = [];
-  var lineById = {}, machineById = {}, productById = {}, defectById = {}, rootCauseById = {};
+  var DEFECT_CATEGORIES = ["Dimensional", "Visual/Cosmetic", "Functional", "Material", "Assembly", "Electrical", "Other"];
+  var ROOT_CAUSE_CATEGORIES = ["Man", "Machine", "Method", "Material", "Measurement", "Environment", "Other"];
 
   function fmtDate(s) {
     if (!s) return "—";
@@ -185,36 +186,24 @@
     return d.getDate() + " " + mo[d.getMonth()] + " " + (d.getFullYear() + 543);
   }
 
-  async function loadLookups() {
-    var res = await Promise.all([
-      sb.from("production_lines").select("id,name"),
-      sb.from("machines").select("id,name"),
-      sb.from("products").select("id,model_name"),
-      sb.from("defect_categories").select("id,name"),
-      sb.from("root_cause_categories").select("id,name")
-    ]);
-    (res[0].data || []).forEach(function (r) { lineById[r.id] = r.name; });
-    (res[1].data || []).forEach(function (r) { machineById[r.id] = r.name; });
-    (res[2].data || []).forEach(function (r) { productById[r.id] = r.model_name; });
-    (res[3].data || []).forEach(function (r) { defectById[r.id] = r.name; });
-    (res[4].data || []).forEach(function (r) { rootCauseById[r.id] = r.name; });
-
-    function fillSelect(id, dict, label) {
-      var names = Object.keys(dict).map(function (k) { return dict[k]; }).sort();
-      $(id).innerHTML = '<option value="">' + label + ': ทั้งหมด</option>' + names.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
+  function populateFilters() {
+    function fillSelect(id, values, label) {
+      $(id).innerHTML = '<option value="">' + label + ': ทั้งหมด</option>' + values.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
     }
-    fillSelect("fDefect", defectById, "Defect Category");
-    fillSelect("fRootCause", rootCauseById, "Root Cause");
-    fillSelect("fLine", lineById, "Line");
+    fillSelect("fDefect", DEFECT_CATEGORIES, "Defect Category");
+    fillSelect("fRootCause", ROOT_CAUSE_CATEGORIES, "Root Cause");
+    var lines = Array.from(new Set(allCases.map(function (c) { return c.line; }).filter(Boolean))).sort();
+    fillSelect("fLine", lines, "Line");
   }
 
   async function loadCases() {
     if (!sb) { $("kbContent").innerHTML = '<div class="empty-state">' + window.icon("alertTriangle", 34) + '<h3>ยังไม่ได้ตั้งค่าฐานข้อมูล</h3></div>'; return; }
-    var res = await sb.from("work_items").select("*").eq("status", "Closed").order("received_date", { ascending: false });
+    var res = await sb.from("issues").select("*").eq("status", "Closed").eq("verified", true).order("received_date", { ascending: false });
     if (res.error) { $("kbContent").innerHTML = '<div class="empty-state">' + window.icon("alertTriangle", 34) + '<h3>โหลดข้อมูลไม่สำเร็จ</h3><p>' + esc(res.error.message) + "</p></div>"; return; }
     allCases = (res.data || []).filter(function (c) {
       return (c.root_cause && c.root_cause.trim()) || (c.corrective_action && c.corrective_action.trim());
     });
+    populateFilters();
     render();
   }
 
@@ -222,9 +211,9 @@
     var q = $("kbSearch").value.trim().toLowerCase();
     var defect = $("fDefect").value, rootCause = $("fRootCause").value, line = $("fLine").value;
     return allCases.filter(function (c) {
-      if (defect && defectById[c.defect_category_id] !== defect) return false;
-      if (rootCause && rootCauseById[c.root_cause_category_id] !== rootCause) return false;
-      if (line && lineById[c.line_id] !== line) return false;
+      if (defect && c.defect_category !== defect) return false;
+      if (rootCause && c.root_cause_category !== rootCause) return false;
+      if (line && c.line !== line) return false;
       if (q) {
         var hay = [c.title, c.description, c.root_cause, c.corrective_action, c.preventive_action].join(" ").toLowerCase();
         if (hay.indexOf(q) === -1) return false;
@@ -236,8 +225,8 @@
   function relatedCasesFor(c) {
     return allCases.filter(function (o) {
       if (o.id === c.id) return false;
-      return (c.defect_category_id && o.defect_category_id === c.defect_category_id) ||
-             (c.root_cause_category_id && o.root_cause_category_id === c.root_cause_category_id);
+      return (c.defect_category && o.defect_category === c.defect_category) ||
+             (c.root_cause_category && o.root_cause_category === c.root_cause_category);
     });
   }
 
@@ -246,7 +235,7 @@
     $("resultCount").textContent = list.length + " กรณี" + (list.length !== allCases.length ? " (จากทั้งหมด " + allCases.length + ")" : "");
     var content = $("kbContent");
     if (!list.length) {
-      content.innerHTML = '<div class="empty-state">' + window.icon("search", 34) + '<h3 style="margin-bottom:6px;">ไม่พบกรณีที่ตรงกับตัวกรอง</h3><p>คลังความรู้จะเพิ่มขึ้นเองเมื่อมีการปิดงานใน Problem Management หรือ Daily Activity ที่กรอกสาเหตุ/มาตรการแก้ไขไว้</p></div>';
+      content.innerHTML = '<div class="empty-state">' + window.icon("search", 34) + '<h3 style="margin-bottom:6px;">ไม่พบกรณีที่ตรงกับตัวกรอง</h3><p>คลังความรู้จะเพิ่มขึ้นเองเมื่อมีการปิดงานใน Case Management ที่ยืนยันแล้ว (Verified) และกรอกสาเหตุ/มาตรการแก้ไขไว้</p></div>';
       return;
     }
     content.innerHTML = '<div class="kb-grid" id="kbGrid"></div>';
@@ -266,9 +255,9 @@
         thumbHtml +
         '<div class="kb-body">' +
         '<div class="kb-badges">' +
-        (defectById[c.defect_category_id] ? '<span class="badge info">' + esc(defectById[c.defect_category_id]) + "</span>" : "") +
-        (rootCauseById[c.root_cause_category_id] ? '<span class="badge neutral">' + esc(rootCauseById[c.root_cause_category_id]) + "</span>" : "") +
-        '<span class="badge success">' + (c.source_type === "Issue" ? "Problem Mgmt" : "Daily Activity") + "</span>" +
+        (c.defect_category ? '<span class="badge info">' + esc(c.defect_category) + "</span>" : "") +
+        (c.root_cause_category ? '<span class="badge neutral">' + esc(c.root_cause_category) + "</span>" : "") +
+        '<span class="badge success">' + window.icon("check", 11) + "Verified</span>" +
         "</div>" +
         '<div class="kb-title">' + esc(c.title || "(ไม่มีหัวข้อ)") + "</div>" +
         '<div class="kb-rootcause">' + esc(c.root_cause || c.corrective_action || "") + "</div>" +
@@ -287,8 +276,8 @@
 
     var html = "";
     html += '<div class="kb-detail-section"><div class="label">แหล่งที่มา</div><div class="val source-link">' +
-      (c.source_type === "Issue" ? "Problem Management" : "Daily Activity") + " · " + fmtDate(c.received_date) +
-      (c.line_id ? " · " + esc(lineById[c.line_id]) : "") + (c.machine_id ? " · " + esc(machineById[c.machine_id]) : "") +
+      "Case Management" + " · " + fmtDate(c.received_date) +
+      (c.line ? " · " + esc(c.line) : "") + (c.machine ? " · " + esc(c.machine) : "") +
       "</div></div>";
 
     if (c.description) html += '<div class="kb-detail-section"><div class="label">รายละเอียดปัญหา</div><div class="val">' + esc(c.description) + "</div></div>";
@@ -340,7 +329,7 @@
     render();
   });
 
-  if (sb) { loadLookups().then(loadCases); }
+  if (sb) { loadCases(); }
 })();
 </script>
 </body>

@@ -12,7 +12,7 @@
 <style>
   :root { --grid-line: var(--line); --axis-line: var(--line-strong); }
 
-  .selector-row { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; margin-bottom: var(--sp-4); }
+  .selector-row { display: flex; justify-content: flex-end; align-items: center; margin-bottom: var(--sp-4); }
   .period-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--r-md); overflow: hidden; }
   .period-btn { appearance: none; border: none; background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: var(--fs-12); font-weight: 600; padding: 7px 13px; cursor: pointer; border-right: 1px solid var(--line-strong); }
   .period-btn:last-child { border-right: none; }
@@ -66,8 +66,6 @@
     <div class="ds-content">
 
       <div class="selector-row">
-        <label style="font-size:var(--fs-13);color:var(--ink-secondary);">ชื่อวิศวกร (Owner):</label>
-        <select id="ownerSelect"></select>
         <div class="period-toggle" id="periodToggle">
           <button class="period-btn active" data-period="monthly">รายเดือน</button>
           <button class="period-btn" data-period="yearly">รายปี</button>
@@ -91,7 +89,7 @@
       </div>
 
       <footer style="margin-top:var(--sp-5);padding-top:var(--sp-3);border-top:1px solid var(--line);color:var(--ink-muted);font-size:var(--fs-11);text-align:center;">
-        My Performance — คำนวณจากข้อมูล Daily Engineering Dashboard (ไม่มีระบบ login จริง ใช้ชื่อ Owner ในการกรอง)
+        My Performance — คำนวณจากข้อมูล Daily Engineering Dashboard ตามบัญชีผู้ใช้งานที่ login อยู่ (จับคู่ด้วยชื่อในหน้า Profile)
       </footer>
     </div>
   </div>
@@ -105,6 +103,7 @@
   var sb = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
   function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function niceMax(max) {
     if (max <= 0) return 1;
     var step = max <= 5 ? 1 : max <= 10 ? 2 : max <= 25 ? 5 : max <= 100 ? 10 : Math.ceil(max / 5 / 50) * 50;
@@ -123,6 +122,7 @@
 
   var allActivities = [];
   var currentPeriod = "monthly";
+  var currentOwnerName = "";
 
   function bucketKeyOf(dateStr, period) { return period === "yearly" ? dateStr.slice(0, 4) : dateStr.slice(0, 7); }
   function bucketLabelOf(key, period) {
@@ -133,9 +133,8 @@
   }
 
   function myActivities() {
-    var owner = $("ownerSelect").value;
-    if (!owner) return [];
-    return allActivities.filter(function (a) { return a.owner === owner; });
+    if (!currentOwnerName) return [];
+    return allActivities.filter(function (a) { return a.owner === currentOwnerName; });
   }
 
   function timeToMinutes(t) { if (!t) return null; var p = t.split(":"); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); }
@@ -204,28 +203,43 @@
 
   function renderValueSummary() {
     var mine = myActivities();
-    var owner = $("ownerSelect").value;
     var el = $("valueSummary");
-    if (!owner || !mine.length) { el.innerHTML = '<div class="empty">ยังไม่มีข้อมูล — เลือกชื่อวิศวกรด้านบน</div>'; return; }
+    if (!mine.length) {
+      el.innerHTML = currentOwnerName
+        ? '<div class="empty">ยังไม่พบข้อมูลผลงานสำหรับชื่อ "' + esc(currentOwnerName) + '" — ตรวจสอบว่าชื่อในหน้า <a href="profile.html">Profile</a> ตรงกับชื่อ Owner ที่ใช้บันทึกงาน</div>'
+        : '<div class="empty">ไม่พบชื่อผู้ใช้งาน — ตั้งชื่อที่หน้า <a href="profile.html">Profile</a> ก่อน</div>';
+      return;
+    }
     var closed = mine.filter(function (a) { return a.status === "Closed"; }).length;
     var costSaving = mine.reduce(function (s, a) { return s + (Number(a.cost_saving_thb) || 0); }, 0);
     var downtimeSaved = mine.reduce(function (s, a) { return s + (Number(a.downtime_saved_minutes) || 0); }, 0);
     var ngReduced = mine.reduce(function (s, a) { return s + (Number(a.ng_reduced_qty) || 0); }, 0);
-    el.innerHTML = "คุณ <b>" + owner + "</b> ปิดงานสำเร็จ <b>" + closed + "</b> รายการ ช่วยลด Downtime รวม <b>" + downtimeSaved.toLocaleString() +
+    el.innerHTML = "คุณ <b>" + esc(currentOwnerName) + "</b> ปิดงานสำเร็จ <b>" + closed + "</b> รายการ ช่วยลด Downtime รวม <b>" + downtimeSaved.toLocaleString() +
       " นาที</b> ลด NG ได้ <b>" + ngReduced.toLocaleString() + " ชิ้น</b> และสร้าง Cost Saving ให้โรงงานรวม <b style=\"color:var(--s-success)\">฿" + costSaving.toLocaleString() + "</b>";
   }
 
-  function populateOwners() {
-    var sel = $("ownerSelect");
-    var owners = Array.from(new Set(allActivities.map(function (a) { return a.owner; }).filter(Boolean))).sort();
-    var cur = sel.value;
-    sel.innerHTML = '<option value="">— เลือกชื่อ —</option>';
-    owners.forEach(function (o) { var opt = document.createElement("option"); opt.value = o; opt.textContent = o; sel.appendChild(opt); });
-    if (cur) sel.value = cur;
-    else if (owners.length) sel.value = owners[0];
+  function renderAll() { renderStats(); renderClosedTrend(); renderValueSummary(); }
+
+  function waitForAuth() {
+    return new Promise(function (resolve) {
+      var tries = 0;
+      (function poll() {
+        if (window.__authClient) return resolve(window.__authClient);
+        if (++tries > 100) return resolve(null);
+        setTimeout(poll, 50);
+      })();
+    });
   }
 
-  function renderAll() { renderStats(); renderClosedTrend(); renderValueSummary(); }
+  async function resolveCurrentOwnerName() {
+    var authClient = await waitForAuth();
+    if (!authClient) return;
+    var sessionRes = await authClient.auth.getSession();
+    var session = sessionRes.data && sessionRes.data.session;
+    if (!session || !session.user) return;
+    var profRes = await authClient.from("profiles").select("display_name").eq("id", session.user.id).maybeSingle();
+    if (profRes.data && profRes.data.display_name) currentOwnerName = profRes.data.display_name;
+  }
 
   document.addEventListener("DOMContentLoaded", function () {
     var savedTheme = localStorage.getItem("eng-log-theme");
@@ -240,7 +254,6 @@
       applyThemeIcon();
     });
 
-    $("ownerSelect").addEventListener("change", renderAll);
     document.querySelectorAll("#periodToggle .period-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         document.querySelectorAll("#periodToggle .period-btn").forEach(function (b) { b.classList.remove("active"); });
@@ -251,10 +264,11 @@
     });
 
     if (!sb) { $("stats").innerHTML = '<div class="empty">ยังไม่ได้ตั้งค่าฐานข้อมูล</div>'; return; }
-    sb.from("daily_activities").select("*").then(function (res) {
+    resolveCurrentOwnerName().then(function () {
+      return sb.from("daily_activities").select("*");
+    }).then(function (res) {
       if (res.error) { $("stats").innerHTML = '<div class="empty">โหลดข้อมูลไม่สำเร็จ</div>'; return; }
       allActivities = res.data || [];
-      populateOwners();
       renderAll();
     });
   });

@@ -1746,6 +1746,43 @@
   }
   function hexToRgb(hex) { var n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 
+  // ---------- Thai Unicode font (Sarabun) for PDF embedding ----------
+  // jsPDF's built-in fonts (Helvetica/Times/Courier) have no Thai glyphs, which is why
+  // exported PDFs previously showed corrupted/boxed Thai characters. We fetch the actual
+  // Sarabun TTF (SIL Open Font License, Google Fonts) and embed it into the PDF itself via
+  // addFileToVFS/addFont, so Thai renders correctly on every OS without relying on any
+  // system font being installed on the viewer's machine.
+  var thaiFontLoaded = null;
+  function arrayBufferToBase64(buffer) {
+    var bytes = new Uint8Array(buffer);
+    var binary = "";
+    var chunkSize = 0x8000;
+    for (var i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  }
+  function loadThaiFont() {
+    if (thaiFontLoaded) return thaiFontLoaded;
+    thaiFontLoaded = Promise.all([
+      fetch("https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/Sarabun-Regular.ttf").then(function (r) { return r.arrayBuffer(); }),
+      fetch("https://raw.githubusercontent.com/google/fonts/main/ofl/sarabun/Sarabun-Bold.ttf").then(function (r) { return r.arrayBuffer(); })
+    ]).then(function (buffers) {
+      return { regular: arrayBufferToBase64(buffers[0]), bold: arrayBufferToBase64(buffers[1]) };
+    }).catch(function (err) {
+      thaiFontLoaded = null;
+      throw err;
+    });
+    return thaiFontLoaded;
+  }
+  function embedThaiFont(doc, thaiFont) {
+    doc.addFileToVFS("Sarabun-Regular.ttf", thaiFont.regular);
+    doc.addFont("Sarabun-Regular.ttf", "Sarabun", "normal");
+    doc.addFileToVFS("Sarabun-Bold.ttf", thaiFont.bold);
+    doc.addFont("Sarabun-Bold.ttf", "Sarabun", "bold");
+    doc.setFont("Sarabun", "normal");
+  }
+
   function pdfHBar(doc, entries, x, y, w, colorIdx) {
     var top = entries.slice(0, 5);
     if (!top.length) { doc.setFontSize(7); doc.setTextColor(160, 170, 180); doc.text("No data", x, y + 3); return y + 6; }
@@ -1753,7 +1790,7 @@
     var barX = x + 24, barW = w - 24 - 8;
     top.forEach(function (e, i) {
       var rgb = hexToRgb(CAT_COLORS[(colorIdx != null ? colorIdx : i) % CAT_COLORS.length]);
-      doc.setFontSize(6.2); doc.setTextColor(60, 68, 78); doc.setFont(undefined, "normal");
+      doc.setFontSize(6.2); doc.setTextColor(60, 68, 78); doc.setFont("Sarabun", "normal");
       doc.text(String(e.name).slice(0, 12), x, y + 2);
       doc.setFillColor(238, 241, 246); doc.rect(barX, y - 1.6, barW, 2.6, "F");
       doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.rect(barX, y - 1.6, barW * (e.n / m), 2.6, "F");
@@ -1787,7 +1824,7 @@
     entries.slice(0, 6).forEach(function (e, i) {
       var rgb = hexToRgb(CAT_COLORS[(i + (colorOffset || 0)) % CAT_COLORS.length]);
       doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.rect(x, y - 2, 2.2, 2.2, "F");
-      doc.setFontSize(6); doc.setTextColor(60, 68, 78); doc.setFont(undefined, "normal");
+      doc.setFontSize(6); doc.setTextColor(60, 68, 78); doc.setFont("Sarabun", "normal");
       doc.text(String(e.name).slice(0, 14) + " " + Math.round((e.n / total) * 1000) / 10 + "%", x + 3.5, y);
       y += 4;
     });
@@ -1815,22 +1852,22 @@
     var x1 = x + w * 0.22, x2 = x + w * 0.48;
     var h1 = (h - 8) * (plan / max), h2 = (h - 8) * (actual / max);
     doc.setFillColor(168, 203, 234); doc.rect(x1, y + h - 8 - h1, bw, h1, "F");
-    doc.setFontSize(7); doc.setFont(undefined, "bold"); doc.setTextColor(30, 30, 30); doc.text(plan.toLocaleString(), x1 + bw / 2, y + h - 8 - h1 - 2, { align: "center" });
-    doc.setFontSize(5.5); doc.setFont(undefined, "normal"); doc.setTextColor(140, 150, 160); doc.text("PLAN", x1 + bw / 2, y + h - 2, { align: "center" });
+    doc.setFontSize(7); doc.setFont("Sarabun", "bold"); doc.setTextColor(30, 30, 30); doc.text(plan.toLocaleString(), x1 + bw / 2, y + h - 8 - h1 - 2, { align: "center" });
+    doc.setFontSize(5.5); doc.setFont("Sarabun", "normal"); doc.setTextColor(140, 150, 160); doc.text("PLAN", x1 + bw / 2, y + h - 2, { align: "center" });
     doc.setFillColor(30, 79, 160); doc.rect(x2, y + h - 8 - h2, bw, h2, "F");
-    doc.setFontSize(7); doc.setFont(undefined, "bold"); doc.setTextColor(30, 30, 30); doc.text(actual.toLocaleString(), x2 + bw / 2, y + h - 8 - h2 - 2, { align: "center" });
-    doc.setFontSize(5.5); doc.setFont(undefined, "normal"); doc.setTextColor(140, 150, 160); doc.text("ACTUAL", x2 + bw / 2, y + h - 2, { align: "center" });
+    doc.setFontSize(7); doc.setFont("Sarabun", "bold"); doc.setTextColor(30, 30, 30); doc.text(actual.toLocaleString(), x2 + bw / 2, y + h - 8 - h2 - 2, { align: "center" });
+    doc.setFontSize(5.5); doc.setFont("Sarabun", "normal"); doc.setTextColor(140, 150, 160); doc.text("ACTUAL", x2 + bw / 2, y + h - 2, { align: "center" });
     var ax = x + w * 0.8, ay = y + (h - 8) * (1 - Math.min(ach, 100) / 100);
     doc.setFillColor(30, 142, 90); doc.circle(ax, ay, 1.4, "F");
-    doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(30, 142, 90); doc.text(ach + "%", ax, ay - 3, { align: "center" });
-    doc.setFontSize(5.5); doc.setFont(undefined, "normal"); doc.setTextColor(140, 150, 160); doc.text("ACHV.", ax, y + h - 2, { align: "center" });
+    doc.setFontSize(7.5); doc.setFont("Sarabun", "bold"); doc.setTextColor(30, 142, 90); doc.text(ach + "%", ax, ay - 3, { align: "center" });
+    doc.setFontSize(5.5); doc.setFont("Sarabun", "normal"); doc.setTextColor(140, 150, 160); doc.text("ACHV.", ax, y + h - 2, { align: "center" });
   }
 
   function pdfCaseCard(doc, c, num, x, y, w, h, flatBefore, flatAfter) {
     doc.setDrawColor(221, 227, 234); doc.setLineWidth(.2); doc.rect(x, y, w, h);
     doc.setFillColor(244, 246, 249); doc.rect(x, y, w, 5, "F");
     doc.setFillColor(22, 41, 77); doc.circle(x + 3, y + 2.5, 1.6, "F");
-    doc.setFontSize(5); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold"); doc.text(String(num), x + 3, y + 3.3, { align: "center" });
+    doc.setFontSize(5); doc.setTextColor(255, 255, 255); doc.setFont("Sarabun", "bold"); doc.text(String(num), x + 3, y + 3.3, { align: "center" });
     doc.setFontSize(6.5); doc.setTextColor(30, 30, 30); doc.text(c.code, x + 6, y + 3.3);
     doc.setFontSize(5); doc.setTextColor(90, 100, 110); doc.text(c.statusLabel, x + w - 2, y + 3.3, { align: "right" });
 
@@ -1852,9 +1889,9 @@
     kv("Lot No.", c.lotNo, innerY); innerY += 4;
 
     doc.setDrawColor(230, 234, 240); doc.setLineWidth(.15); doc.line(x + 1.5, innerY - 2.6, x + w - 1.5, innerY - 2.6);
-    doc.setFontSize(6.2); doc.setFont(undefined, "bold"); doc.setTextColor(22, 41, 77);
+    doc.setFontSize(6.2); doc.setFont("Sarabun", "bold"); doc.setTextColor(22, 41, 77);
     var probLines = doc.splitTextToSize(c.problem, w - 4); doc.text(probLines.slice(0, 2), x + 2, innerY); innerY += probLines.slice(0, 2).length * 2.8 + 1;
-    doc.setFont(undefined, "normal"); kv("Root Cause", c.rootCause, innerY); innerY += 4;
+    doc.setFont("Sarabun", "normal"); kv("Root Cause", c.rootCause, innerY); innerY += 4;
 
     doc.line(x + 1.5, innerY - 2.6, x + w - 1.5, innerY - 2.6);
     doc.setFontSize(5.4); doc.setTextColor(140, 150, 160); doc.text("CORRECTIVE", x + 2, innerY);
@@ -1880,6 +1917,12 @@
       await loadJsPDF();
       var jsPDF = window.jspdf.jsPDF;
       var doc = new jsPDF({ unit: "mm", format: "a4" });
+      try {
+        var thaiFont = await loadThaiFont();
+        embedThaiFont(doc, thaiFont);
+      } catch (fontErr) {
+        console.warn("โหลดฟอนต์ไทยไม่สำเร็จ ข้อความไทยในไฟล์ PDF อาจแสดงผลผิดพลาด:", fontErr);
+      }
       var rep = currentReportData;
       var company = $("fCompanyName").value || "[Company Name]";
       var dept = $("fDeptName").value || "Manufacturing Engineering Department";
@@ -1891,22 +1934,22 @@
 
       function header(withTitle) {
         if (logoDataUrl) { try { doc.addImage(logoDataUrl, "PNG", marginX, 8, 11, 11); } catch (e) {} }
-        else { doc.setFillColor(22, 41, 77); doc.roundedRect(marginX, 8, 11, 11, 2, 2, "F"); doc.setTextColor(255, 255, 255); doc.setFontSize(10); doc.setFont(undefined, "bold"); doc.text((company.trim().charAt(0) || "M").toUpperCase(), marginX + 5.5, 15, { align: "center" }); }
-        doc.setTextColor(20, 20, 20); doc.setFontSize(11); doc.setFont(undefined, "bold");
+        else { doc.setFillColor(22, 41, 77); doc.roundedRect(marginX, 8, 11, 11, 2, 2, "F"); doc.setTextColor(255, 255, 255); doc.setFontSize(10); doc.setFont("Sarabun", "bold"); doc.text((company.trim().charAt(0) || "M").toUpperCase(), marginX + 5.5, 15, { align: "center" }); }
+        doc.setTextColor(20, 20, 20); doc.setFontSize(11); doc.setFont("Sarabun", "bold");
         var nameW = doc.getTextWidth(company); var fs = 11; while (nameW > 95 && fs > 7) { fs -= 0.5; doc.setFontSize(fs); nameW = doc.getTextWidth(company); }
         doc.text(company, marginX + 14, 13);
-        doc.setFontSize(7.5); doc.setFont(undefined, "normal"); doc.setTextColor(100, 110, 120); doc.text(dept, marginX + 14, 17);
+        doc.setFontSize(7.5); doc.setFont("Sarabun", "normal"); doc.setTextColor(100, 110, 120); doc.text(dept, marginX + 14, 17);
         if (withTitle) {
-          doc.setFontSize(11); doc.setFont(undefined, "bold"); doc.setTextColor(22, 41, 77); doc.text("DAILY ENGINEERING REPORT", pageW - marginX, 13, { align: "right" });
-          doc.setFontSize(7.5); doc.setFont(undefined, "normal"); doc.setTextColor(100, 110, 120);
+          doc.setFontSize(11); doc.setFont("Sarabun", "bold"); doc.setTextColor(22, 41, 77); doc.text("DAILY ENGINEERING REPORT", pageW - marginX, 13, { align: "right" });
+          doc.setFontSize(7.5); doc.setFont("Sarabun", "normal"); doc.setTextColor(100, 110, 120);
           doc.text(fmtThai(rep.dateIso) + " (" + dowThai(rep.dateIso) + ")", pageW - marginX, 17, { align: "right" });
         } else {
-          doc.setFontSize(10); doc.setFont(undefined, "bold"); doc.setTextColor(22, 41, 77); doc.text("DAILY ENGINEERING REPORT", pageW - marginX, 13, { align: "right" });
+          doc.setFontSize(10); doc.setFont("Sarabun", "bold"); doc.setTextColor(22, 41, 77); doc.text("DAILY ENGINEERING REPORT", pageW - marginX, 13, { align: "right" });
         }
         return 23;
       }
       function metaStrip(yy) {
-        doc.autoTable({ startY: yy, theme: "grid", margin: { left: marginX, right: marginX }, styles: { fontSize: 7, cellPadding: 1.6 },
+        doc.autoTable({ startY: yy, theme: "grid", margin: { left: marginX, right: marginX }, styles: { font: "Sarabun", fontSize: 7, cellPadding: 1.6 },
           body: [["Report No.", rep.reportNo, "Revision", revision, "Prepared By", prepared, "Date", fmtThaiShort(rep.dateIso)]],
           columnStyles: { 0: { fontStyle: "bold", fillColor: [244, 246, 249] }, 2: { fontStyle: "bold", fillColor: [244, 246, 249] }, 4: { fontStyle: "bold", fillColor: [244, 246, 249] }, 6: { fontStyle: "bold", fillColor: [244, 246, 249] } } });
         return doc.lastAutoTable.finalY + 5;
@@ -1914,7 +1957,7 @@
       function newPage(withTitle) { if (curPage > 0) doc.addPage(); curPage++; y = header(withTitle); }
       function secTitle(n, t) {
         doc.setFillColor(22, 41, 77); doc.roundedRect(marginX, y - 3, 4, 4, .8, .8, "F");
-        doc.setFontSize(6.5); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold"); doc.text(String(n), marginX + 2, y, { align: "center" });
+        doc.setFontSize(6.5); doc.setTextColor(255, 255, 255); doc.setFont("Sarabun", "bold"); doc.text(String(n), marginX + 2, y, { align: "center" });
         doc.setFontSize(8.5); doc.setTextColor(22, 41, 77); doc.text(t.toUpperCase(), marginX + 6, y);
         y += 5;
       }
@@ -1927,7 +1970,7 @@
       if ($("incExec").checked) {
         sec++; var boxY = y; y += 4; secTitle(sec, "Executive Summary");
         var colW = (pageW - marginX * 2) * 0.58;
-        doc.setFontSize(7.5); doc.setFont(undefined, "normal"); doc.setTextColor(34, 34, 51);
+        doc.setFontSize(7.5); doc.setFont("Sarabun", "normal"); doc.setTextColor(34, 34, 51);
         var plain = (rep.execSummaryHtml != null ? rep.execSummaryHtml : rep.execSummary.join(" ")).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
         var wrapped = doc.splitTextToSize(plain, colW - 2);
         doc.text(wrapped, marginX, y + 3);
@@ -1937,7 +1980,7 @@
           var bx = kx + i * kw;
           doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, y, kw - 2, 16, 1.2, 1.2);
           doc.setFontSize(4.6); doc.setTextColor(136, 150, 160); doc.text(k[1], bx + (kw - 2) / 2, y + 9, { align: "center" });
-          doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(k[3][0], k[3][1], k[3][2]); doc.text(String(k[2]), bx + (kw - 2) / 2, y + 13.5, { align: "center" });
+          doc.setFontSize(7.5); doc.setFont("Sarabun", "bold"); doc.setTextColor(k[3][0], k[3][1], k[3][2]); doc.text(String(k[2]), bx + (kw - 2) / 2, y + 13.5, { align: "center" });
         });
         y = y + Math.max(wrapped.length * 3.4, 18) + 5;
       }
@@ -1955,14 +1998,14 @@
           var stripY = prodY + 32;
           [["Yield", (rep.production.yieldPct != null ? rep.production.yieldPct + "%" : "—")], ["NG", (rep.production.ngPct != null ? rep.production.ngPct + "%" : "—")], ["Downtime", rep.production.downtime + " min"], ["NG Qty", rep.production.ng]].forEach(function (s, i) {
             var sx = marginX + i * (colW2 / 4);
-            doc.setFontSize(8); doc.setFont(undefined, "bold"); doc.setTextColor(30, 30, 30); doc.text(String(s[1]), sx + colW2 / 8, stripY, { align: "center" });
-            doc.setFontSize(5); doc.setFont(undefined, "normal"); doc.setTextColor(140, 150, 160); doc.text(s[0].toUpperCase(), sx + colW2 / 8, stripY + 3, { align: "center" });
+            doc.setFontSize(8); doc.setFont("Sarabun", "bold"); doc.setTextColor(30, 30, 30); doc.text(String(s[1]), sx + colW2 / 8, stripY, { align: "center" });
+            doc.setFontSize(5); doc.setFont("Sarabun", "normal"); doc.setTextColor(140, 150, 160); doc.text(s[0].toUpperCase(), sx + colW2 / 8, stripY + 3, { align: "center" });
           });
 
           y = yStart;
           var ex = marginX + colW2 + 4;
           doc.setFillColor(22, 41, 77); doc.roundedRect(ex, y - 3, 4, 4, .8, .8, "F");
-          doc.setFontSize(6.5); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold"); doc.text(String(sec + 1), ex + 2, y, { align: "center" });
+          doc.setFontSize(6.5); doc.setTextColor(255, 255, 255); doc.setFont("Sarabun", "bold"); doc.text(String(sec + 1), ex + 2, y, { align: "center" });
           doc.setFontSize(8.5); doc.setTextColor(22, 41, 77); doc.text("ENGINEERING VALUE CONTRIBUTION", ex + 6, y);
           sec++;
           var evItems = [["users", "Activities", rep.engineering.casesHandled, [30, 79, 160]], ["wrench", "Resolved", rep.engineering.casesResolved, [30, 79, 160]], ["target", "Success Rate", (rep.engineering.successRate != null ? rep.engineering.successRate + "%" : "—"), [30, 142, 90]], ["trendingDown", "NG Reduced", rep.engineering.ngReduction, [201, 58, 46]], ["clock", "Downtime Cut", rep.engineering.downtimeReduction, [201, 130, 26]]];
@@ -1972,7 +2015,7 @@
             var bx = ex + col * (evColW + 4), by = y + 3 + row * 15;
             doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, by, evColW, 13, 1.2, 1.2);
             doc.setFontSize(4.6); doc.setTextColor(136, 150, 160); doc.text(it[1].toUpperCase(), bx + evColW / 2, by + 9, { align: "center" });
-            doc.setFontSize(7); doc.setFont(undefined, "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + evColW / 2, by + 5.5, { align: "center" });
+            doc.setFontSize(7); doc.setFont("Sarabun", "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + evColW / 2, by + 5.5, { align: "center" });
           });
           y = Math.max(stripY, y + 3 + 2 * 15) + 6;
         } else if (showProdPdf) {
@@ -1983,8 +2026,8 @@
           var stripY2 = prodY2 + 32;
           [["Yield", (rep.production.yieldPct != null ? rep.production.yieldPct + "%" : "—")], ["NG", (rep.production.ngPct != null ? rep.production.ngPct + "%" : "—")], ["Downtime", rep.production.downtime + " min"], ["NG Qty", rep.production.ng]].forEach(function (s, i) {
             var sx = marginX + i * (halfW / 4);
-            doc.setFontSize(8); doc.setFont(undefined, "bold"); doc.setTextColor(30, 30, 30); doc.text(String(s[1]), sx + halfW / 8, stripY2, { align: "center" });
-            doc.setFontSize(5); doc.setFont(undefined, "normal"); doc.setTextColor(140, 150, 160); doc.text(s[0].toUpperCase(), sx + halfW / 8, stripY2 + 3, { align: "center" });
+            doc.setFontSize(8); doc.setFont("Sarabun", "bold"); doc.setTextColor(30, 30, 30); doc.text(String(s[1]), sx + halfW / 8, stripY2, { align: "center" });
+            doc.setFontSize(5); doc.setFont("Sarabun", "normal"); doc.setTextColor(140, 150, 160); doc.text(s[0].toUpperCase(), sx + halfW / 8, stripY2 + 3, { align: "center" });
           });
           y = stripY2 + 6;
         } else {
@@ -1996,7 +2039,7 @@
             var bx = marginX + i * (evColWFull + 4);
             doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, y, evColWFull, 15, 1.2, 1.2);
             doc.setFontSize(4.6); doc.setTextColor(136, 150, 160); doc.text(it[1].toUpperCase(), bx + evColWFull / 2, y + 10, { align: "center" });
-            doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + evColWFull / 2, y + 5.5, { align: "center" });
+            doc.setFontSize(7.5); doc.setFont("Sarabun", "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + evColWFull / 2, y + 5.5, { align: "center" });
           });
           y += 20;
         }
@@ -2015,7 +2058,7 @@
         chartDefs.forEach(function (cd, i) {
           var bx = marginX + i * (cw + 4);
           doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, y, cw, 40, 1.5, 1.5);
-          doc.setFontSize(5.4); doc.setTextColor(60, 68, 78); doc.setFont(undefined, "bold"); doc.text(cd.title, bx + cw / 2, y + 4, { align: "center" });
+          doc.setFontSize(5.4); doc.setTextColor(60, 68, 78); doc.setFont("Sarabun", "bold"); doc.text(cd.title, bx + cw / 2, y + 4, { align: "center" });
           cd.draw(bx, y, cw);
         });
         y += 44;
@@ -2071,31 +2114,31 @@
             sec++; secTitle(sec, "Engineering Evidence Panel");
             withEvidence.forEach(function (c) {
               ensureSpace(14);
-              doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(22, 41, 77);
+              doc.setFontSize(7.5); doc.setFont("Sarabun", "bold"); doc.setTextColor(22, 41, 77);
               doc.text(c.code + " — " + String(c.problem).slice(0, 60), marginX, y);
               y += 4;
               if ($("incMeasurement").checked && c.measurements && c.measurements.length) {
-                doc.autoTable({ startY: y, margin: { left: marginX, right: marginX }, styles: { fontSize: 6.5, cellPadding: 1.3 }, head: [["Measurement", "Value", "Unit"]], body: c.measurements.map(function (m) { return [m.label || "", m.value || "", m.unit || ""]; }), headStyles: { fillColor: [22, 41, 77], textColor: 255 } });
+                doc.autoTable({ startY: y, margin: { left: marginX, right: marginX }, styles: { font: "Sarabun", fontSize: 6.5, cellPadding: 1.3 }, head: [["Measurement", "Value", "Unit"]], body: c.measurements.map(function (m) { return [m.label || "", m.value || "", m.unit || ""]; }), headStyles: { font: "Sarabun", fontStyle: "bold", fillColor: [22, 41, 77], textColor: 255 } });
                 y = doc.lastAutoTable.finalY + 2;
               }
               if ($("incTrial").checked && c.trials && c.trials.length) {
                 ensureSpace(14);
-                doc.autoTable({ startY: y, margin: { left: marginX, right: marginX }, styles: { fontSize: 6, cellPadding: 1.2 }, head: [["No.", "Date", "Before", "After", "Result", "Pass/Fail", "Engineer"]], body: c.trials.map(function (t) { return [t.no || "", t.date || "", t.paramBefore || "", t.paramAfter || "", t.result || "", t.passFail || "", t.engineer || ""]; }), headStyles: { fillColor: [22, 41, 77], textColor: 255 } });
+                doc.autoTable({ startY: y, margin: { left: marginX, right: marginX }, styles: { font: "Sarabun", fontSize: 6, cellPadding: 1.2 }, head: [["No.", "Date", "Before", "After", "Result", "Pass/Fail", "Engineer"]], body: c.trials.map(function (t) { return [t.no || "", t.date || "", t.paramBefore || "", t.paramAfter || "", t.result || "", t.passFail || "", t.engineer || ""]; }), headStyles: { font: "Sarabun", fontStyle: "bold", fillColor: [22, 41, 77], textColor: 255 } });
                 y = doc.lastAutoTable.finalY + 2;
               }
               if ($("incRelatedDocs").checked && c.relatedDocs && c.relatedDocs.length) {
                 ensureSpace(10);
-                doc.setFontSize(6.5); doc.setFont(undefined, "normal"); doc.setTextColor(90, 100, 110);
+                doc.setFontSize(6.5); doc.setFont("Sarabun", "normal"); doc.setTextColor(90, 100, 110);
                 var docLine = c.relatedDocs.map(function (d) { return "[" + (d.type || "Doc") + "] " + (d.name || d.url || ""); }).join("   ·   ");
                 var docWrapped = doc.splitTextToSize(docLine, pageW - marginX * 2);
                 doc.text(docWrapped, marginX, y); y += docWrapped.length * 2.6 + 2;
               }
               if (c.engineerComment) {
                 ensureSpace(10);
-                doc.setFontSize(6.5); doc.setFont(undefined, "italic"); doc.setTextColor(60, 68, 78);
+                doc.setFontSize(6.5); doc.setFont("Sarabun", "italic"); doc.setTextColor(60, 68, 78);
                 var cmtWrapped = doc.splitTextToSize("Comment: " + c.engineerComment, pageW - marginX * 2);
                 doc.text(cmtWrapped, marginX, y); y += cmtWrapped.length * 2.6 + 2;
-                doc.setFont(undefined, "normal");
+                doc.setFont("Sarabun", "normal");
               }
               y += 2;
               doc.setDrawColor(230, 234, 240); doc.line(marginX, y - 1, pageW - marginX, y - 1); y += 3;
@@ -2114,7 +2157,7 @@
           var bx = marginX + i * (imColW + 4);
           doc.setDrawColor(221, 227, 234); doc.roundedRect(bx, y, imColW, 15, 1.2, 1.2);
           doc.setFontSize(4.6); doc.setTextColor(136, 150, 160); doc.text(it[1].toUpperCase(), bx + imColW / 2, y + 10, { align: "center" });
-          doc.setFontSize(7.5); doc.setFont(undefined, "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + imColW / 2, y + 5.5, { align: "center" });
+          doc.setFontSize(7.5); doc.setFont("Sarabun", "bold"); doc.setTextColor(it[3][0], it[3][1], it[3][2]); doc.text(String(it[2]), bx + imColW / 2, y + 5.5, { align: "center" });
         });
         y += 20;
       }
@@ -2123,8 +2166,8 @@
       for (var pn = 1; pn <= pageCount; pn++) {
         doc.setPage(pn);
         doc.setDrawColor(220, 224, 230); doc.setLineWidth(.2); doc.line(marginX, 283, pageW - marginX, 283);
-        doc.setFontSize(6.5); doc.setTextColor(120, 130, 140); doc.setFont(undefined, "normal");
-        if (conf) { doc.setTextColor(201, 58, 46); doc.setFont(undefined, "bold"); doc.text(conf.toUpperCase(), marginX, 288); doc.setTextColor(120, 130, 140); doc.setFont(undefined, "normal"); }
+        doc.setFontSize(6.5); doc.setTextColor(120, 130, 140); doc.setFont("Sarabun", "normal");
+        if (conf) { doc.setTextColor(201, 58, 46); doc.setFont("Sarabun", "bold"); doc.text(conf.toUpperCase(), marginX, 288); doc.setTextColor(120, 130, 140); doc.setFont("Sarabun", "normal"); }
         doc.text("Document No.: " + rep.reportNo + "  ·  Rev. " + revision, pageW / 2, 288, { align: "center" });
         doc.text("Page " + pn + " of " + pageCount, pageW - marginX, 288, { align: "right" });
       }

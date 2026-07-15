@@ -371,7 +371,7 @@
       .slice(0, 6);
     $("missionSub").textContent = list.length + " รายการที่ควรดำเนินการวันนี้";
     var el = $("missionList"); el.innerHTML = "";
-    if (!list.length) { el.innerHTML = '<li class="mission-item"><span class="dot neutral"></span><span>ไม่มีงานค้างเร่งด่วนวันนี้ 🎉</span></li>'; return; }
+    if (!list.length) { el.innerHTML = '<li class="mission-item"><span class="dot neutral"></span><span style="display:inline-flex;align-items:center;gap:5px;">' + window.icon("checkCircle", 13) + 'ไม่มีงานค้างเร่งด่วนวันนี้</span></li>'; return; }
     list.forEach(function (item) {
       var link = item.r.source_type === "Issue" ? "index.html" : "daily-activity.html";
       var li = document.createElement("li"); li.className = "mission-item";

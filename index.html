@@ -3,92 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Engineering Daily Issue Log</title>
+<title>Case Management — Manufacturing Engineering Platform</title>
+<link rel="stylesheet" href="assets/design-system.css">
+<script src="assets/icons.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <style>
   :root {
-    --bg: #F3F5F1;
-    --surface: #FFFFFF;
-    --surface-2: #ECF0EA;
-    --ink: #0b0b0b;
-    --ink-secondary: #52514e;
-    --ink-muted: #898781;
-    --line: #e1e0d9;
-    --line-strong: #c3c2b7;
-    --accent: #2B5D6B;
-    --accent-soft: #E3EEEF;
-    --shadow: 0 1px 2px rgba(27,33,31,0.06), 0 8px 24px -12px rgba(27,33,31,0.18);
-    --good: #0ca30c; --good-soft: #e2f3e2;
-    --warning: #fab219; --warning-soft: #fef1d9;
-    --critical: #d03b3b; --critical-soft: #fbe3e3;
-    --sev-minor: #B7D6DB; --sev-major: #4F8A96; --sev-critical: #17414B;
-    --cat-1: #2a78d6; --cat-2: #1baf7a; --cat-3: #eda100; --cat-4: #4a3aa7;
-    --cat-5: #e34948; --cat-6: #eb6834; --cat-7: #e87ba4; --cat-other: #898781;
-    --pareto-line: #eb6834;
-    --grid-line: #e1e0d9; --axis-line: #c3c2b7;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
-      --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
-      --accent: #7CC2CD; --accent-soft: #1E3236;
-      --good: #0ca30c; --good-soft: #16281a;
-      --warning: #fab219; --warning-soft: #332711;
-      --critical: #d03b3b; --critical-soft: #33201d;
-      --sev-minor: #2E4D52; --sev-major: #5FA3AC; --sev-critical: #9FE0E8;
-      --cat-1: #3987e5; --cat-2: #199e70; --cat-3: #c98500; --cat-4: #9085e9;
-      --cat-5: #e66767; --cat-6: #d95926; --cat-7: #d55181; --cat-other: #898781;
-      --pareto-line: #d95926;
-      --grid-line: #2c2c2a; --axis-line: #383835;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
-    --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
-    --accent: #7CC2CD; --accent-soft: #1E3236;
-    --good: #0ca30c; --good-soft: #16281a;
-    --warning: #fab219; --warning-soft: #332711;
-    --critical: #d03b3b; --critical-soft: #33201d;
-    --sev-minor: #2E4D52; --sev-major: #5FA3AC; --sev-critical: #9FE0E8;
-    --cat-1: #3987e5; --cat-2: #199e70; --cat-3: #c98500; --cat-4: #9085e9;
-    --cat-5: #e66767; --cat-6: #d95926; --cat-7: #d55181; --cat-other: #898781;
-    --pareto-line: #d95926;
-    --grid-line: #2c2c2a; --axis-line: #383835;
-  }
-  :root[data-theme="light"] {
-    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA; --ink: #0b0b0b;
-    --ink-secondary: #52514e; --ink-muted: #898781; --line: #e1e0d9; --line-strong: #c3c2b7;
-    --accent: #2B5D6B; --accent-soft: #E3EEEF;
-    --good: #0ca30c; --good-soft: #e2f3e2;
-    --warning: #fab219; --warning-soft: #fef1d9;
-    --critical: #d03b3b; --critical-soft: #fbe3e3;
-    --sev-minor: #B7D6DB; --sev-major: #4F8A96; --sev-critical: #17414B;
-    --cat-1: #2a78d6; --cat-2: #1baf7a; --cat-3: #eda100; --cat-4: #4a3aa7;
-    --cat-5: #e34948; --cat-6: #eb6834; --cat-7: #e87ba4; --cat-other: #898781;
-    --pareto-line: #eb6834;
-    --grid-line: #e1e0d9; --axis-line: #c3c2b7;
+    --shadow: var(--shadow-sm);
+    --good: var(--s-success); --good-soft: var(--s-success-soft);
+    --warning: var(--s-warning); --warning-soft: var(--s-warning-soft);
+    --critical: var(--s-critical); --critical-soft: var(--s-critical-soft);
+    --sev-minor: var(--s-success); --sev-major: var(--s-warning); --sev-critical: var(--s-critical);
+    --cat-other: var(--ink-muted);
+    --pareto-line: var(--cat-3);
+    --grid-line: var(--line); --axis-line: var(--line-strong);
   }
   * { box-sizing: border-box; }
   html, body { background: var(--bg); color: var(--ink); }
   body {
-    font-family: -apple-system, "Segoe UI", "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif;
-    font-size: 15.5px; line-height: 1.55; margin: 0; padding: 24px 18px 80px;
+    font-family: var(--font-sans);
+    font-size: 14.5px; line-height: 1.55; margin: 0;
   }
   .wrap { max-width: 1180px; margin: 0 auto; }
-  .mono { font-family: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .mono { font-family: var(--font-mono); }
   .tabular { font-variant-numeric: tabular-nums; }
 
-  header.page {
-    display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;
-    margin-bottom: 22px; padding: 20px 24px; border-radius: 16px;
-    background: linear-gradient(135deg, var(--accent-soft), var(--surface) 65%);
-    border: 1px solid var(--line); box-shadow: var(--shadow);
-  }
-  header.page .eyebrow { display: flex; align-items: center; gap: 6px; }
-  header.page .greet { font-size: 13px; color: var(--ink-secondary); margin-top: 3px; }
-  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
-  h1 { font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Noto Serif Thai", serif; font-size: clamp(21px,3.2vw,27px); font-weight: 600; margin: 0; text-wrap: balance; }
+  h1 { font-family: var(--font-sans); font-size: var(--fs-24); font-weight: 700; margin: 0; text-wrap: balance; }
   .today { font-size: 12.5px; color: var(--ink-muted); }
 
   .btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 13.5px; padding: 9px 16px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -124,7 +65,7 @@
   .period-btn.active { background: var(--accent); color: #fff; }
 
   .card-shell { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
-  .card-shell h2 { font-family: Georgia, serif; font-size: 16px; font-weight: 600; margin: 0 0 12px; }
+  .card-shell h2 { font-family: var(--font-sans); font-size: var(--fs-16); font-weight: 700; margin: 0 0 12px; }
 
   .dist-bar { display: flex; height: 18px; border-radius: 4px; overflow: hidden; gap: 2px; background: var(--line); }
   .dist-seg { display: flex; align-items: center; justify-content: center; min-width: 2px; }
@@ -234,7 +175,7 @@
   .list-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
   .sort-wrap { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-secondary); }
   .view-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
-  .view-btn { appearance: none; border: none; background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; cursor: pointer; border-right: 1px solid var(--line-strong); }
+  .view-btn { appearance: none; border: none; background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; cursor: pointer; border-right: 1px solid var(--line-strong); display: inline-flex; align-items: center; gap: 5px; }
   .view-btn:last-child { border-right: none; }
   .view-btn:hover { background: var(--surface-2); }
   .view-btn.active { background: var(--accent); color: #fff; }
@@ -295,7 +236,8 @@
   .why-item { display: flex; gap: 8px; font-size: 13px; color: var(--ink-secondary); }
   .why-item .num { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
   .attach-item { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 8px 10px; background: var(--surface-2); border-radius: 9px; margin-bottom: 6px; }
-  .attach-item a { color: var(--accent); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .attach-item a { color: var(--accent); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+  .attach-item a svg { flex: none; }
   .mini-timeline { display: flex; align-items: center; gap: 0; font-size: 12px; }
   .mini-timeline .pt { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 76px; }
   .mini-timeline .pt .mk { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line-strong); background: var(--surface); }
@@ -392,7 +334,7 @@
   .preview-thumb { cursor: pointer; }
   .modal { background: var(--surface); border-radius: 10px; max-width: 620px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); border: 1px solid var(--line); }
   .modal__head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
-  .modal__head h3 { font-family: Georgia, serif; font-size: 17px; margin: 0; }
+  .modal__head h3 { font-family: var(--font-sans); font-size: var(--fs-16); font-weight: 700; margin: 0; }
   .modal__body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
   .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-secondary); margin-bottom: 5px; }
   .field input, .field select, .field textarea { width: 100%; }
@@ -411,41 +353,61 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="ds-shell">
+  <nav class="ds-sidebar" id="sidebar">
+    <div class="ds-sidebar__brand"><div class="mark">M</div><div><div class="name">Manufacturing Eng.</div><div class="sub">Engineering Platform</div></div></div>
+    <div class="ds-nav">
+      <a href="daily-dashboard.html" data-i="layoutDashboard">Dashboard</a>
+      <a href="index.html?new=1" data-i="plus">New RCA</a>
+      <a href="index.html" class="active" data-i="folder">Case Management</a>
+      <a href="daily-activity.html" data-i="checkCircle">Daily Tasks</a>
+      <a href="executive-dashboard.html" data-i="trendingUp">Analytics</a>
+      <a href="report.html" data-i="fileText">Reports</a>
+      <a href="management-report.html" data-i="printer">Management Report</a>
+      <a href="knowledge-base.html" data-i="bookOpen">Knowledge Base</a>
+      <a href="my-performance.html" data-i="users">My Performance</a>
+      <a href="notification.html" data-i="bell">Notification</a>
+      <a href="settings.html" data-i="settings">Settings</a>
+    </div>
+  </nav>
 
-  <header class="page">
-    <div>
-      <div class="eyebrow">🏭 Engineering Team · Daily Issue Log</div>
-      <h1>บันทึกงานวิศวกรรมประจำวัน</h1>
-      <div class="today mono" id="todayLabel"></div>
-      <div class="greet" id="greetLine"></div>
-    </div>
-    <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-      <div class="notif-wrap">
-        <button class="icon-btn notif-bell" id="btnNotif" aria-label="การแจ้งเตือน" title="การแจ้งเตือน">
-          🔔<span class="notif-badge" id="notifBadge" style="display:none;">0</span>
-        </button>
-        <div class="notif-dropdown" id="notifDropdown">
-          <div class="notif-dropdown__head">การแจ้งเตือน</div>
-          <div class="notif-dropdown__list" id="notifList"></div>
-        </div>
+  <div class="ds-main">
+    <header class="ds-topbar">
+      <div>
+        <div class="ds-topbar__title">Case Management</div>
+        <div class="ds-topbar__meta mono" id="todayLabel"></div>
       </div>
-      <button class="icon-btn" id="btnThemeToggle" aria-label="สลับธีมสว่าง/มืด" title="สลับธีมสว่าง/มืด">🌗</button>
-    </div>
-  </header>
+      <div class="ds-topbar__actions">
+        <div class="notif-wrap">
+          <button class="ico-btn notif-bell" id="btnNotif" aria-label="การแจ้งเตือน" title="การแจ้งเตือน">
+            <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="notif-dropdown" id="notifDropdown">
+            <div class="notif-dropdown__head">การแจ้งเตือน</div>
+            <div class="notif-dropdown__list" id="notifList"></div>
+          </div>
+        </div>
+        <button class="ico-btn" id="btnThemeToggle" aria-label="สลับธีมสว่าง/มืด" title="สลับธีมสว่าง/มืด"></button>
+      </div>
+    </header>
+
+    <div class="ds-content">
+    <div class="wrap" style="max-width:none; margin:0;">
+
+  <div class="greet" id="greetLine" style="margin-bottom:14px;"></div>
 
   <section class="quick-actions" id="quickActions">
-    <button class="qa-btn primary" id="btnAdd">➕<span>เพิ่มปัญหา</span></button>
-    <button class="qa-btn" id="btnMyIssues">🙋<span>งานของฉัน</span></button>
-    <button class="qa-btn" id="btnOverdueIssues">⏰<span>งานค้าง</span></button>
-    <button class="qa-btn" id="btnReport">📄<span>รายงาน</span></button>
-    <button class="qa-btn" id="btnExportPdf">🖨<span>Export PDF</span></button>
-    <button class="qa-btn" id="btnExportExcel">📊<span>Export Excel</span></button>
-    <a class="qa-btn" href="daily-dashboard.html" style="text-decoration:none;">📅<span>Daily Dashboard</span></a>
+    <button class="qa-btn primary" id="btnAdd" data-i="plus">เพิ่มปัญหา</button>
+    <button class="qa-btn" id="btnMyIssues" data-i="user">งานของฉัน</button>
+    <button class="qa-btn" id="btnOverdueIssues" data-i="clock">งานค้าง</button>
+    <button class="qa-btn" id="btnReport" data-i="fileText">รายงาน</button>
+    <button class="qa-btn" id="btnExportPdf" data-i="printer">Export PDF</button>
+    <button class="qa-btn" id="btnExportExcel" data-i="chartBar">Export Excel</button>
+    <a class="qa-btn" href="daily-dashboard.html" style="text-decoration:none;" data-i="layoutDashboard">Daily Dashboard</a>
   </section>
 
   <div class="banner warn" id="configBanner">
-    ⚠️ ยังไม่ได้ตั้งค่าฐานข้อมูล — เปิดไฟล์ <code>index.html</code> ด้วยโปรแกรมแก้ไขข้อความ แล้วใส่ค่า
+    ยังไม่ได้ตั้งค่าฐานข้อมูล — เปิดไฟล์ <code>index.html</code> ด้วยโปรแกรมแก้ไขข้อความ แล้วใส่ค่า
     <code>SUPABASE_URL</code> และ <code>SUPABASE_ANON_KEY</code> ที่ด้านบนของสคริปต์ (ดูขั้นตอนที่แชทให้ไว้)
   </div>
   <div class="banner err" id="errorBanner"></div>
@@ -459,7 +421,7 @@
   </section>
 
   <section class="card-shell">
-    <h2>🗓 Timeline — วันที่รับเรื่อง → วันที่แก้ไขเสร็จ</h2>
+    <h2>Timeline — วันที่รับเรื่อง → วันที่แก้ไขเสร็จ</h2>
     <div style="font-size:12.5px;color:var(--ink-muted);margin-bottom:14px;">แดง = ยังไม่แก้ไข (Open) · เหลือง = กำลังดำเนินการ · เขียว = ปิดงานแล้ว (ตัวเลขคือจำนวนวัน) — งานที่ยังไม่ปิดจะลากยาวถึงวันนี้โดยอัตโนมัติ</div>
     <div class="chart-scroll"><div id="timelineChart"><div class="skel skel-chart"></div></div></div>
     <div class="timeline-legend">
@@ -507,8 +469,8 @@
         </select>
       </div>
       <div class="view-toggle" id="viewToggle">
-        <button class="view-btn active" data-view="card" title="มุมมองการ์ด">🗂 Card</button>
-        <button class="view-btn" data-view="table" title="มุมมองตาราง">📋 Table</button>
+        <button class="view-btn active" data-view="card" title="มุมมองการ์ด" id="btnViewCard">Card</button>
+        <button class="view-btn" data-view="table" title="มุมมองตาราง" id="btnViewTable">Table</button>
       </div>
     </div>
   </section>
@@ -529,6 +491,9 @@
   </section>
 
   <footer class="page">ข้อมูลและรูปภาพถูกเก็บบน Supabase (ฐานข้อมูลจริง) — ทุกคนที่เปิดลิงก์นี้เห็นข้อมูลชุดเดียวกันแบบเรียลไทม์</footer>
+    </div>
+    </div>
+  </div>
 </div>
 
 <div class="chart-tooltip" id="chartTooltip"></div>
@@ -537,8 +502,8 @@
 <div class="backdrop" id="shareBackdrop">
   <div class="modal" style="max-width:440px;">
     <div class="modal__head">
-      <h3>🔗 แชร์รายงาน (Read-only)</h3>
-      <button class="icon-btn" id="btnCloseShare">✕</button>
+      <h3>แชร์รายงาน (Read-only)</h3>
+      <button class="icon-btn" id="btnCloseShare"></button>
     </div>
     <div class="modal__body">
       <div id="shareStep1">
@@ -580,8 +545,8 @@
     <div class="preview-box__head">
       <b id="previewName">—</b>
       <div style="display:flex;gap:6px;">
-        <a class="icon-btn" id="previewDownload" href="#" target="_blank" title="ดาวน์โหลด">⬇</a>
-        <button class="icon-btn" id="btnClosePreview" title="ปิด">✕</button>
+        <a class="icon-btn" id="previewDownload" href="#" target="_blank" title="ดาวน์โหลด"></a>
+        <button class="icon-btn" id="btnClosePreview" title="ปิด"></button>
       </div>
     </div>
     <div class="preview-box__body" id="previewBody"></div>
@@ -592,7 +557,7 @@
   <div class="modal">
     <div class="modal__head">
       <h3 id="modalTitle">เพิ่มปัญหาใหม่</h3>
-      <button class="icon-btn" id="btnCloseModal">✕</button>
+      <button class="icon-btn" id="btnCloseModal"></button>
     </div>
     <div class="modal__body">
       <div class="field">
@@ -708,10 +673,10 @@
       <div class="field" style="background:var(--surface-2); border:1px dashed var(--line-strong); border-radius:10px; padding:12px 14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
           <div>
-            <label style="margin-bottom:2px;">💡 ตัวช่วยแนะนำกรอบ RCA</label>
+            <label style="margin-bottom:2px;">ตัวช่วยแนะนำกรอบ RCA</label>
             <div style="font-size:11.5px;color:var(--ink-muted);">ใช้ Defect Category / Root Cause Category ด้านบนแนะนำแนวคำถามและตัวอย่างสาเหตุตามกรอบ 6M — เป็นแค่จุดเริ่มต้น ไม่ใช่คำตอบสำเร็จรูป ต้องตรวจสอบกับข้อเท็จจริงหน้างานเสมอ</div>
           </div>
-          <button type="button" class="btn small" id="btnRcaAssist">💡 แนะนำกรอบ RCA</button>
+          <button type="button" class="btn small" id="btnRcaAssist">แนะนำกรอบ RCA</button>
         </div>
         <div id="rcaAssistPanel" style="display:none;margin-top:10px;font-size:12.5px;color:var(--ink-secondary);"></div>
       </div>
@@ -742,17 +707,17 @@
         <div class="photo-upload-pair">
           <div class="upload-box" id="beforeBox">
             <div id="beforePreviewWrap"></div>
-            <label class="file-btn">📷 รูปก่อนแก้ปัญหา<input type="file" accept="image/*" id="fPhotoBefore"></label>
+            <label class="file-btn">รูปก่อนแก้ปัญหา<input type="file" accept="image/*" id="fPhotoBefore"></label>
           </div>
           <div class="upload-box" id="afterBox">
             <div id="afterPreviewWrap"></div>
-            <label class="file-btn">📷 รูปหลังแก้ปัญหา<input type="file" accept="image/*" id="fPhotoAfter"></label>
+            <label class="file-btn">รูปหลังแก้ปัญหา<input type="file" accept="image/*" id="fPhotoAfter"></label>
           </div>
         </div>
       </div>
       <div class="field">
         <label>Attachments (ไฟล์แนบเพิ่มเติม)</label>
-        <label class="file-btn">📎 แนบไฟล์ (รูป/วิดีโอ/PDF/Excel/Word)<input type="file" id="fAttachments" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple></label>
+        <label class="file-btn">แนบไฟล์ (รูป/วิดีโอ/PDF/Excel/Word)<input type="file" id="fAttachments" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple></label>
         <div id="attachmentsList" style="margin-top:8px;display:flex;flex-direction:column;gap:4px;"></div>
       </div>
     </div>
@@ -795,6 +760,20 @@
   var newAttachmentFiles = []; // File[] — selected this session, uploaded on save
 
   function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  document.querySelectorAll(".ds-nav a").forEach(function (a) { a.innerHTML = window.icon(a.dataset.i, 18) + a.textContent; });
+  document.querySelectorAll("#quickActions [data-i]").forEach(function (b) { b.innerHTML = window.icon(b.dataset.i, 15) + "<span>" + b.textContent + "</span>"; });
+  $("btnNotif").innerHTML = window.icon("bell", 18) + $("btnNotif").innerHTML;
+  $("btnCloseShare").innerHTML = window.icon("x", 15);
+  $("previewDownload").innerHTML = window.icon("download", 15);
+  $("btnClosePreview").innerHTML = window.icon("x", 15);
+  $("btnCloseModal").innerHTML = window.icon("x", 15);
+  $("btnViewCard").innerHTML = window.icon("folder", 14) + " Card";
+  $("btnViewTable").innerHTML = window.icon("fileText", 14) + " Table";
+  $("btnRcaAssist").innerHTML = window.icon("lightbulb", 14) + " แนะนำกรอบ RCA";
+  function applyThemeIcon() { var d = document.documentElement.getAttribute("data-theme") === "dark" || (!document.documentElement.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches); $("btnThemeToggle").innerHTML = window.icon(d ? "sun" : "moon", 18); }
+
   function showConfigBanner() { $("configBanner").classList.add("show"); }
   function showError(msg) {
     var b = $("errorBanner");
@@ -807,7 +786,7 @@
     var stack = $("toastStack");
     var t = document.createElement("div"); t.className = "toast" + (type ? " " + type : "");
     var icon = document.createElement("span"); icon.className = "icon";
-    icon.textContent = type === "success" ? "✅" : type === "error" ? "⚠️" : "ℹ️";
+    icon.innerHTML = window.icon(type === "success" ? "checkCircle" : type === "error" ? "alertTriangle" : "info", 16);
     var text = document.createElement("span"); text.textContent = msg;
     t.appendChild(icon); t.appendChild(text);
     stack.appendChild(t);
@@ -1399,13 +1378,13 @@
   function extOf(name) { return (name || "").split(".").pop().toLowerCase(); }
   function fileIconFor(name) {
     var ext = extOf(name);
-    if (IMAGE_EXT.indexOf(ext) !== -1) return "🖼";
-    if (VIDEO_EXT.indexOf(ext) !== -1) return "🎬";
-    if (ext === "pdf") return "📕";
-    if (ext === "doc" || ext === "docx") return "📄";
-    if (ext === "xls" || ext === "xlsx") return "📊";
-    if (ext === "ppt" || ext === "pptx") return "📽";
-    return "📎";
+    if (IMAGE_EXT.indexOf(ext) !== -1) return "camera";
+    if (VIDEO_EXT.indexOf(ext) !== -1) return "presentation";
+    if (ext === "pdf") return "fileText";
+    if (ext === "doc" || ext === "docx") return "fileText";
+    if (ext === "xls" || ext === "xlsx") return "chartBar";
+    if (ext === "ppt" || ext === "pptx") return "presentation";
+    return "paperclip";
   }
 
   function openPreview(url, name) {
@@ -1428,7 +1407,7 @@
       frame2.src = "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(url);
       body.appendChild(frame2);
     } else {
-      body.innerHTML = '<div class="preview-box__fallback">ไม่รองรับการแสดงตัวอย่างไฟล์ประเภทนี้ในเบราว์เซอร์<br>กด ⬇ เพื่อดาวน์โหลด/เปิดไฟล์</div>';
+      body.innerHTML = '<div class="preview-box__fallback">ไม่รองรับการแสดงตัวอย่างไฟล์ประเภทนี้ในเบราว์เซอร์<br>กดปุ่มดาวน์โหลดเพื่อเปิดไฟล์</div>';
     }
     $("previewBackdrop").classList.add("show");
   }
@@ -1476,7 +1455,7 @@
       if (res.error) throw new Error(res.error.message);
       var link = window.location.origin + window.location.pathname.replace(/index\.html$/, "") + "share.html?t=" + token;
       $("shareLinkOutput").value = link;
-      $("sharePasswordNote").textContent = pw ? "🔒 ลิงก์นี้ต้องใส่รหัสผ่านที่ตั้งไว้จึงจะเปิดดูได้" : "ลิงก์นี้เปิดดูได้ทุกคนที่มีลิงก์ (ไม่ต้องใส่รหัสผ่าน)";
+      $("sharePasswordNote").textContent = pw ? "ลิงก์นี้ต้องใส่รหัสผ่านที่ตั้งไว้จึงจะเปิดดูได้" : "ลิงก์นี้เปิดดูได้ทุกคนที่มีลิงก์ (ไม่ต้องใส่รหัสผ่าน)";
       $("shareStep1").style.display = "none";
       $("shareStep2").style.display = "";
       btn.style.display = "none";
@@ -1507,15 +1486,15 @@
       ? (closedWithDates.reduce(function (s, i) { return s + (new Date(i.resolved_date) - new Date(i.received_date)) / 86400000; }, 0) / closedWithDates.length)
       : null;
     var tiles = [
-      ["📋 งานทั้งหมด", total, "", null],
-      ["🔓 ยังไม่แก้ไข (Open)", open, "critical", function () { setQuickFilter({ status: "Open" }); }],
-      ["⏳ กำลังดำเนินการ", prog, "warning-c", function () { setQuickFilter({ status: "In Progress" }); }],
-      ["✅ ปิดงานแล้ว", closed, "good-c", function () { setQuickFilter({ status: "Closed" }); }],
-      ["🔴 Critical", critical, "critical", function () { setQuickFilter({ severity: "Critical" }); }],
-      ["🟠 Major", major, "warning-c", function () { setQuickFilter({ severity: "Major" }); }],
-      ["🟢 Minor", minor, "good-c", function () { setQuickFilter({ severity: "Minor" }); }],
-      ["⚠️ เกินกำหนด (Overdue)", overdue, overdue > 0 ? "critical" : "", function () { setQuickFilter({ overdue: true }); }],
-      ["⏱ เวลาแก้ไขเฉลี่ย (วัน)", avg === null ? "—" : avg.toFixed(1), "", null]
+      ["งานทั้งหมด", total, "", null],
+      ["ยังไม่แก้ไข (Open)", open, "critical", function () { setQuickFilter({ status: "Open" }); }],
+      ["กำลังดำเนินการ", prog, "warning-c", function () { setQuickFilter({ status: "In Progress" }); }],
+      ["ปิดงานแล้ว", closed, "good-c", function () { setQuickFilter({ status: "Closed" }); }],
+      ["Critical", critical, "critical", function () { setQuickFilter({ severity: "Critical" }); }],
+      ["Major", major, "warning-c", function () { setQuickFilter({ severity: "Major" }); }],
+      ["Minor", minor, "good-c", function () { setQuickFilter({ severity: "Minor" }); }],
+      ["เกินกำหนด (Overdue)", overdue, overdue > 0 ? "critical" : "", function () { setQuickFilter({ overdue: true }); }],
+      ["เวลาแก้ไขเฉลี่ย (วัน)", avg === null ? "—" : avg.toFixed(1), "", null]
     ];
     var el = $("stats"); el.innerHTML = "";
     tiles.forEach(function (t) {
@@ -1675,9 +1654,9 @@
       if (isOverdue(issue)) dueSpan.style.color = "var(--critical)";
       td(dueSpan, true);
       var actionsWrap = document.createElement("div"); actionsWrap.style.cssText = "display:flex;gap:2px;";
-      var shareBtn = document.createElement("button"); shareBtn.className = "icon-btn"; shareBtn.textContent = "🔗"; shareBtn.title = "แชร์";
+      var shareBtn = document.createElement("button"); shareBtn.className = "icon-btn"; shareBtn.innerHTML = window.icon("externalLink", 14); shareBtn.title = "แชร์";
       shareBtn.addEventListener("click", function (e) { e.stopPropagation(); openShareDialog(issue); });
-      var editBtn = document.createElement("button"); editBtn.className = "icon-btn"; editBtn.textContent = "✎";
+      var editBtn = document.createElement("button"); editBtn.className = "icon-btn"; editBtn.innerHTML = window.icon("edit", 14); editBtn.title = "แก้ไข";
       editBtn.addEventListener("click", function (e) { e.stopPropagation(); openModal(issue); });
       actionsWrap.appendChild(shareBtn); actionsWrap.appendChild(editBtn);
       td(actionsWrap, true);
@@ -1737,11 +1716,11 @@
       var toggleBtn = document.createElement("button"); toggleBtn.className = "btn small";
       toggleBtn.textContent = expandedId === issue.id ? "▾ ซ่อนรายละเอียด" : "▸ ดูรายละเอียด / ลงบันทึกวันนี้";
       toggleBtn.addEventListener("click", function () { toggleExpand(issue.id); });
-      var shareBtn = document.createElement("button"); shareBtn.className = "icon-btn"; shareBtn.textContent = "🔗"; shareBtn.title = "แชร์รายงาน (read-only)";
+      var shareBtn = document.createElement("button"); shareBtn.className = "icon-btn"; shareBtn.innerHTML = window.icon("externalLink", 14); shareBtn.title = "แชร์รายงาน (read-only)";
       shareBtn.addEventListener("click", function () { openShareDialog(issue); });
-      var editBtn = document.createElement("button"); editBtn.className = "icon-btn"; editBtn.textContent = "✎"; editBtn.title = "แก้ไข";
+      var editBtn = document.createElement("button"); editBtn.className = "icon-btn"; editBtn.innerHTML = window.icon("edit", 14); editBtn.title = "แก้ไข";
       editBtn.addEventListener("click", function () { openModal(issue); });
-      var delBtn = document.createElement("button"); delBtn.className = "icon-btn"; delBtn.textContent = "🗑"; delBtn.title = "ลบ";
+      var delBtn = document.createElement("button"); delBtn.className = "icon-btn"; delBtn.innerHTML = window.icon("trash", 14); delBtn.title = "ลบ";
       delBtn.addEventListener("click", function () { deleteIssue(issue); });
       var rightBtns = document.createElement("div");
       rightBtns.appendChild(shareBtn); rightBtns.appendChild(editBtn); rightBtns.appendChild(delBtn);
@@ -1846,7 +1825,7 @@
         var row = document.createElement("div"); row.className = "attach-item";
         row.style.cursor = "pointer";
         var icon = fileIconFor(a.name);
-        var link = document.createElement("a"); link.href = a.url; link.textContent = icon + " " + a.name;
+        var link = document.createElement("a"); link.href = a.url; link.innerHTML = window.icon(icon, 13) + " " + esc(a.name);
         link.addEventListener("click", function (e) { e.preventDefault(); openPreview(a.url, a.name); });
         row.appendChild(link);
         s8.appendChild(row);
@@ -1932,7 +1911,7 @@
     if (!approvals.length) { el.innerHTML = '<div style="font-size:12.5px;color:var(--ink-muted)">ยังไม่มีประวัติการอนุมัติ</div>'; return; }
     approvals.forEach(function (u) {
       var item = document.createElement("div"); item.className = "approval-item";
-      var badge = document.createElement("div"); badge.className = "badge"; badge.textContent = "✔ " + fmtDate(u.update_date);
+      var badge = document.createElement("div"); badge.className = "badge"; badge.style.cssText = "display:inline-flex;align-items:center;gap:4px;"; badge.innerHTML = window.icon("check", 12) + esc(fmtDate(u.update_date));
       var note = document.createElement("div"); note.textContent = u.note || "";
       item.appendChild(badge); item.appendChild(note);
       el.appendChild(item);
@@ -1985,7 +1964,7 @@
     sliderWrap.appendChild(slider); sliderWrap.appendChild(sliderVal);
 
     var fileBtn = document.createElement("label"); fileBtn.className = "file-btn";
-    fileBtn.innerHTML = '📷 แนบรูปตรวจสอบ<input type="file" accept="image/*">';
+    fileBtn.innerHTML = window.icon("camera", 14) + 'แนบรูปตรวจสอบ<input type="file" accept="image/*">';
     var fileInput = fileBtn.querySelector("input");
     var fileNameSpan = document.createElement("span"); fileNameSpan.style.fontSize = "12px"; fileNameSpan.style.color = "var(--ink-muted)";
     fileInput.addEventListener("change", function () {
@@ -2042,9 +2021,9 @@
     pendingAttachments.forEach(function (a, idx) {
       var row = document.createElement("div");
       row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;";
-      var link = document.createElement("a"); link.href = a.url; link.target = "_blank"; link.textContent = "📎 " + a.name;
+      var link = document.createElement("a"); link.href = a.url; link.target = "_blank"; link.textContent = a.name;
       link.style.cssText = "color:var(--accent);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
-      var rm = document.createElement("button"); rm.className = "icon-btn"; rm.textContent = "✕"; rm.type = "button";
+      var rm = document.createElement("button"); rm.className = "icon-btn"; rm.innerHTML = window.icon("x", 13); rm.type = "button";
       rm.addEventListener("click", function () { pendingAttachments.splice(idx, 1); renderAttachmentsList(); });
       row.appendChild(link); row.appendChild(rm);
       el.appendChild(row);
@@ -2052,9 +2031,9 @@
     newAttachmentFiles.forEach(function (f, idx) {
       var row = document.createElement("div");
       row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-muted);";
-      var span = document.createElement("span"); span.textContent = "📎 " + f.name + " (รอบันทึก)";
+      var span = document.createElement("span"); span.textContent = f.name + " (รอบันทึก)";
       span.style.cssText = "flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
-      var rm = document.createElement("button"); rm.className = "icon-btn"; rm.textContent = "✕"; rm.type = "button";
+      var rm = document.createElement("button"); rm.className = "icon-btn"; rm.innerHTML = window.icon("x", 13); rm.type = "button";
       rm.addEventListener("click", function () { newAttachmentFiles.splice(idx, 1); renderAttachmentsList(); });
       row.appendChild(span); row.appendChild(rm);
       el.appendChild(row);
@@ -2256,7 +2235,7 @@
     var now = new Date();
     $("todayLabel").textContent = "วันนี้: " + now.getDate() + " " + months[now.getMonth()] + " " + now.getFullYear();
     var myNameForGreet = getMyName();
-    $("greetLine").textContent = myNameForGreet ? ("👋 สวัสดีคุณ " + myNameForGreet + " — ยินดีต้อนรับกลับสู่ระบบ") : "👋 ยินดีต้อนรับ — ติดตามและจัดการปัญหางานวิศวกรรมได้ในที่เดียว";
+    $("greetLine").textContent = myNameForGreet ? ("สวัสดีคุณ " + myNameForGreet + " — ยินดีต้อนรับกลับสู่ระบบ") : "ยินดีต้อนรับ — ติดตามและจัดการปัญหางานวิศวกรรมได้ในที่เดียว";
 
     $("btnAdd").addEventListener("click", function () { openModal(null); });
     function reportURL(extra) {
@@ -2282,7 +2261,7 @@
         setMyName(name.trim());
       }
       setQuickFilter({ mine: true });
-      showToast("กรองเฉพาะงานของ \"" + getMyName() + "\" — เปลี่ยนชื่อได้จากไอคอน ✎ ข้างปุ่มนี้", "success");
+      showToast("กรองเฉพาะงานของ \"" + getMyName() + "\" — เปลี่ยนชื่อได้จากไอคอนแก้ไขข้างปุ่มนี้", "success");
     });
     $("btnMyIssues").addEventListener("contextmenu", function (e) {
       e.preventDefault();
@@ -2305,9 +2284,11 @@
       var next = cur === "dark" ? "light" : cur === "light" ? "" : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
       if (next) { root.setAttribute("data-theme", next); localStorage.setItem("eng-log-theme", next); }
       else { root.removeAttribute("data-theme"); localStorage.removeItem("eng-log-theme"); }
+      applyThemeIcon();
     });
     var savedTheme = localStorage.getItem("eng-log-theme");
     if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+    applyThemeIcon();
     $("btnCloseShare").addEventListener("click", closeShareDialog);
     $("btnCancelShare").addEventListener("click", closeShareDialog);
     $("btnCreateShare").addEventListener("click", createShareLink);

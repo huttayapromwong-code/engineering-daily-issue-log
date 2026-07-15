@@ -3,169 +3,129 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Knowledge Base — Engineering Daily Issue Log</title>
+<title>Knowledge Base — Manufacturing Engineering Platform</title>
+<link rel="stylesheet" href="assets/design-system.css">
+<script src="assets/icons.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <style>
-  :root {
-    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA;
-    --ink: #0b0b0b; --ink-secondary: #52514e; --ink-muted: #898781;
-    --line: #e1e0d9; --line-strong: #c3c2b7;
-    --accent: #2B5D6B; --accent-soft: #E3EEEF;
-    --shadow: 0 1px 2px rgba(27,33,31,0.06), 0 8px 24px -12px rgba(27,33,31,0.18);
-    --good: #0ca30c; --good-soft: #e2f3e2;
-    --warning: #fab219; --warning-soft: #fef1d9;
-    --critical: #d03b3b; --critical-soft: #fbe3e3;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
-      --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
-      --accent: #7CC2CD; --accent-soft: #1E3236;
-      --good: #0ca30c; --good-soft: #16281a;
-      --warning: #fab219; --warning-soft: #332711;
-      --critical: #d03b3b; --critical-soft: #33201d;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #14181A; --surface: #1B2124; --surface-2: #212A2D; --ink: #ffffff;
-    --ink-secondary: #c3c2b7; --ink-muted: #898781; --line: #2c2c2a; --line-strong: #383835;
-    --accent: #7CC2CD; --accent-soft: #1E3236;
-    --good: #0ca30c; --good-soft: #16281a; --warning: #fab219; --warning-soft: #332711;
-    --critical: #d03b3b; --critical-soft: #33201d;
-  }
-  :root[data-theme="light"] {
-    --bg: #F3F5F1; --surface: #FFFFFF; --surface-2: #ECF0EA; --ink: #0b0b0b;
-    --ink-secondary: #52514e; --ink-muted: #898781; --line: #e1e0d9; --line-strong: #c3c2b7;
-    --accent: #2B5D6B; --accent-soft: #E3EEEF;
-    --good: #0ca30c; --good-soft: #e2f3e2; --warning: #fab219; --warning-soft: #fef1d9;
-    --critical: #d03b3b; --critical-soft: #fbe3e3;
-  }
-  * { box-sizing: border-box; }
-  html, body { background: var(--bg); color: var(--ink); }
-  body { font-family: -apple-system, "Segoe UI", "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.55; margin: 0; padding: 24px 18px 80px; }
-  .wrap { max-width: 1280px; margin: 0 auto; }
-  .mono { font-family: "SF Mono", ui-monospace, monospace; }
-  h1, h2, h3 { font-family: Georgia, "Iowan Old Style", "Noto Serif Thai", serif; margin: 0; }
+  .banner { padding: 12px 16px; border-radius: var(--r-md); font-size: var(--fs-13); margin-bottom: var(--sp-4); display: none; align-items: center; gap: 8px; }
+  .banner.show { display: flex; }
+  .banner svg { flex: none; width: 16px; height: 16px; }
+  .banner.warn { background: var(--s-warning-soft); color: var(--s-warning); border: 1px solid var(--s-warning); }
 
-  header.page { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; padding: 20px 24px; border-radius: 16px; background: linear-gradient(135deg, var(--accent-soft), var(--surface) 65%); border: 1px solid var(--line); box-shadow: var(--shadow); }
-  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
-  h1 { font-size: clamp(20px,3vw,26px); font-weight: 600; }
-  .today { font-size: 12.5px; color: var(--ink-muted); margin-top: 4px; }
-
-  .btn { appearance: none; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
-  .btn:hover { background: var(--surface-2); }
-  .btn.small { padding: 6px 10px; font-size: 12px; }
-  .icon-btn { appearance: none; border: none; background: transparent; cursor: pointer; color: var(--ink-muted); padding: 4px 6px; border-radius: 4px; font-size: 14px; }
-  .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
-
-  .banner { padding: 12px 16px; border-radius: 12px; font-size: 13.5px; margin-bottom: 16px; display: none; }
-  .banner.show { display: block; }
-  .banner.warn { background: var(--warning-soft); color: #8a6100; border: 1px solid var(--warning); }
-  @media (prefers-color-scheme: dark) { .banner.warn { color: var(--warning); } }
-
-  select, input[type=text], input[type=search] {
-    font: inherit; font-size: 13.5px; padding: 9px 12px; border-radius: 9px;
-    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
-  }
-  select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-
-  .search-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
-  .search-row input[type=search] { width: 100%; font-size: 15px; padding: 12px 16px; border-radius: 10px; }
-  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+  .search-row { position: relative; }
+  .search-row .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-muted); pointer-events: none; }
+  .search-row input[type=search] { width: 100%; font-size: var(--fs-15); padding: 12px 16px 12px 40px; border-radius: var(--r-md); }
+  .filter-row { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-3); align-items: center; }
   .filter-row select { min-width: 150px; }
-  .result-count { font-size: 12.5px; color: var(--ink-muted); margin-left: auto; }
+  .result-count { font-size: var(--fs-12); color: var(--ink-muted); margin-left: auto; }
 
-  .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-  .kb-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform .15s ease, box-shadow .15s ease; }
-  .kb-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(27,33,31,0.08), 0 14px 32px -12px rgba(27,33,31,0.24); }
+  .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-3); }
+  .kb-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-xs); overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform .15s ease, box-shadow .15s ease; }
+  .kb-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
   .kb-thumb { height: 130px; background: var(--surface-2); display: flex; }
   .kb-thumb img { width: 50%; height: 100%; object-fit: cover; }
   .kb-thumb .ph { width: 50%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ink-muted); font-size: 11px; background: var(--surface-2); }
-  .kb-body { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .kb-body { padding: var(--sp-3) var(--sp-4); flex: 1; display: flex; flex-direction: column; gap: var(--sp-2); }
   .kb-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-  .badge { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 100px; white-space: nowrap; }
-  .badge.defect { background: var(--accent-soft); color: var(--accent); }
-  .badge.rootcause { background: var(--surface-2); color: var(--ink-secondary); }
-  .badge.source { background: var(--good-soft); color: var(--good); }
-  .kb-title { font-weight: 600; font-size: 14.5px; line-height: 1.4; }
-  .kb-rootcause { font-size: 12.5px; color: var(--ink-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .kb-meta { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--ink-muted); }
+  .kb-title { font-weight: 600; font-size: var(--fs-15); line-height: 1.4; }
+  .kb-rootcause { font-size: var(--fs-13); color: var(--ink-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .kb-meta { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-11); color: var(--ink-muted); }
   .kb-related-count { font-weight: 700; color: var(--accent); }
 
   .empty-state { text-align: center; padding: 60px 20px; color: var(--ink-muted); }
-  .empty-state .big { font-size: 34px; margin-bottom: 10px; }
-  .skel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-  .skel-card { height: 230px; border-radius: 14px; background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%); background-size: 400% 100%; animation: skel 1.4s ease infinite; }
+  .empty-state svg { width: 34px; height: 34px; margin-bottom: 10px; }
+  .skel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-3); }
+  .skel-card { height: 230px; border-radius: var(--r-lg); background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-alt) 37%, var(--surface-2) 63%); background-size: 400% 100%; animation: skel 1.4s ease infinite; }
   @keyframes skel { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 
   .backdrop { position: fixed; inset: 0; background: rgba(11,11,11,.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
   .backdrop.show { display: flex; }
-  .modal { background: var(--surface); border-radius: 12px; max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); border: 1px solid var(--line); }
-  .modal__head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
-  .modal__head h3 { font-size: 17px; }
-  .modal__body { padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; }
-  .kb-detail-section .label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-muted); font-weight: 600; margin-bottom: 5px; }
-  .kb-detail-section .val { font-size: 13.5px; color: var(--ink); white-space: pre-wrap; }
-  .kb-detail-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .kb-detail-photos img { width: 100%; border-radius: 8px; max-height: 160px; object-fit: cover; }
+  .modal { background: var(--surface); border-radius: var(--r-lg); max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md); border: 1px solid var(--line); }
+  .modal__head { display: flex; justify-content: space-between; align-items: center; padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+  .modal__head h3 { font-size: var(--fs-18); }
+  .modal__body { padding: var(--sp-4) var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); }
+  .kb-detail-section .label { font-size: var(--fs-11); text-transform: uppercase; letter-spacing: .04em; color: var(--ink-muted); font-weight: 600; margin-bottom: 5px; }
+  .kb-detail-section .val { font-size: var(--fs-13); color: var(--ink); white-space: pre-wrap; }
+  .kb-detail-photos { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+  .kb-detail-photos img { width: 100%; border-radius: var(--r-md); max-height: 160px; object-fit: cover; }
   .why-chain { display: flex; flex-direction: column; gap: 6px; }
-  .why-chain .why-item { display: flex; gap: 8px; font-size: 13px; }
+  .why-chain .why-item { display: flex; gap: 8px; font-size: var(--fs-13); }
   .why-chain .why-num { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
   .related-list { display: flex; flex-direction: column; gap: 6px; }
-  .related-item { padding: 8px 12px; background: var(--surface-2); border-radius: 8px; font-size: 12.5px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
+  .related-item { padding: 8px 12px; background: var(--surface-2); border-radius: var(--r-md); font-size: var(--fs-12); cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
   .related-item:hover { background: var(--accent-soft); }
-  .source-link { font-size: 11.5px; color: var(--ink-muted); }
+  .source-link { font-size: var(--fs-11); color: var(--ink-muted); }
 
-  footer.page { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 12px; text-align: center; }
+  footer.page { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid var(--line); color: var(--ink-muted); font-size: var(--fs-12); text-align: center; }
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <header class="page">
-    <div>
-      <div class="eyebrow">📚 Engineering Team · Knowledge Base</div>
-      <h1>คลังความรู้ RCA</h1>
-      <div class="today mono" id="todayLabel"></div>
+<div class="ds-shell">
+  <nav class="ds-sidebar" id="sidebar">
+    <div class="ds-sidebar__brand"><div class="mark">M</div><div><div class="name">Manufacturing Eng.</div><div class="sub">Engineering Platform</div></div></div>
+    <div class="ds-nav">
+      <a href="daily-dashboard.html" data-i="layoutDashboard">Dashboard</a>
+      <a href="index.html?new=1" data-i="plus">New RCA</a>
+      <a href="index.html" data-i="folder">Case Management</a>
+      <a href="daily-activity.html" data-i="checkCircle">Daily Tasks</a>
+      <a href="executive-dashboard.html" data-i="trendingUp">Analytics</a>
+      <a href="report.html" data-i="fileText">Reports</a>
+      <a href="management-report.html" data-i="printer">Management Report</a>
+      <a href="knowledge-base.html" class="active" data-i="bookOpen">Knowledge Base</a>
+      <a href="my-performance.html" data-i="users">My Performance</a>
+      <a href="notification.html" data-i="bell">Notification</a>
+      <a href="settings.html" data-i="settings">Settings</a>
     </div>
-    <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-      <a class="btn" href="index.html">← Problem Management</a>
-      <a class="btn" href="daily-activity.html">📝 Daily Activity</a>
-      <button class="icon-btn" id="btnThemeToggle" aria-label="สลับธีมสว่าง/มืด" title="สลับธีมสว่าง/มืด">🌗</button>
-    </div>
-  </header>
+  </nav>
 
-  <div class="banner warn" id="configBanner">⚠️ ยังไม่ได้ตั้งค่าฐานข้อมูลใน config.js</div>
+  <div class="ds-main">
+    <header class="ds-topbar">
+      <div>
+        <div class="ds-topbar__title">Knowledge Base</div>
+        <div class="ds-topbar__meta mono" id="todayLabel"></div>
+      </div>
+      <div class="ds-topbar__actions">
+        <button class="ico-btn" id="btnThemeToggle" aria-label="สลับธีมสว่าง/มืด" title="สลับธีมสว่าง/มืด"></button>
+      </div>
+    </header>
 
-  <div class="search-card">
-    <div class="search-row">
-      <input type="search" id="kbSearch" placeholder="🔍 ค้นหาจากหัวข้อ, สาเหตุ, รายละเอียด...">
-    </div>
-    <div class="filter-row">
-      <select id="fDefect"><option value="">Defect Category: ทั้งหมด</option></select>
-      <select id="fRootCause"><option value="">Root Cause: ทั้งหมด</option></select>
-      <select id="fLine"><option value="">Line: ทั้งหมด</option></select>
-      <button class="btn small" id="btnClearFilter">ล้างตัวกรอง</button>
-      <span class="result-count" id="resultCount"></span>
+    <div class="ds-content">
+
+      <div class="banner warn" id="configBanner"><span id="configBannerIcon"></span>ยังไม่ได้ตั้งค่าฐานข้อมูลใน config.js</div>
+
+      <div class="card card__pad" style="margin-bottom:var(--sp-4);">
+        <div class="search-row">
+          <span class="search-icon" id="searchIcon"></span>
+          <input type="search" id="kbSearch" placeholder="ค้นหาจากหัวข้อ, สาเหตุ, รายละเอียด...">
+        </div>
+        <div class="filter-row">
+          <select id="fDefect"><option value="">Defect Category: ทั้งหมด</option></select>
+          <select id="fRootCause"><option value="">Root Cause: ทั้งหมด</option></select>
+          <select id="fLine"><option value="">Line: ทั้งหมด</option></select>
+          <button class="btn sm secondary" id="btnClearFilter">ล้างตัวกรอง</button>
+          <span class="result-count" id="resultCount"></span>
+        </div>
+      </div>
+
+      <div id="kbContent">
+        <div class="skel-grid">
+          <div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div>
+          <div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div>
+        </div>
+      </div>
+
+      <footer class="page">Knowledge Base — ดึงข้อมูลอัตโนมัติจากงานที่ปิดแล้ว (status = Closed) ใน work_items ไม่มีการกรอกข้อมูลซ้ำ · หน้านี้เป็น Read-only ทั้งหมด</footer>
     </div>
   </div>
-
-  <div id="kbContent">
-    <div class="skel-grid">
-      <div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div>
-      <div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div>
-    </div>
-  </div>
-
-  <footer class="page">Knowledge Base — ดึงข้อมูลอัตโนมัติจากงานที่ปิดแล้ว (status = Closed) ใน work_items ไม่มีการกรอกข้อมูลซ้ำ · หน้านี้เป็น Read-only ทั้งหมด</footer>
 </div>
 
 <div class="backdrop" id="detailBackdrop">
   <div class="modal">
     <div class="modal__head">
       <h3 id="detailTitle">รายละเอียด</h3>
-      <button class="icon-btn" id="btnCloseDetail">✕</button>
+      <button class="ico-btn" id="btnCloseDetail"></button>
     </div>
     <div class="modal__body" id="detailBody"></div>
   </div>
@@ -186,19 +146,31 @@
     });
   }
 
+  document.querySelectorAll(".ds-nav a").forEach(function (a) { a.innerHTML = window.icon(a.dataset.i, 18) + a.textContent; });
+  $("configBannerIcon").innerHTML = window.icon("alertTriangle", 16);
+  $("searchIcon").innerHTML = window.icon("search", 16);
+  $("btnCloseDetail").innerHTML = window.icon("x", 16);
+
   var months = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
   var now = new Date();
   $("todayLabel").textContent = now.getDate() + " " + months[now.getMonth()] + " " + (now.getFullYear() + 543);
 
+  function applyThemeIcon() {
+    var root = document.documentElement;
+    var isDark = root.getAttribute("data-theme") === "dark" || (!root.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    $("btnThemeToggle").innerHTML = window.icon(isDark ? "sun" : "moon", 18);
+  }
   $("btnThemeToggle").addEventListener("click", function () {
     var root = document.documentElement;
     var cur = root.getAttribute("data-theme");
     var next = cur === "dark" ? "light" : cur === "light" ? "" : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
     if (next) { root.setAttribute("data-theme", next); localStorage.setItem("eng-log-theme", next); }
     else { root.removeAttribute("data-theme"); localStorage.removeItem("eng-log-theme"); }
+    applyThemeIcon();
   });
   var savedTheme = localStorage.getItem("eng-log-theme");
   if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+  applyThemeIcon();
 
   if (!configured) $("configBanner").classList.add("show");
 
@@ -236,9 +208,9 @@
   }
 
   async function loadCases() {
-    if (!sb) { $("kbContent").innerHTML = '<div class="empty-state"><div class="big">⚠️</div><h3>ยังไม่ได้ตั้งค่าฐานข้อมูล</h3></div>'; return; }
+    if (!sb) { $("kbContent").innerHTML = '<div class="empty-state">' + window.icon("alertTriangle", 34) + '<h3>ยังไม่ได้ตั้งค่าฐานข้อมูล</h3></div>'; return; }
     var res = await sb.from("work_items").select("*").eq("status", "Closed").order("received_date", { ascending: false });
-    if (res.error) { $("kbContent").innerHTML = '<div class="empty-state"><div class="big">⚠️</div><h3>โหลดข้อมูลไม่สำเร็จ</h3><p>' + esc(res.error.message) + "</p></div>"; return; }
+    if (res.error) { $("kbContent").innerHTML = '<div class="empty-state">' + window.icon("alertTriangle", 34) + '<h3>โหลดข้อมูลไม่สำเร็จ</h3><p>' + esc(res.error.message) + "</p></div>"; return; }
     allCases = (res.data || []).filter(function (c) {
       return (c.root_cause && c.root_cause.trim()) || (c.corrective_action && c.corrective_action.trim());
     });
@@ -273,7 +245,7 @@
     $("resultCount").textContent = list.length + " กรณี" + (list.length !== allCases.length ? " (จากทั้งหมด " + allCases.length + ")" : "");
     var content = $("kbContent");
     if (!list.length) {
-      content.innerHTML = '<div class="empty-state"><div class="big">📭</div><h3 style="margin-bottom:6px;">ไม่พบกรณีที่ตรงกับตัวกรอง</h3><p>คลังความรู้จะเพิ่มขึ้นเองเมื่อมีการปิดงานใน Problem Management หรือ Daily Activity ที่กรอกสาเหตุ/มาตรการแก้ไขไว้</p></div>';
+      content.innerHTML = '<div class="empty-state">' + window.icon("search", 34) + '<h3 style="margin-bottom:6px;">ไม่พบกรณีที่ตรงกับตัวกรอง</h3><p>คลังความรู้จะเพิ่มขึ้นเองเมื่อมีการปิดงานใน Problem Management หรือ Daily Activity ที่กรอกสาเหตุ/มาตรการแก้ไขไว้</p></div>';
       return;
     }
     content.innerHTML = '<div class="kb-grid" id="kbGrid"></div>';
@@ -293,9 +265,9 @@
         thumbHtml +
         '<div class="kb-body">' +
         '<div class="kb-badges">' +
-        (defectById[c.defect_category_id] ? '<span class="badge defect">' + esc(defectById[c.defect_category_id]) + "</span>" : "") +
-        (rootCauseById[c.root_cause_category_id] ? '<span class="badge rootcause">' + esc(rootCauseById[c.root_cause_category_id]) + "</span>" : "") +
-        '<span class="badge source">' + (c.source_type === "Issue" ? "Problem Mgmt" : "Daily Activity") + "</span>" +
+        (defectById[c.defect_category_id] ? '<span class="badge info">' + esc(defectById[c.defect_category_id]) + "</span>" : "") +
+        (rootCauseById[c.root_cause_category_id] ? '<span class="badge neutral">' + esc(rootCauseById[c.root_cause_category_id]) + "</span>" : "") +
+        '<span class="badge success">' + (c.source_type === "Issue" ? "Problem Mgmt" : "Daily Activity") + "</span>" +
         "</div>" +
         '<div class="kb-title">' + esc(c.title || "(ไม่มีหัวข้อ)") + "</div>" +
         '<div class="kb-rootcause">' + esc(c.root_cause || c.corrective_action || "") + "</div>" +

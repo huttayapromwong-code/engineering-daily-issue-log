@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>เข้าสู่ระบบ — Manufacturing Engineering Platform</title>
+<link rel="stylesheet" href="assets/design-system.css">
+<script src="assets/icons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: var(--sp-5); }
+  .auth-card { width: 100%; max-width: 380px; }
+  .auth-brand { display: flex; align-items: center; gap: var(--sp-2); justify-content: center; margin-bottom: var(--sp-6); }
+  .auth-brand .mark { width: 36px; height: 36px; border-radius: var(--r-md); background: var(--accent); color: var(--ink-inverse); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: var(--fs-16); }
+  .auth-brand .name { font-weight: 700; font-size: var(--fs-15); }
+  .auth-brand .sub { font-size: var(--fs-11); color: var(--ink-muted); }
+
+  .auth-tabs { display: flex; border: 1px solid var(--line-strong); border-radius: var(--r-md); overflow: hidden; margin-bottom: var(--sp-4); }
+  .auth-tab { flex: 1; appearance: none; border: none; background: var(--surface); color: var(--ink-secondary); font: inherit; font-size: var(--fs-13); font-weight: 600; padding: 10px; cursor: pointer; }
+  .auth-tab.active { background: var(--accent); color: var(--ink-inverse); }
+
+  .field { margin-bottom: var(--sp-3); }
+  .field label { display: block; font-size: var(--fs-12); font-weight: 600; color: var(--ink-secondary); margin-bottom: 5px; }
+  .field input { width: 100%; }
+
+  .auth-err { background: var(--s-critical-soft); color: var(--s-critical); border-radius: var(--r-md); padding: 10px 12px; font-size: var(--fs-12); margin-bottom: var(--sp-3); display: none; align-items: center; gap: 6px; }
+  .auth-err.show { display: flex; }
+  .auth-msg { background: var(--s-success-soft); color: var(--s-success); border-radius: var(--r-md); padding: 10px 12px; font-size: var(--fs-12); margin-bottom: var(--sp-3); display: none; align-items: center; gap: 6px; }
+  .auth-msg.show { display: flex; }
+
+  .btn-submit { width: 100%; padding: 10px; }
+  .auth-foot { text-align: center; margin-top: var(--sp-4); font-size: var(--fs-12); color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="auth-card">
+  <div class="auth-brand">
+    <div class="mark">M</div>
+    <div><div class="name">Manufacturing Eng.</div><div class="sub">Engineering Platform</div></div>
+  </div>
+
+  <div class="card card__pad">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabSignIn">เข้าสู่ระบบ</button>
+      <button class="auth-tab" id="tabSignUp">สร้างบัญชีใหม่</button>
+    </div>
+
+    <div class="auth-err" id="authErr"><span id="authErrIcon"></span><span id="authErrText"></span></div>
+    <div class="auth-msg" id="authMsg"><span id="authMsgIcon"></span><span id="authMsgText"></span></div>
+
+    <div class="field">
+      <label for="fEmail">อีเมล</label>
+      <input type="email" id="fEmail" autocomplete="email" placeholder="you@company.com">
+    </div>
+    <div class="field">
+      <label for="fPassword">รหัสผ่าน</label>
+      <input type="password" id="fPassword" autocomplete="current-password" placeholder="อย่างน้อย 6 ตัวอักษร">
+    </div>
+
+    <button class="btn primary btn-submit" id="btnSubmit">เข้าสู่ระบบ</button>
+  </div>
+
+  <div class="auth-foot">ระบบภายในสำหรับทีมวิศวกรรมเท่านั้น</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var SUPABASE_URL = window.SUPABASE_URL || "";
+  var SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
+  var configured = SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.indexOf("YOUR_") !== 0;
+  var sb = (configured && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  function $(id) { return document.getElementById(id); }
+  $("authErrIcon").innerHTML = window.icon("alertTriangle", 15);
+  $("authMsgIcon").innerHTML = window.icon("checkCircle", 15);
+
+  var mode = "signin";
+
+  function showErr(msg) { $("authErrText").textContent = msg; $("authErr").classList.add("show"); $("authMsg").classList.remove("show"); }
+  function showMsg(msg) { $("authMsgText").textContent = msg; $("authMsg").classList.add("show"); $("authErr").classList.remove("show"); }
+  function clearBanners() { $("authErr").classList.remove("show"); $("authMsg").classList.remove("show"); }
+
+  function setMode(next) {
+    mode = next;
+    clearBanners();
+    $("tabSignIn").classList.toggle("active", mode === "signin");
+    $("tabSignUp").classList.toggle("active", mode === "signup");
+    $("fPassword").setAttribute("autocomplete", mode === "signin" ? "current-password" : "new-password");
+    $("btnSubmit").textContent = mode === "signin" ? "เข้าสู่ระบบ" : "สร้างบัญชี";
+  }
+  $("tabSignIn").addEventListener("click", function () { setMode("signin"); });
+  $("tabSignUp").addEventListener("click", function () { setMode("signup"); });
+
+  function redirectAfterLogin() {
+    var next = new URLSearchParams(window.location.search).get("next");
+    window.location.href = next || "daily-dashboard.html";
+  }
+
+  async function checkExistingSession() {
+    if (!sb) return;
+    var res = await sb.auth.getSession();
+    if (res.data && res.data.session) redirectAfterLogin();
+  }
+  checkExistingSession();
+
+  $("btnSubmit").addEventListener("click", async function () {
+    if (!sb) { showErr("ยังไม่ได้ตั้งค่าฐานข้อมูล (config.js)"); return; }
+    var email = $("fEmail").value.trim();
+    var password = $("fPassword").value;
+    if (!email || !password) { showErr("กรุณากรอกอีเมลและรหัสผ่าน"); return; }
+    clearBanners();
+    var btn = $("btnSubmit"); btn.disabled = true;
+    try {
+      if (mode === "signin") {
+        var res = await sb.auth.signInWithPassword({ email: email, password: password });
+        if (res.error) throw new Error(res.error.message);
+        redirectAfterLogin();
+      } else {
+        var res2 = await sb.auth.signUp({ email: email, password: password });
+        if (res2.error) throw new Error(res2.error.message);
+        if (res2.data.session) { redirectAfterLogin(); return; }
+        showMsg("สร้างบัญชีแล้ว — ตรวจสอบอีเมลเพื่อยืนยันตัวตน (ถ้าระบบเปิดใช้ email confirmation)");
+      }
+    } catch (err) {
+      showErr(err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  $("fPassword").addEventListener("keydown", function (e) { if (e.key === "Enter") $("btnSubmit").click(); });
+})();
+</script>
+</body>
+</html>

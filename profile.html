@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profile — Manufacturing Engineering Platform</title>
+<link rel="stylesheet" href="assets/design-system.css">
+<script src="assets/icons.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="assets/auth.js"></script>
+<style>
+  .profile-shell { max-width: 480px; margin: 0 auto; }
+  .avatar-lg { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--ink-inverse); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: var(--fs-24); margin: 0 auto var(--sp-4); }
+  .field { margin-bottom: var(--sp-3); }
+  .field label { display: block; font-size: var(--fs-12); font-weight: 600; color: var(--ink-secondary); margin-bottom: 5px; }
+  .field input { width: 100%; }
+  .field input:disabled { color: var(--ink-muted); background: var(--surface-2); }
+  .auth-msg { background: var(--s-success-soft); color: var(--s-success); border-radius: var(--r-md); padding: 10px 12px; font-size: var(--fs-12); margin-bottom: var(--sp-3); display: none; align-items: center; gap: 6px; }
+  .auth-msg.show { display: flex; }
+  .auth-err { background: var(--s-critical-soft); color: var(--s-critical); border-radius: var(--r-md); padding: 10px 12px; font-size: var(--fs-12); margin-bottom: var(--sp-3); display: none; align-items: center; gap: 6px; }
+  .auth-err.show { display: flex; }
+</style>
+</head>
+<body>
+<div class="ds-shell">
+  <nav class="ds-sidebar" id="sidebar">
+    <div class="ds-sidebar__brand"><div class="mark">M</div><div><div class="name">Manufacturing Eng.</div><div class="sub">Engineering Platform</div></div></div>
+    <div class="ds-nav">
+      <a href="daily-dashboard.html" data-i="layoutDashboard">Dashboard</a>
+      <a href="index.html?new=1" data-i="plus">New RCA</a>
+      <a href="index.html" data-i="folder">Case Management</a>
+      <a href="daily-activity.html" data-i="checkCircle">Daily Tasks</a>
+      <a href="executive-dashboard.html" data-i="trendingUp">Analytics</a>
+      <a href="report.html" data-i="fileText">Reports</a>
+      <a href="management-report.html" data-i="printer">Management Report</a>
+      <a href="knowledge-base.html" data-i="bookOpen">Knowledge Base</a>
+      <a href="my-performance.html" data-i="users">My Performance</a>
+      <a href="notification.html" data-i="bell">Notification</a>
+      <a href="settings.html" data-i="settings">Settings</a>
+    </div>
+  </nav>
+
+  <div class="ds-main">
+    <header class="ds-topbar">
+      <div>
+        <div class="ds-topbar__title">Profile</div>
+        <div class="ds-topbar__meta">บัญชีของฉัน</div>
+      </div>
+      <div class="ds-topbar__actions"></div>
+    </header>
+
+    <div class="ds-content">
+      <div class="profile-shell">
+        <div class="card card__pad">
+          <div class="avatar-lg" id="avatarInitial">?</div>
+
+          <div class="auth-err" id="profileErr"><span id="profileErrIcon"></span><span id="profileErrText"></span></div>
+          <div class="auth-msg" id="profileMsg"><span id="profileMsgIcon"></span><span id="profileMsgText"></span></div>
+
+          <div class="field">
+            <label>อีเมล</label>
+            <input type="text" id="fEmail" disabled>
+          </div>
+          <div class="field">
+            <label>ชื่อที่แสดง (Display Name)</label>
+            <input type="text" id="fDisplayName" placeholder="ชื่อของคุณ">
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:var(--sp-4);">
+            <button class="btn primary" id="btnSave"></button>
+            <button class="btn danger" id="btnSignOut" style="margin-left:auto;"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+
+  document.querySelectorAll(".ds-nav a").forEach(function (a) { a.innerHTML = window.icon(a.dataset.i, 18) + a.textContent; });
+  $("profileErrIcon").innerHTML = window.icon("alertTriangle", 15);
+  $("profileMsgIcon").innerHTML = window.icon("checkCircle", 15);
+  $("btnSave").innerHTML = window.icon("check", 14) + "บันทึก";
+  $("btnSignOut").innerHTML = window.icon("logout", 14) + "ออกจากระบบ";
+
+  function showErr(msg) { $("profileErrText").textContent = msg; $("profileErr").classList.add("show"); $("profileMsg").classList.remove("show"); }
+  function showMsg(msg) { $("profileMsgText").textContent = msg; $("profileMsg").classList.add("show"); $("profileErr").classList.remove("show"); }
+
+  function waitForAuth() {
+    return new Promise(function (resolve) {
+      var tries = 0;
+      (function poll() {
+        if (window.__authClient) return resolve(window.__authClient);
+        if (++tries > 100) return resolve(null);
+        setTimeout(poll, 50);
+      })();
+    });
+  }
+
+  var sb, currentUser;
+
+  async function init() {
+    sb = await waitForAuth();
+    if (!sb) return;
+    var res = await sb.auth.getSession();
+    var session = res.data && res.data.session;
+    if (!session) return;
+    currentUser = session.user;
+    $("fEmail").value = currentUser.email || "";
+    $("avatarInitial").textContent = (currentUser.email || "?").charAt(0).toUpperCase();
+
+    var prof = await sb.from("profiles").select("display_name").eq("id", currentUser.id).maybeSingle();
+    if (prof.data && prof.data.display_name) $("fDisplayName").value = prof.data.display_name;
+  }
+  init();
+
+  $("btnSave").addEventListener("click", async function () {
+    if (!sb || !currentUser) return;
+    var name = $("fDisplayName").value.trim();
+    var res = await sb.from("profiles").update({ display_name: name }).eq("id", currentUser.id);
+    if (res.error) { showErr("บันทึกไม่สำเร็จ: " + res.error.message); return; }
+    showMsg("บันทึกแล้ว");
+  });
+
+  $("btnSignOut").addEventListener("click", async function () {
+    if (!sb) return;
+    await sb.auth.signOut();
+    window.location.replace("login.html");
+  });
+})();
+</script>
+</body>
+</html>

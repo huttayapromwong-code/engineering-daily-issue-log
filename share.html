@@ -198,12 +198,6 @@
     var months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
     return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
   }
-  async function sha256Hex(text) {
-    var enc = new TextEncoder().encode(text);
-    var buf = await crypto.subtle.digest("SHA-256", enc);
-    return Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, "0"); }).join("");
-  }
-
   $("lockIcon").innerHTML = window.icon("lock", 34);
   $("errIcon").innerHTML = window.icon("alertTriangle", 34);
   $("readonlyIcon").innerHTML = window.icon("lock", 14);
@@ -358,44 +352,45 @@
     $("errWrap").style.display = "";
   }
 
-  var currentShare = null;
+  var currentToken = null;
 
-  async function loadIssueAndRender() {
-    var issueRes = await sb.from("issues").select("*").eq("id", currentShare.issue_id).single();
-    if (issueRes.error || !issueRes.data) { showError("ไม่พบข้อมูลงานนี้", "งานนี้อาจถูกลบไปแล้ว"); return; }
-    var updRes = await sb.from("issue_updates").select("*").eq("issue_id", currentShare.issue_id).order("update_date", { ascending: false });
-    renderIssue(issueRes.data, updRes.data || []);
+  var ERROR_MESSAGES = {
+    not_found: ["ไม่พบลิงก์นี้", "ลิงก์อาจไม่ถูกต้องหรือถูกลบไปแล้ว"],
+    revoked: ["ลิงก์นี้ถูกยกเลิกแล้ว", "ติดต่อผู้ที่ส่งลิงก์นี้ให้คุณเพื่อขอลิงก์ใหม่"],
+    expired: ["ลิงก์นี้หมดอายุแล้ว", "ติดต่อผู้ที่ส่งลิงก์นี้ให้คุณเพื่อขอลิงก์ใหม่"],
+    issue_not_found: ["ไม่พบข้อมูลงานนี้", "งานนี้อาจถูกลบไปแล้ว"]
+  };
+
+  async function fetchReport(token, password) {
+    var res = await sb.rpc("get_shared_report", { p_token: token, p_password: password || null });
+    if (res.error) { showError("โหลดข้อมูลไม่สำเร็จ", res.error.message); return; }
+    var data = res.data;
+    if (data.error === "password_required") {
+      showLock();
+      $("pwErr").style.display = password ? "block" : "none";
+      return;
+    }
+    if (data.error) {
+      var msg = ERROR_MESSAGES[data.error] || ["ไม่สามารถเปิดรายงานนี้ได้", ""];
+      showError(msg[0], msg[1]);
+      return;
+    }
+    $("lockWrap").style.display = "none";
+    renderIssue(data.issue, data.updates || []);
   }
 
   async function main() {
     if (!sb) { showError("ระบบยังไม่ได้ตั้งค่า", "กรุณาตรวจสอบ config.js"); return; }
     var token = new URLSearchParams(window.location.search).get("t");
     if (!token) { showError("ลิงก์ไม่ถูกต้อง", "ไม่พบรหัสลิงก์ในที่อยู่เว็บ"); return; }
+    currentToken = token;
 
-    var res = await sb.from("shares").select("*").eq("token", token).single();
-    if (res.error || !res.data) { showError("ไม่พบลิงก์นี้", "ลิงก์อาจไม่ถูกต้องหรือถูกลบไปแล้ว"); return; }
-    var share = res.data;
-    if (share.revoked) { showError("ลิงก์นี้ถูกยกเลิกแล้ว", "ติดต่อผู้ที่ส่งลิงก์นี้ให้คุณเพื่อขอลิงก์ใหม่"); return; }
-    if (share.expires_at && new Date(share.expires_at) < new Date()) { showError("ลิงก์นี้หมดอายุแล้ว", "ติดต่อผู้ที่ส่งลิงก์นี้ให้คุณเพื่อขอลิงก์ใหม่"); return; }
+    $("pwSubmit").addEventListener("click", function () {
+      fetchReport(currentToken, $("pwInput").value);
+    });
+    $("pwInput").addEventListener("keydown", function (e) { if (e.key === "Enter") $("pwSubmit").click(); });
 
-    currentShare = share;
-
-    if (share.password_hash) {
-      showLock();
-      $("pwSubmit").addEventListener("click", async function () {
-        var pw = $("pwInput").value;
-        var hash = await sha256Hex(pw);
-        if (hash === share.password_hash) {
-          $("lockWrap").style.display = "none";
-          loadIssueAndRender();
-        } else {
-          $("pwErr").style.display = "block";
-        }
-      });
-      $("pwInput").addEventListener("keydown", function (e) { if (e.key === "Enter") $("pwSubmit").click(); });
-    } else {
-      loadIssueAndRender();
-    }
+    fetchReport(token, null);
   }
 
   main();

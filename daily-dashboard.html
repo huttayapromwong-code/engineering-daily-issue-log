@@ -74,6 +74,28 @@
   .toast { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--r-md); padding: 12px 14px; box-shadow: var(--shadow-md); font-size: 13px; }
   .toast.success { border-left-color: var(--s-success); }
   .toast.error { border-left-color: var(--s-critical); }
+
+  .section-divider { height: 1px; background: var(--line); margin: var(--sp-6) 0 var(--sp-4); }
+  .section-heading { font-size: var(--fs-18); font-weight: 700; margin-bottom: var(--sp-1); display: flex; align-items: center; gap: 8px; }
+  .section-sub { font-size: var(--fs-12); color: var(--ink-muted); margin-bottom: var(--sp-4); }
+
+  .pareto-svg .pareto-bar { fill: var(--accent); }
+  .pareto-svg .pareto-cumline { fill: none; stroke: var(--cat-3); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .pareto-svg .pareto-dot { fill: var(--cat-3); stroke: var(--surface); stroke-width: 2; }
+  .pareto-svg .pareto-threshold { stroke: var(--ink-muted); stroke-width: 1.2; stroke-dasharray: 4 3; }
+  .pareto-svg .pareto-label { fill: var(--ink-muted); font-size: 10px; font-family: var(--font-mono); }
+
+  .rank-item.clickable { cursor: pointer; }
+  .rank-item.clickable:hover { background: var(--surface-2); }
+
+  .backdrop { position: fixed; inset: 0; background: rgba(11,11,11,.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .backdrop.show { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--r-lg); max-width: 560px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-md); border: 1px solid var(--line); }
+  .modal__head { display: flex; justify-content: space-between; align-items: center; padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--line); }
+  .modal__head h3 { font-size: var(--fs-16); margin: 0; }
+  .modal__body { padding: var(--sp-4) var(--sp-5); display: flex; flex-direction: column; gap: 8px; }
+  .drill-row { display: flex; justify-content: space-between; gap: 10px; font-size: var(--fs-13); padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .drill-row:last-child { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -184,11 +206,55 @@
           <ul class="highlight-list" id="highlightList"></ul>
         </div>
       </div>
+
+      <div class="section-divider"></div>
+      <div class="section-heading" id="prodSummaryHeading"></div>
+      <div class="section-sub">สรุปการผลิตและข้อบกพร่องของวันนี้ คำนวณอัตโนมัติจาก Issue ที่บันทึกในระบบ</div>
+
+      <div class="kpi-grid" id="prodKpiGrid"></div>
+
+      <div style="height:var(--sp-4);"></div>
+
+      <div class="row-3b">
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="top10Title"></div><div class="card__sub">เรียงตามปริมาณ NG มากสุด · คลิกเพื่อดูรายการ</div></div></div>
+          <div class="rank-list" id="top10DefectList"></div>
+        </div>
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="paretoTitle"></div><div class="card__sub">80/20 ของ NG ตาม Defect Category</div></div></div>
+          <div id="paretoChart"></div>
+        </div>
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="rootCauseBreakdownTitle"></div><div class="card__sub">จำนวนงานแยกตามสาเหตุ (6M) · คลิกเพื่อดูรายการ</div></div></div>
+          <div class="rank-list" id="rootCauseBreakdownList"></div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="prodByProductTitle"></div></div></div>
+          <div class="ds-table-wrap"><table class="ds-table"><thead><tr><th>Product</th><th>Total Production</th><th>Qty OK</th><th>Qty NG</th><th>Yield %</th></tr></thead><tbody id="prodByProductBody"></tbody></table></div>
+        </div>
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="prodByLineTitle"></div></div></div>
+          <div class="ds-table-wrap"><table class="ds-table"><thead><tr><th>Line</th><th>Total Production</th><th>Qty OK</th><th>Qty NG</th><th>Yield %</th></tr></thead><tbody id="prodByLineBody"></tbody></table></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="toast-stack" id="toastStack"></div>
+
+<div class="backdrop" id="drillBackdrop">
+  <div class="modal">
+    <div class="modal__head">
+      <h3 id="drillTitle">รายละเอียด</h3>
+      <button class="ico-btn" id="btnCloseDrill"></button>
+    </div>
+    <div class="modal__body" id="drillBody"></div>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -212,7 +278,14 @@
   $("btnGenReport").innerHTML = window.icon("fileText", 16) + "Generate Management Report";
   $("btnPresent").innerHTML = window.icon("presentation", 16) + "Presentation Mode";
   $("btnRegenSummary").innerHTML = window.icon("refresh", 14) + "Generate New Summary";
-  $("aiSummaryTitle").innerHTML = window.icon("lightbulb", 16) + " AI Daily Summary";
+  $("aiSummaryTitle").innerHTML = window.icon("lightbulb", 16) + " Daily Engineering Insight";
+  $("prodSummaryHeading").innerHTML = window.icon("factory", 20) + "Daily Production Summary";
+  $("top10Title").innerHTML = window.icon("flame", 16) + " Top 10 Defect Categories";
+  $("paretoTitle").innerHTML = window.icon("trendingDown", 16) + " Pareto — NG by Defect Category";
+  $("rootCauseBreakdownTitle").innerHTML = window.icon("search", 16) + " Root Cause Breakdown";
+  $("prodByProductTitle").innerHTML = window.icon("factory", 16) + " Production by Product";
+  $("prodByLineTitle").innerHTML = window.icon("chartBar", 16) + " Production by Line";
+  $("btnCloseDrill").innerHTML = window.icon("x", 16);
   $("missionTitleText").innerHTML = "";
   $("missionTitleText").parentNode.parentNode.querySelector(".card__title").textContent = "Today's Mission";
 
@@ -279,7 +352,7 @@
 
   // ---------- data load ----------
   var lineById = {};
-  var openItems = [], recentItems = [], recentPlans = [];
+  var openItems = [], recentItems = [], recentPlans = [], todayIssues = [];
 
   function fmtDateShort(s) {
     if (!s) return "—";
@@ -294,12 +367,14 @@
       sb.from("production_lines").select("id,name"),
       sb.from("work_items").select("*").neq("status", "Closed"),
       sb.from("work_items").select("*").gte("received_date", daysAgoIso(7)),
-      sb.from("production_plans").select("*").gte("plan_date", daysAgoIso(7))
+      sb.from("production_plans").select("*").gte("plan_date", daysAgoIso(7)),
+      sb.from("issues").select("*").eq("received_date", todayIso())
     ]);
     (res[0].data || []).forEach(function (l) { lineById[l.id] = l.name; });
     openItems = res[1].data || [];
     recentItems = res[2].data || [];
     recentPlans = res[3].data || [];
+    todayIssues = res[4].data || [];
 
     renderKpis();
     renderMission();
@@ -307,6 +382,12 @@
     renderWorkTrend();
     renderLineDonut();
     renderTopProblems();
+    renderProdSummaryKpis();
+    renderTop10Defects();
+    renderDashboardPareto();
+    renderRootCauseBreakdown();
+    renderProdByDimension("product", "prodByProductBody");
+    renderProdByDimension("line", "prodByLineBody");
     renderSummary();
     renderPending();
     renderHighlights();
@@ -486,6 +567,136 @@
     });
   }
 
+  // ---------- Daily Production Summary (from issues, today only) ----------
+  function openDrill(field, value) {
+    $("drillTitle").textContent = value + " — รายการวันนี้";
+    var matches = todayIssues.filter(function (r) { return r[field] === value; });
+    var body = $("drillBody");
+    if (!matches.length) { body.innerHTML = '<div class="chart-empty">ไม่พบรายการ</div>'; }
+    else {
+      body.innerHTML = matches.map(function (r) {
+        return '<div class="drill-row"><span><b class="mono">' + esc(r.code || "—") + "</b> " + esc(r.title || "(ไม่มีหัวข้อ)") + '</span><span class="tabular">' + (Number(r.qty_ng) || 0) + " NG</span></div>";
+      }).join("");
+    }
+    $("drillBackdrop").classList.add("show");
+  }
+  $("btnCloseDrill").addEventListener("click", function () { $("drillBackdrop").classList.remove("show"); });
+  $("drillBackdrop").addEventListener("click", function (e) { if (e.target.id === "drillBackdrop") $("drillBackdrop").classList.remove("show"); });
+
+  function renderProdSummaryKpis() {
+    var ok = sum(todayIssues, "qty_ok"), ng = sum(todayIssues, "qty_ng");
+    var total = ok + ng;
+    var yieldPct = total > 0 ? (ok / total * 100) : null;
+    var ngRate = total > 0 ? (ng / total * 100) : null;
+    var tiles = [
+      { label: "Total Production", value: total.toLocaleString(), tone: "accent", icon: "factory" },
+      { label: "Quantity OK", value: ok.toLocaleString(), tone: "success", icon: "checkCircle" },
+      { label: "Quantity NG", value: ng.toLocaleString(), tone: ng > 0 ? "critical" : "success", icon: "alertTriangle" },
+      { label: "Yield %", value: yieldPct === null ? "—" : yieldPct.toFixed(1) + "%", tone: "success", icon: "target" },
+      { label: "NG Rate %", value: ngRate === null ? "—" : ngRate.toFixed(1) + "%", tone: ngRate > 0 ? "critical" : "success", icon: "trendingDown" }
+    ];
+    var grid = $("prodKpiGrid"); grid.innerHTML = "";
+    tiles.forEach(function (k) {
+      var tile = document.createElement("div"); tile.className = "kpi-tile";
+      tile.innerHTML = '<div class="kpi-tile__top"><div class="icon-badge tone-' + k.tone + '">' + window.icon(k.icon, 20) + '</div><div class="kpi-tile__label">' + k.label + '</div></div><div class="kpi-tile__value tabular">' + k.value + "</div>";
+      grid.appendChild(tile);
+    });
+  }
+
+  function renderTop10Defects() {
+    var sums = {};
+    todayIssues.forEach(function (r) {
+      if (!r.defect_category) return;
+      sums[r.defect_category] = (sums[r.defect_category] || 0) + (Number(r.qty_ng) || 0);
+    });
+    var entries = Object.keys(sums).map(function (k) { return { label: k, value: sums[k] }; }).filter(function (e) { return e.value > 0; }).sort(function (a, b) { return b.value - a.value; }).slice(0, 10);
+    var el = $("top10DefectList"); el.innerHTML = "";
+    if (!entries.length) { el.innerHTML = '<div class="chart-empty">ยังไม่มีข้อมูล NG วันนี้</div>'; return; }
+    entries.forEach(function (e, i) {
+      var row = document.createElement("div"); row.className = "rank-item clickable";
+      row.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="t">' + esc(e.label) + '</span><span class="c">' + e.value.toLocaleString() + " PCS</span>";
+      row.addEventListener("click", function () { openDrill("defect_category", e.label); });
+      el.appendChild(row);
+    });
+  }
+
+  function renderRootCauseBreakdown() {
+    var counts = {};
+    todayIssues.forEach(function (r) {
+      if (!r.root_cause_category) return;
+      counts[r.root_cause_category] = (counts[r.root_cause_category] || 0) + 1;
+    });
+    var entries = Object.keys(counts).map(function (k) { return { label: k, value: counts[k] }; }).sort(function (a, b) { return b.value - a.value; });
+    var el = $("rootCauseBreakdownList"); el.innerHTML = "";
+    if (!entries.length) { el.innerHTML = '<div class="chart-empty">ยังไม่มีข้อมูลวันนี้</div>'; return; }
+    entries.forEach(function (e, i) {
+      var row = document.createElement("div"); row.className = "rank-item clickable";
+      row.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="t">' + esc(e.label) + '</span><span class="c">' + e.value + "</span>";
+      row.addEventListener("click", function () { openDrill("root_cause_category", e.label); });
+      el.appendChild(row);
+    });
+  }
+
+  function renderDashboardPareto() {
+    var sums = {};
+    todayIssues.forEach(function (r) {
+      var q = Number(r.qty_ng) || 0;
+      if (q <= 0 || !r.defect_category) return;
+      sums[r.defect_category] = (sums[r.defect_category] || 0) + q;
+    });
+    var entries = Object.keys(sums).map(function (k) { return { label: k, value: sums[k] }; }).sort(function (a, b) { return b.value - a.value; });
+    var el = $("paretoChart");
+    var totalQty = entries.reduce(function (s, e) { return s + e.value; }, 0);
+    if (!totalQty) { el.innerHTML = '<div class="chart-empty">ยังไม่มีข้อมูล NG วันนี้</div>'; return; }
+
+    var W = Math.max(280, entries.length * 60), H = 200;
+    var mL = 34, mR = 34, mB = 34, mT = 10;
+    var plotW = W - mL - mR, plotH = H - mT - mB;
+    var n = entries.length, slot = plotW / n, barW = Math.min(slot * 0.5, 30);
+    var maxV = Math.max.apply(null, entries.map(function (e) { return e.value; }));
+
+    var svg = '<svg class="svg-chart pareto-svg" viewBox="0 0 ' + W + ' ' + H + '">';
+    var y80 = mT + plotH - (plotH * 80 / 100);
+    svg += '<line x1="' + mL + '" y1="' + y80 + '" x2="' + (mL + plotW) + '" y2="' + y80 + '" class="pareto-threshold"/>';
+
+    var pathPts = []; var cum = 0;
+    entries.forEach(function (e, i) {
+      var x = mL + i * slot + (slot - barW) / 2;
+      var barH = (e.value / maxV) * plotH;
+      var y = mT + plotH - barH;
+      svg += '<rect class="pareto-bar" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="3"/>';
+      cum += e.value;
+      var cumPct = cum / totalQty * 100;
+      var px = x + barW / 2, py = mT + plotH - (plotH * cumPct / 100);
+      pathPts.push([px, py]);
+      svg += '<text x="' + (x + barW / 2) + '" y="' + (H - mB + 16) + '" text-anchor="middle" class="pareto-label">' + (e.label.length > 8 ? e.label.slice(0, 7) + "…" : e.label) + "</text>";
+    });
+    var d = pathPts.map(function (p, i) { return (i === 0 ? "M" : "L") + p[0] + " " + p[1]; }).join(" ");
+    svg += '<path d="' + d + '" class="pareto-cumline"/>';
+    pathPts.forEach(function (p) { svg += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.5" class="pareto-dot"/>'; });
+    svg += "</svg>";
+    el.innerHTML = svg;
+  }
+
+  function renderProdByDimension(field, bodyId) {
+    var groups = {};
+    todayIssues.forEach(function (r) {
+      var key = r[field] || "ไม่ระบุ";
+      if (!groups[key]) groups[key] = { ok: 0, ng: 0 };
+      groups[key].ok += Number(r.qty_ok) || 0;
+      groups[key].ng += Number(r.qty_ng) || 0;
+    });
+    var entries = Object.keys(groups).map(function (k) {
+      var g = groups[k], total = g.ok + g.ng;
+      return { label: k, total: total, ok: g.ok, ng: g.ng, yieldPct: total > 0 ? (g.ok / total * 100) : null };
+    }).sort(function (a, b) { return b.total - a.total; });
+    var body = $(bodyId);
+    if (!entries.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-muted);padding:20px;">ยังไม่มีข้อมูลวันนี้</td></tr>'; return; }
+    body.innerHTML = entries.map(function (e) {
+      return "<tr><td>" + esc(e.label) + '</td><td class="tabular">' + e.total.toLocaleString() + '</td><td class="tabular">' + e.ok.toLocaleString() + '</td><td class="tabular">' + e.ng.toLocaleString() + '</td><td class="tabular">' + (e.yieldPct === null ? "—" : e.yieldPct.toFixed(1) + "%") + "</td></tr>";
+    }).join("");
+  }
+
   // ---------- AI Daily Summary (rule-based, business phrasing) ----------
   function renderSummary() {
     var today = todayIso();
@@ -511,6 +722,17 @@
     if (downtimeSaved > 0) parts.push("สามารถลด Downtime ได้ " + downtimeSaved.toLocaleString() + " นาที");
     if (ngReduced > 0) parts.push("ลด NG ได้ " + ngReduced.toLocaleString() + " PCS");
     if (costSaving > 0) parts.push("ช่วยลดต้นทุนได้ประมาณ " + costSaving.toLocaleString() + " บาท");
+
+    var prodOk = sum(todayIssues, "qty_ok"), prodNg = sum(todayIssues, "qty_ng");
+    var prodTotal = prodOk + prodNg;
+    if (prodTotal > 0) {
+      var y = Math.round((prodOk / prodTotal) * 1000) / 10, ngr = Math.round((prodNg / prodTotal) * 1000) / 10;
+      parts.push("ผลผลิตวันนี้รวม " + prodTotal.toLocaleString() + " ชิ้น Yield " + y + "% NG Rate " + ngr + "%");
+      var defectSums = {};
+      todayIssues.forEach(function (r) { if (r.defect_category) defectSums[r.defect_category] = (defectSums[r.defect_category] || 0) + (Number(r.qty_ng) || 0); });
+      var topDefect = Object.keys(defectSums).sort(function (a, b) { return defectSums[b] - defectSums[a]; })[0];
+      if (topDefect && defectSums[topDefect] > 0) parts.push("Defect ที่พบมากที่สุดคือ " + topDefect + " (" + defectSums[topDefect].toLocaleString() + " PCS)");
+    }
     $("summaryBox").textContent = parts.join(" ") + ".";
 
     sb.from("daily_summaries").upsert({ summary_date: today, summary_text: parts.join(" ") + ".", generated_at: new Date().toISOString() }, { onConflict: "summary_date" }).then(function () {});

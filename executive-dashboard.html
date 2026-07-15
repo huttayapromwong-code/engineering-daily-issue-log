@@ -36,6 +36,23 @@
   .empty { color: var(--ink-muted); font-size: var(--fs-13); text-align: center; padding: 20px; }
 
   @media print { .ds-sidebar, .ds-topbar__actions, .period-toggle { display: none !important; } body { background: #fff; } .card { box-shadow: none; border: 1px solid #ccc; } }
+
+  .section-divider { height: 1px; background: var(--line); margin: var(--sp-6) 0 var(--sp-4); }
+  .section-heading { font-size: var(--fs-18); font-weight: 700; margin-bottom: var(--sp-1); display: flex; align-items: center; gap: 8px; }
+  .section-sub { font-size: var(--fs-12); color: var(--ink-muted); margin-bottom: var(--sp-4); }
+
+  .filter-bar { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4); box-shadow: var(--shadow-xs); }
+  .filter-bar select { font: inherit; font-size: var(--fs-13); padding: 7px 10px; border-radius: var(--r-md); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .filter-bar .clear-link { font-size: var(--fs-12); color: var(--accent); cursor: pointer; text-decoration: underline; background: none; border: none; font-family: inherit; padding: 4px 2px; }
+
+  .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-4); }
+
+  .trend-svg .trend-grid-line { stroke: var(--line); stroke-width: 1; }
+  .trend-svg .trend-tick-label, .trend-svg .trend-cat-label { fill: var(--ink-muted); font-size: 10px; font-family: var(--font-mono); }
+  .trend-svg .trend-end-label { font-size: 11px; font-weight: 700; }
+  .trend-legend { display: flex; gap: var(--sp-4); margin-bottom: var(--sp-2); flex-wrap: wrap; }
+  .trend-legend-item { display: flex; align-items: center; gap: 6px; font-size: var(--fs-12); color: var(--ink-secondary); }
+  .trend-legend-key { width: 14px; height: 2px; border-radius: 2px; flex: none; }
 </style>
 </head>
 <body>
@@ -104,6 +121,65 @@
         </div>
       </div>
 
+      <div class="section-divider"></div>
+      <div class="section-heading" id="analyticsHeading"></div>
+      <div class="section-sub">วิเคราะห์เชิงลึกจากข้อมูล Issue ทั้งหมด — กรองและดูแนวโน้มได้ตามต้องการ</div>
+
+      <div class="filter-bar" id="analyticsFilterBar">
+        <select id="fProduct"><option value="">Product ทั้งหมด</option></select>
+        <select id="fCustomer"><option value="">Customer ทั้งหมด</option></select>
+        <select id="fLine"><option value="">Line ทั้งหมด</option></select>
+        <select id="fShift"><option value="">Shift ทั้งหมด</option><option value="Day">Day</option><option value="Night">Night</option></select>
+        <select id="fDefectCategory"><option value="">Defect Category ทั้งหมด</option></select>
+        <button class="clear-link" id="btnClearAnalyticsFilter">ล้างตัวกรอง</button>
+      </div>
+
+      <div class="card card__pad" style="margin-bottom:var(--sp-4);">
+        <div class="card__head">
+          <div><div class="card__title" id="trendTitle"></div><div class="card__sub">Qty OK เทียบกับ Qty NG</div></div>
+          <div class="period-toggle" id="trendPeriodToggle" style="margin-bottom:0;">
+            <button class="period-btn active" data-period="daily">รายวัน</button>
+            <button class="period-btn" data-period="weekly">รายสัปดาห์</button>
+            <button class="period-btn" data-period="monthly">รายเดือน</button>
+          </div>
+        </div>
+        <div id="okNgTrendChart"></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="defectTrendTitle"></div><div class="card__sub">ปริมาณ NG ตามช่วงเวลา</div></div></div>
+          <div id="defectTrendChart"></div>
+        </div>
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="rootCauseTrendTitle"></div><div class="card__sub">จำนวนงานที่ระบุสาเหตุ (6M) ตามช่วงเวลา</div></div></div>
+          <div id="rootCauseTrendChart"></div>
+        </div>
+      </div>
+
+      <div class="analytics-grid">
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="productAnalysisTitle"></div></div></div>
+          <div class="ds-table-wrap"><table class="ds-table"><thead><tr><th>Product</th><th>Issues</th><th>Qty OK</th><th>Qty NG</th><th>Yield %</th></tr></thead><tbody id="productAnalysisBody"></tbody></table></div>
+        </div>
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="lineComparisonTitle"></div></div></div>
+          <div class="ds-table-wrap"><table class="ds-table"><thead><tr><th>Line</th><th>Issues</th><th>Qty OK</th><th>Qty NG</th><th>Yield %</th></tr></thead><tbody id="lineComparisonBody"></tbody></table></div>
+        </div>
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="customerAnalysisTitle"></div></div></div>
+          <div class="ds-table-wrap"><table class="ds-table"><thead><tr><th>Customer</th><th>Issues</th><th>Qty OK</th><th>Qty NG</th><th>Yield %</th></tr></thead><tbody id="customerAnalysisBody"></tbody></table></div>
+        </div>
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="machineRankingTitle"></div></div></div>
+          <div class="ds-table-wrap"><table class="ds-table"><thead><tr><th>Machine</th><th>Issues</th><th>Qty OK</th><th>Qty NG</th><th>Yield %</th></tr></thead><tbody id="machineRankingBody"></tbody></table></div>
+        </div>
+        <div class="card card__pad">
+          <div class="card__head"><div><div class="card__title" id="operatorRankingTitle"></div></div></div>
+          <div class="ds-table-wrap"><table class="ds-table"><thead><tr><th>Operator</th><th>Issues</th><th>Qty OK</th><th>Qty NG</th><th>Yield %</th></tr></thead><tbody id="operatorRankingBody"></tbody></table></div>
+        </div>
+      </div>
+
       <footer style="margin-top:var(--sp-5);padding-top:var(--sp-3);border-top:1px solid var(--line);color:var(--ink-muted);font-size:var(--fs-11);text-align:center;">
         Analytics — สรุปจากข้อมูล Daily Engineering Dashboard แบบ read-only
       </footer>
@@ -133,6 +209,15 @@
   $("summaryTitle").innerHTML = window.icon("lightbulb", 16) + " AI Daily Summary";
   $("topProblemTitle").innerHTML = window.icon("flame", 16) + " Top Problem";
   $("topRootCauseTitle").innerHTML = window.icon("search", 16) + " Top Root Cause";
+  $("analyticsHeading").innerHTML = window.icon("trendingUp", 20) + "Analytics Breakdown";
+  $("trendTitle").innerHTML = window.icon("trendingUp", 16) + " Production Trend";
+  $("defectTrendTitle").innerHTML = window.icon("flame", 16) + " Defect Trend";
+  $("rootCauseTrendTitle").innerHTML = window.icon("search", 16) + " Root Cause Trend";
+  $("productAnalysisTitle").innerHTML = window.icon("factory", 16) + " Product Analysis";
+  $("lineComparisonTitle").innerHTML = window.icon("chartBar", 16) + " Line Comparison";
+  $("customerAnalysisTitle").innerHTML = window.icon("users", 16) + " Customer Analysis";
+  $("machineRankingTitle").innerHTML = window.icon("wrench", 16) + " Machine Ranking";
+  $("operatorRankingTitle").innerHTML = window.icon("user", 16) + " Operator Ranking";
 
   function applyThemeIcon() {
     var root = document.documentElement;
@@ -222,6 +307,181 @@
     });
   }
 
+  // ============================================================
+  // Analytics Breakdown (from issues, independent of daily_activities above)
+  // ============================================================
+  var allIssues = [];
+  var DEFECT_CATEGORIES = ["Dimensional", "Visual/Cosmetic", "Functional", "Material", "Assembly", "Electrical", "Other"];
+  var currentTrendPeriod = "daily";
+
+  function analyticsFilters() {
+    return { product: $("fProduct").value, customer: $("fCustomer").value, line: $("fLine").value, shift: $("fShift").value, defectCategory: $("fDefectCategory").value };
+  }
+  function matchesFilters(i, f) {
+    if (f.product && i.product !== f.product) return false;
+    if (f.customer && i.customer !== f.customer) return false;
+    if (f.line && i.line !== f.line) return false;
+    if (f.shift && i.shift !== f.shift) return false;
+    if (f.defectCategory && i.defect_category !== f.defectCategory) return false;
+    return true;
+  }
+  function filteredIssuesAll() {
+    var f = analyticsFilters();
+    return allIssues.filter(function (i) { return matchesFilters(i, f); });
+  }
+  function filteredIssuesScoped() {
+    var range = periodRange(currentPeriod, isoToday());
+    return filteredIssuesAll().filter(function (i) { return i.received_date >= range[0] && i.received_date <= range[1]; });
+  }
+
+  function populateAnalyticsFilters() {
+    function fillSelect(id, values) {
+      var sel = $(id), cur = sel.value;
+      values.sort().forEach(function (v) { var o = document.createElement("option"); o.value = v; o.textContent = v; sel.appendChild(o); });
+      if (values.indexOf(cur) !== -1) sel.value = cur;
+    }
+    fillSelect("fProduct", Array.from(new Set(allIssues.map(function (i) { return i.product; }).filter(Boolean))));
+    fillSelect("fCustomer", Array.from(new Set(allIssues.map(function (i) { return i.customer; }).filter(Boolean))));
+    fillSelect("fLine", Array.from(new Set(allIssues.map(function (i) { return i.line; }).filter(Boolean))));
+    fillSelect("fDefectCategory", DEFECT_CATEGORIES.slice());
+  }
+
+  function bucketKeyOf(dateStr, period) {
+    if (period === "monthly") return dateStr.slice(0, 7);
+    if (period === "weekly") {
+      var d = new Date(dateStr + "T00:00:00");
+      var day = d.getDay(); var diffToMonday = (day === 0 ? -6 : 1 - day);
+      var monday = new Date(d); monday.setDate(d.getDate() + diffToMonday);
+      return monday.toISOString().slice(0, 10);
+    }
+    return dateStr;
+  }
+  function bucketLabelOf(key, period) {
+    if (period === "monthly") {
+      var parts = key.split("-");
+      var mo = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+      return mo[parseInt(parts[1], 10) - 1] + " " + parts[0].slice(2);
+    }
+    if (period === "weekly") return "wk " + fmtDateShortMD(key);
+    return fmtDateShortMD(key);
+  }
+  function fmtDateShortMD(s) {
+    var d = new Date(s + "T00:00:00");
+    var mo = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+    return d.getDate() + " " + mo[d.getMonth()];
+  }
+
+  // Generic multi-series trend line chart (1 or 2 series), modeled on report.html's renderTrendChart
+  function renderTrendLines(elId, legendId, issues, series, period) {
+    var byBucket = {};
+    issues.forEach(function (i) {
+      if (!i.received_date) return;
+      var key = bucketKeyOf(i.received_date, period);
+      if (!byBucket[key]) { byBucket[key] = {}; series.forEach(function (s) { byBucket[key][s.key] = 0; }); }
+      series.forEach(function (s) { byBucket[key][s.key] += s.valueFn(i); });
+    });
+    var keys = Object.keys(byBucket).sort();
+    var el = $(elId);
+    if (legendId) {
+      $(legendId).innerHTML = series.map(function (s) { return '<div class="trend-legend-item"><span class="trend-legend-key" style="background:' + s.color + '"></span>' + s.label + "</div>"; }).join("");
+    }
+    if (!keys.length) { el.innerHTML = '<div class="empty">No Data Available</div>'; return; }
+
+    var W = Math.max(420, keys.length * 60), H = 200;
+    var mL = 40, mR = 16, mB = 30, mT = 10;
+    var plotW = W - mL - mR, plotH = H - mT - mB;
+    var n = keys.length, slot = n > 1 ? plotW / (n - 1) : 0;
+    var maxV = 1;
+    keys.forEach(function (k) { series.forEach(function (s) { maxV = Math.max(maxV, byBucket[k][s.key]); }); });
+
+    function xOf(i) { return n > 1 ? mL + i * slot : mL + plotW / 2; }
+    function yOf(v) { return mT + plotH - (v / maxV * plotH); }
+
+    var svg = '<svg class="svg-chart trend-svg" viewBox="0 0 ' + W + ' ' + H + '">';
+    [0, 0.5, 1].forEach(function (f) {
+      var y = mT + plotH * (1 - f);
+      svg += '<line x1="' + mL + '" y1="' + y + '" x2="' + (mL + plotW) + '" y2="' + y + '" class="trend-grid-line"/>';
+      svg += '<text x="' + (mL - 6) + '" y="' + (y + 3) + '" text-anchor="end" class="trend-tick-label">' + Math.round(maxV * f) + "</text>";
+    });
+    series.forEach(function (s) {
+      var pts = keys.map(function (k, i) { return [xOf(i), yOf(byBucket[k][s.key])]; });
+      var d = pts.map(function (p, i) { return (i === 0 ? "M" : "L") + p[0] + " " + p[1]; }).join(" ");
+      svg += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+      pts.forEach(function (p) { svg += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.5" fill="' + s.color + '" stroke="var(--surface)" stroke-width="2"/>'; });
+      var last = pts[pts.length - 1];
+      svg += '<text x="' + last[0] + '" y="' + (last[1] - 8) + '" text-anchor="end" class="trend-end-label" fill="' + s.color + '">' + byBucket[keys[keys.length - 1]][s.key] + "</text>";
+    });
+    var labelEvery = Math.max(1, Math.ceil(n / 8));
+    keys.forEach(function (k, i) {
+      if (i % labelEvery !== 0 && i !== n - 1) return;
+      svg += '<text x="' + xOf(i) + '" y="' + (H - mB + 16) + '" text-anchor="middle" class="trend-cat-label">' + bucketLabelOf(k, period) + "</text>";
+    });
+    svg += "</svg>";
+    el.innerHTML = svg;
+  }
+
+  function renderAnalyticsTrends() {
+    var issues = filteredIssuesAll();
+    renderTrendLines("okNgTrendChart", null, issues, [
+      { key: "ok", label: "Qty OK", color: "var(--s-success)", valueFn: function (i) { return Number(i.qty_ok) || 0; } },
+      { key: "ng", label: "Qty NG", color: "var(--s-critical)", valueFn: function (i) { return Number(i.qty_ng) || 0; } }
+    ], currentTrendPeriod);
+    renderTrendLines("defectTrendChart", null, issues, [
+      { key: "ng", label: "Qty NG", color: "var(--s-critical)", valueFn: function (i) { return Number(i.qty_ng) || 0; } }
+    ], currentTrendPeriod);
+    renderTrendLines("rootCauseTrendChart", null, issues, [
+      { key: "count", label: "งานที่ระบุสาเหตุ", color: "var(--accent)", valueFn: function (i) { return i.root_cause_category ? 1 : 0; } }
+    ], currentTrendPeriod);
+  }
+
+  function renderDimensionTable(field, bodyId, capN) {
+    var issues = filteredIssuesScoped();
+    var groups = {};
+    issues.forEach(function (i) {
+      var key = i[field] || "ไม่ระบุ";
+      if (!groups[key]) groups[key] = { count: 0, ok: 0, ng: 0 };
+      groups[key].count++;
+      groups[key].ok += Number(i.qty_ok) || 0;
+      groups[key].ng += Number(i.qty_ng) || 0;
+    });
+    var entries = Object.keys(groups).map(function (k) {
+      var g = groups[k], total = g.ok + g.ng;
+      return { label: k, count: g.count, ok: g.ok, ng: g.ng, yieldPct: total > 0 ? (g.ok / total * 100) : null };
+    }).sort(function (a, b) { return b.count - a.count; }).slice(0, capN || 10);
+    var body = $(bodyId);
+    if (!entries.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-muted);padding:20px;">No Data Available</td></tr>'; return; }
+    body.innerHTML = entries.map(function (e) {
+      return "<tr><td>" + truncateLabel(e.label, 30) + '</td><td class="tabular">' + e.count.toLocaleString() + '</td><td class="tabular">' + e.ok.toLocaleString() + '</td><td class="tabular">' + e.ng.toLocaleString() + '</td><td class="tabular">' + (e.yieldPct === null ? "—" : e.yieldPct.toFixed(1) + "%") + "</td></tr>";
+    }).join("");
+  }
+
+  function renderAnalyticsBreakdown() {
+    renderDimensionTable("product", "productAnalysisBody");
+    renderDimensionTable("line", "lineComparisonBody");
+    renderDimensionTable("customer", "customerAnalysisBody");
+    renderDimensionTable("machine", "machineRankingBody");
+    renderDimensionTable("owner", "operatorRankingBody");
+  }
+
+  function renderAnalyticsAll() {
+    renderAnalyticsTrends();
+    renderAnalyticsBreakdown();
+  }
+
+  document.querySelectorAll("#analyticsFilterBar select").forEach(function (sel) { sel.addEventListener("change", renderAnalyticsAll); });
+  $("btnClearAnalyticsFilter").addEventListener("click", function () {
+    document.querySelectorAll("#analyticsFilterBar select").forEach(function (sel) { sel.value = ""; });
+    renderAnalyticsAll();
+  });
+  document.querySelectorAll("#trendPeriodToggle .period-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll("#trendPeriodToggle .period-btn").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      currentTrendPeriod = btn.dataset.period;
+      renderAnalyticsTrends();
+    });
+  });
+
   async function loadSummaryFor(dateStr) {
     var res = await sb.from("daily_summaries").select("summary_text").eq("summary_date", dateStr).maybeSingle();
     $("summaryDateLabel").textContent = "สรุปวันที่ " + fmtDate(dateStr);
@@ -260,6 +520,7 @@
         btn.classList.add("active");
         currentPeriod = btn.dataset.period;
         renderHero(); renderStatusBar(); renderTopList("topProblemList", "problem"); renderTopList("topRootCauseList", "root_cause");
+        renderAnalyticsBreakdown();
       });
     });
 
@@ -268,6 +529,12 @@
       if (res.error) { $("summaryBox").innerHTML = '<span class="empty">โหลดข้อมูลไม่สำเร็จ: ' + res.error.message + '</span>'; return; }
       allActivities = res.data || [];
       renderAll();
+    });
+    sb.from("issues").select("*").then(function (res) {
+      if (res.error) { return; }
+      allIssues = res.data || [];
+      populateAnalyticsFilters();
+      renderAnalyticsAll();
     });
   });
 })();
